@@ -22,9 +22,30 @@ const mainMenu = [
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const { cartCount, wishlist, compare } = useShop();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(q)).slice(0, 6);
+  }, [searchQuery]);
+
+  const handleSearchSelect = (id: number) => {
+    setSearchQuery("");
+    setSearchOpen(false);
+    navigate(`/product/${id}`);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchOpen(false);
+      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
 
   const [isSticky, setIsSticky] = useState(false);
 

@@ -22,12 +22,12 @@ const slides = [
 ];
 
 const categories = [
-  { name: "Kính Mắt Thông Minh", hasSubmenu: true },
-  { name: "Balo Thông Minh", hasSubmenu: false },
-  { name: "Bút Thông Minh", hasSubmenu: false },
-  { name: "Đồng Hồ, Vòng Đeo Tay Thông Minh", hasSubmenu: false },
-  { name: "Flash Sale", hasSubmenu: false },
-  { name: "Tai Nghe Bluetooth", hasSubmenu: true },
+  { name: "Kính Mắt Thông Minh", hasSubmenu: true, submenu: ["Kính Mắt AI Thông Minh", "Kính Mắt Camera Thông Minh", "Kính Mắt Nghe Nhạc Thông Minh"] },
+  { name: "Balo Thông Minh", hasSubmenu: false, submenu: [] },
+  { name: "Bút Thông Minh", hasSubmenu: false, submenu: [] },
+  { name: "Đồng Hồ, Vòng Đeo Tay Thông Minh", hasSubmenu: false, submenu: [] },
+  { name: "Flash Sale", hasSubmenu: false, submenu: [] },
+  { name: "Tai Nghe Bluetooth", hasSubmenu: true, submenu: ["Tai Nghe TWS", "Tai Nghe Chụp Tai", "Tai Nghe Mở Tai"] },
 ];
 
 const SLIDE_DURATION = 6000;

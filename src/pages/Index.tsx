@@ -1,19 +1,21 @@
 import Header from "@/components/Header";
-import HeroSlider from "@/components/HeroSlider";
-import KolSection from "@/components/KolSection";
+import HeroSection from "@/components/HeroSection";
+import FeaturesBar from "@/components/FeaturesBar";
 import NewsSection from "@/components/NewsSection";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <HeroSlider />
-      <KolSection />
+      <HeroSection />
+      <FeaturesBar />
       <NewsSection />
       <Footer />
       <BottomNav />
+      <ScrollToTop />
     </div>
   );
 };

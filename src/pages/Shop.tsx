@@ -122,7 +122,7 @@ const Shop = () => {
           {priceRanges.map((range, i) => (
             <button
               key={i}
-              onClick={() => setSelectedPrice(i)}
+              onClick={() => handlePriceChange(i)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                 selectedPrice === i ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}

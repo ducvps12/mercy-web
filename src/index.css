@@ -78,9 +78,68 @@
     @apply transition-all duration-300 ease-out;
   }
   .mercy-card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px hsl(var(--mercy-dark) / 0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 48px hsl(var(--mercy-dark) / 0.15);
   }
+
+  /* Magnetic button effect */
+  .btn-magnetic {
+    @apply relative overflow-hidden transition-all duration-300;
+  }
+  .btn-magnetic::before {
+    content: '';
+    @apply absolute inset-0 rounded-lg opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, hsl(var(--mercy-orange-light)), hsl(var(--mercy-orange-glow)));
+  }
+  .btn-magnetic:hover::before {
+    @apply opacity-100;
+  }
+  .btn-magnetic > * {
+    @apply relative z-10;
+  }
+
+  /* Shimmer loading skeleton */
+  .shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--border)) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  /* Ripple effect on tap */
+  .tap-ripple {
+    @apply relative overflow-hidden;
+  }
+  .tap-ripple:active::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    background: hsl(var(--mercy-orange) / 0.2);
+    animation: ripple 0.6s linear;
+  }
+
+  /* Icon bounce on hover */
+  .icon-hover-bounce:hover {
+    animation: bounce-subtle 0.4s ease-in-out;
+  }
+
+  /* Underline animation */
+  .underline-animate {
+    @apply relative;
+  }
+  .underline-animate::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-primary origin-right transition-transform duration-300;
+    transform: scaleX(0);
+  }
+  .underline-animate:hover::after {
+    transform: scaleX(1);
+    @apply origin-left;
+  }
+
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -113,4 +172,23 @@ html {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--mercy-orange) / 0.6);
+}
+
+/* Focus visible ring */
+*:focus-visible {
+  outline: 2px solid hsl(var(--mercy-orange));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

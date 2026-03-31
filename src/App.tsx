@@ -7,6 +7,7 @@ import { ShopProvider } from "@/context/ShopContext";
 import LoadingScreen from "@/components/LoadingScreen";
 import Index from "./pages/Index.tsx";
 import Shop from "./pages/Shop.tsx";
+import ProductDetail from "./pages/ProductDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

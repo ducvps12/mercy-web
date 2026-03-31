@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturesBar from "@/components/FeaturesBar";
@@ -9,26 +10,8 @@ import CompareBar from "@/components/CompareBar";
 import { useShop } from "@/context/ShopContext";
 import { Heart, RefreshCw, ShoppingCart, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { products, formatPrice } from "@/data/products";
 
-import glasses1 from "@/assets/products/glasses-1.jpg";
-import glasses2 from "@/assets/products/glasses-2.jpg";
-import glasses3 from "@/assets/products/glasses-3.jpg";
-import glasses4 from "@/assets/products/glasses-4.jpg";
-import glasses5 from "@/assets/products/glasses-5.jpg";
-import glasses7 from "@/assets/products/glasses-7.jpg";
-
-const products = [
-  { id: 1, name: "Kính Nghe Nhạc Thông Minh Bluetooth Mercy KNNT5.0", price: 2990000, image: glasses1 },
-  { id: 2, name: "Kính Râm Nghe Nhạc Thông Minh Bluetooth Mercy KNND5.0", price: 3490000, image: glasses2 },
-  { id: 3, name: "Kính Thông Minh Bluetooth Mercy 6.0 – Camera Quay Video/Chụp Hình", price: 5990000, image: glasses3 },
-  { id: 4, name: "Kính Thông Minh Mercy MCK5.0 [Bản Black]", price: 4990000, image: glasses4 },
-  { id: 5, name: "Kính Thông Minh Mercy MCK5.0 [Bản White]", price: 4990000, image: glasses5 },
-  { id: 6, name: "Kính Thông Minh Mercy MCK5.1 [Bản Black]", price: 5990000, image: glasses7 },
-  { id: 7, name: "Kính Thông Minh Mercy MCK5.1 [Bản White]", price: 5990000, image: glasses1 },
-];
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat("vi-VN").format(price) + "đ";
 
 const sortOptions = [
   { value: "default", label: "Sắp xếp mặc định" },
@@ -118,7 +101,7 @@ const Shop = () => {
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {/* Product Image */}
-              <div className="relative aspect-square overflow-hidden bg-muted/30">
+              <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-muted/30">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -127,17 +110,17 @@ const Shop = () => {
                   width={800}
                   height={800}
                 />
-              </div>
+              </Link>
 
               {/* Product Info */}
-              <div className="p-4">
+              <Link to={`/product/${product.id}`} className="block p-4">
                 <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors duration-200">
                   {product.name}
                 </h3>
                 <p className="text-primary font-bold text-base mt-2">
                   {formatPrice(product.price)}
                 </p>
-              </div>
+              </Link>
 
               {/* Action Buttons */}
               <div className="flex items-center border-t border-border">

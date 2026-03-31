@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useState, useMemo, useCallback } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturesBar from "@/components/FeaturesBar";
@@ -8,7 +8,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import CartDrawer from "@/components/CartDrawer";
 import CompareBar from "@/components/CompareBar";
 import { useShop } from "@/context/ShopContext";
-import { Heart, RefreshCw, ShoppingCart, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { Heart, RefreshCw, ShoppingCart, ChevronDown, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { products, formatPrice } from "@/data/products";
 
@@ -31,6 +31,8 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPrice, setSelectedPrice] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
   const { addToCart, toggleWishlist, toggleCompare, isInWishlist, isInCompare } = useShop();
 
   const categories = useMemo(() => {
@@ -48,6 +50,17 @@ const Shop = () => {
     else if (sortBy === "name") result.sort((a, b) => a.name.localeCompare(b.name));
     return result;
   }, [selectedCategory, selectedPrice, sortBy]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  // Reset page when filters change
+  const handleCategoryChange = (cat: string | null) => { setSelectedCategory(cat); setCurrentPage(1); };
+  const handlePriceChange = (i: number) => { setSelectedPrice(i); setCurrentPage(1); };
+  const handleSortChange = (val: string) => { setSortBy(val); setCurrentPage(1); };
 
   const handleAddToCart = (product: typeof products[0]) => {
     addToCart(product);
@@ -69,6 +82,7 @@ const Shop = () => {
   const clearFilters = () => {
     setSelectedCategory(null);
     setSelectedPrice(0);
+    setCurrentPage(1);
   };
 
   const hasFilters = selectedCategory !== null || selectedPrice !== 0;
@@ -80,7 +94,7 @@ const Shop = () => {
         <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Danh mục</h3>
         <div className="space-y-1">
           <button
-            onClick={() => setSelectedCategory(null)}
+            onClick={() => handleCategoryChange(null)}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
               !selectedCategory ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
@@ -90,7 +104,7 @@ const Shop = () => {
           {categories.map((cat) => (
             <button
               key={cat.name}
-              onClick={() => setSelectedCategory(cat.name)}
+              onClick={() => handleCategoryChange(cat.name)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                 selectedCategory === cat.name ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
@@ -108,7 +122,7 @@ const Shop = () => {
           {priceRanges.map((range, i) => (
             <button
               key={i}
-              onClick={() => setSelectedPrice(i)}
+              onClick={() => handlePriceChange(i)}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
                 selectedPrice === i ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
@@ -168,7 +182,7 @@ const Shop = () => {
             <div className="relative">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="appearance-none bg-background border border-border rounded-lg px-4 py-2.5 pr-10 text-sm text-foreground cursor-pointer hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               >
                 {sortOptions.map((opt) => (
@@ -204,63 +218,98 @@ const Shop = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {filteredProducts.map((product, i) => (
-                  <div
-                    key={product.id}
-                    className="group bg-background rounded-xl border border-border overflow-hidden hover:shadow-xl hover:shadow-foreground/5 transition-all duration-300 hover:-translate-y-1"
-                    style={{ animationDelay: `${i * 60}ms` }}
-                  >
-                    <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-muted/30">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        loading="lazy"
-                        width={800}
-                        height={800}
-                      />
-                    </Link>
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {paginatedProducts.map((product, i) => (
+                    <div
+                      key={product.id}
+                      className="group bg-background rounded-xl border border-border overflow-hidden hover:shadow-xl hover:shadow-foreground/5 transition-all duration-300 hover:-translate-y-1"
+                      style={{ animationDelay: `${i * 60}ms` }}
+                    >
+                      <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-muted/30">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          loading="lazy"
+                          width={800}
+                          height={800}
+                        />
+                      </Link>
 
-                    <Link to={`/product/${product.id}`} className="block p-4">
-                      <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors duration-200">
-                        {product.name}
-                      </h3>
-                      <p className="text-primary font-bold text-base mt-2">
-                        {formatPrice(product.price)}
-                      </p>
-                    </Link>
+                      <Link to={`/product/${product.id}`} className="block p-4">
+                        <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors duration-200">
+                          {product.name}
+                        </h3>
+                        <p className="text-primary font-bold text-base mt-2">
+                          {formatPrice(product.price)}
+                        </p>
+                      </Link>
 
-                    <div className="flex items-center border-t border-border">
-                      <button
-                        onClick={() => handleToggleCompare(product)}
-                        className={`flex-none p-3 transition-all duration-200 ${
-                          isInCompare(product.id) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                        }`}
-                        title="So sánh"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 border-x border-border"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Thêm vào giỏ hàng
-                      </button>
-                      <button
-                        onClick={() => handleToggleWishlist(product)}
-                        className={`flex-none p-3 transition-all duration-200 ${
-                          isInWishlist(product.id) ? "text-red-500 bg-red-50" : "text-muted-foreground hover:text-red-500 hover:bg-red-50"
-                        }`}
-                        title="Yêu thích"
-                      >
-                        <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
-                      </button>
+                      <div className="flex items-center border-t border-border">
+                        <button
+                          onClick={() => handleToggleCompare(product)}
+                          className={`flex-none p-3 transition-all duration-200 ${
+                            isInCompare(product.id) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                          }`}
+                          title="So sánh"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 border-x border-border"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Thêm vào giỏ hàng
+                        </button>
+                        <button
+                          onClick={() => handleToggleWishlist(product)}
+                          className={`flex-none p-3 transition-all duration-200 ${
+                            isInWishlist(product.id) ? "text-red-500 bg-red-50" : "text-muted-foreground hover:text-red-500 hover:bg-red-50"
+                          }`}
+                          title="Yêu thích"
+                        >
+                          <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+                        </button>
+                      </div>
                     </div>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <button
+                      onClick={() => { setCurrentPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          currentPage === page
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => { setCurrentPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </div>

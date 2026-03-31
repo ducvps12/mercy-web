@@ -22,8 +22,17 @@ const Header = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const [isSticky, setIsSticky] = useState(false);
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => {
+      const hero = document.getElementById("hero-section");
+      if (hero) {
+        const heroBottom = hero.offsetTop + hero.offsetHeight;
+        setIsSticky(window.scrollY >= heroBottom);
+      }
+      setScrolled(window.scrollY > 10);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);

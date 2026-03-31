@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturesBar from "@/components/FeaturesBar";
@@ -9,13 +10,7 @@ import CompareBar from "@/components/CompareBar";
 import { useShop } from "@/context/ShopContext";
 import { Heart, RefreshCw, ShoppingCart, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-
-import glasses1 from "@/assets/products/glasses-1.jpg";
-import glasses2 from "@/assets/products/glasses-2.jpg";
-import glasses3 from "@/assets/products/glasses-3.jpg";
-import glasses4 from "@/assets/products/glasses-4.jpg";
-import glasses5 from "@/assets/products/glasses-5.jpg";
-import glasses7 from "@/assets/products/glasses-7.jpg";
+import { products, formatPrice } from "@/data/products";
 
 const products = [
   { id: 1, name: "Kính Nghe Nhạc Thông Minh Bluetooth Mercy KNNT5.0", price: 2990000, image: glasses1 },

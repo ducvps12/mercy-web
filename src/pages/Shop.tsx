@@ -51,6 +51,17 @@ const Shop = () => {
     return result;
   }, [selectedCategory, selectedPrice, sortBy]);
 
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  // Reset page when filters change
+  const handleCategoryChange = (cat: string | null) => { setSelectedCategory(cat); setCurrentPage(1); };
+  const handlePriceChange = (i: number) => { setSelectedPrice(i); setCurrentPage(1); };
+  const handleSortChange = (val: string) => { setSortBy(val); setCurrentPage(1); };
+
   const handleAddToCart = (product: typeof products[0]) => {
     addToCart(product);
     toast.success("Đã thêm vào giỏ hàng", { description: product.name });

@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { Menu, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus, RefreshCw } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Menu, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus, RefreshCw, X } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { products } from "@/data/products";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   { name: "Kính Mắt Thông Minh", hasSubmenu: true },
@@ -20,9 +22,32 @@ const mainMenu = [
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { cartCount, wishlist, compare } = useShop();
+  const navigate = useNavigate();
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(q)).slice(0, 6);
+  }, [searchQuery]);
+
+  const handleSearchSelect = (id: number) => {
+    setSearchQuery("");
+    setSearchFocused(false);
+    navigate(`/product/${id}`);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchFocused(false);
+      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
 
   const [isSticky, setIsSticky] = useState(false);
 
@@ -76,24 +101,56 @@ const Header = () => {
           </button>
 
           {/* Category dropdown + Search bar combined (desktop) */}
-          <div className="hidden md:flex items-center flex-1 max-w-2xl">
-            <div className={`flex items-center w-full rounded-lg overflow-hidden border-2 transition-all duration-400 ${searchFocused ? 'border-primary shadow-lg shadow-primary/10' : 'border-border'}`}>
+          <div className="hidden md:flex items-center flex-1 max-w-2xl relative">
+            <form onSubmit={handleSearchSubmit} className={`flex items-center w-full rounded-lg overflow-visible border-2 transition-all duration-400 ${searchFocused ? 'border-primary shadow-lg shadow-primary/10' : 'border-border'}`}>
               {/* Category selector inside search */}
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-secondary text-secondary-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary/90 transition-colors duration-200 border-r border-border/30">
+              <button type="button" className="flex items-center gap-2 px-4 py-2.5 bg-secondary text-secondary-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary/90 transition-colors duration-200 border-r border-border/30">
                 Category
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
-              <input
-                type="text"
-                placeholder="Search for product..."
-                className="flex-1 px-4 py-2.5 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-              />
-              <button className="bg-primary hover:bg-mercy-orange-light text-primary-foreground px-5 py-2.5 transition-all duration-200 active:scale-95 hover:shadow-md hover:shadow-primary/20">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm kiếm sản phẩm..."
+                  className="w-full px-4 py-2.5 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                />
+                {searchQuery && (
+                  <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <button type="submit" className="bg-primary hover:bg-mercy-orange-light text-primary-foreground px-5 py-2.5 transition-all duration-200 active:scale-95 hover:shadow-md hover:shadow-primary/20">
                 <Search className="w-5 h-5" />
               </button>
-            </div>
+            </form>
+            {/* Search Results Dropdown */}
+            {searchFocused && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background rounded-lg shadow-xl border border-border z-50 overflow-hidden">
+                {searchResults.map((p) => (
+                  <button
+                    key={p.id}
+                    onMouseDown={() => handleSearchSelect(p.id)}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-primary/5 transition-colors duration-150"
+                  >
+                    <img src={p.image} alt={p.name} className="w-10 h-10 object-cover rounded" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                      <p className="text-xs text-primary font-semibold">{p.price.toLocaleString("vi-VN")}₫</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {searchFocused && searchQuery.trim() && searchResults.length === 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background rounded-lg shadow-xl border border-border z-50 p-4 text-center text-sm text-muted-foreground">
+                Không tìm thấy sản phẩm nào
+              </div>
+            )}
           </div>
 
           {/* Hotline */}

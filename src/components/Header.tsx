@@ -264,6 +264,49 @@ const Header = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain">
+          {/* Mobile Search */}
+          <div className="px-4 pt-4 pb-2">
+            <form onSubmit={(e) => { handleSearchSubmit(e); setMenuOpen(false); }} className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm sản phẩm..."
+                className="w-full pl-10 pr-9 py-2.5 text-sm bg-muted rounded-lg outline-none text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 transition-all duration-200"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </form>
+            {/* Mobile Search Results */}
+            {searchFocused && searchResults.length > 0 && (
+              <div className="mt-1 bg-background rounded-lg border border-border overflow-hidden shadow-lg">
+                {searchResults.map((p) => (
+                  <button
+                    key={p.id}
+                    onMouseDown={() => { handleSearchSelect(p.id); setMenuOpen(false); }}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-primary/5 transition-colors duration-150"
+                  >
+                    <img src={p.image} alt={p.name} className="w-9 h-9 object-cover rounded" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                      <p className="text-xs text-primary font-semibold">{p.price.toLocaleString("vi-VN")}₫</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {searchFocused && searchQuery.trim() && searchResults.length === 0 && (
+              <div className="mt-1 bg-background rounded-lg border border-border p-3 text-center text-sm text-muted-foreground">
+                Không tìm thấy sản phẩm nào
+              </div>
+            )}
+          </div>
           <div className="px-5 pt-6 pb-3">
             <h3 className={`text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4 transition-all duration-500 ${menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
               style={{ transitionDelay: '150ms' }}

@@ -182,7 +182,7 @@ const Shop = () => {
             <div className="relative">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="appearance-none bg-background border border-border rounded-lg px-4 py-2.5 pr-10 text-sm text-foreground cursor-pointer hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               >
                 {sortOptions.map((opt) => (

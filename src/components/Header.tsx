@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { Menu, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus, RefreshCw } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Menu, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus, RefreshCw, X } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
+import { products } from "@/data/products";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   { name: "Kính Mắt Thông Minh", hasSubmenu: true },

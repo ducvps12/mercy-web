@@ -22,8 +22,17 @@ const Header = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const [isSticky, setIsSticky] = useState(false);
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => {
+      const hero = document.getElementById("hero-section");
+      if (hero) {
+        const heroBottom = hero.offsetTop + hero.offsetHeight;
+        setIsSticky(window.scrollY >= heroBottom);
+      }
+      setScrolled(window.scrollY > 10);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -34,7 +43,7 @@ const Header = () => {
   }, [menuOpen]);
 
   return (
-    <header className={`sticky top-0 z-50 bg-background transition-shadow duration-500 ${scrolled ? 'shadow-lg shadow-foreground/5' : 'shadow-sm'}`}>
+    <header className={`${isSticky ? 'fixed top-0 left-0 right-0' : 'relative'} z-50 bg-background transition-shadow duration-500 ${scrolled ? 'shadow-lg shadow-foreground/5' : 'shadow-sm'}`}>
       {/* Top bar */}
       <div className={`bg-background border-b border-border transition-all duration-500 overflow-hidden ${scrolled ? 'max-h-0 border-transparent' : 'max-h-24'}`}>
         <div className="container flex items-center justify-between h-14 md:h-20 gap-3 md:gap-4">

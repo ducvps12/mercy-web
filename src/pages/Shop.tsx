@@ -31,6 +31,8 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedPrice, setSelectedPrice] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
   const { addToCart, toggleWishlist, toggleCompare, isInWishlist, isInCompare } = useShop();
 
   const categories = useMemo(() => {

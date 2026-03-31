@@ -12,18 +12,6 @@ import { Heart, RefreshCw, ShoppingCart, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { products, formatPrice } from "@/data/products";
 
-const products = [
-  { id: 1, name: "Kính Nghe Nhạc Thông Minh Bluetooth Mercy KNNT5.0", price: 2990000, image: glasses1 },
-  { id: 2, name: "Kính Râm Nghe Nhạc Thông Minh Bluetooth Mercy KNND5.0", price: 3490000, image: glasses2 },
-  { id: 3, name: "Kính Thông Minh Bluetooth Mercy 6.0 – Camera Quay Video/Chụp Hình", price: 5990000, image: glasses3 },
-  { id: 4, name: "Kính Thông Minh Mercy MCK5.0 [Bản Black]", price: 4990000, image: glasses4 },
-  { id: 5, name: "Kính Thông Minh Mercy MCK5.0 [Bản White]", price: 4990000, image: glasses5 },
-  { id: 6, name: "Kính Thông Minh Mercy MCK5.1 [Bản Black]", price: 5990000, image: glasses7 },
-  { id: 7, name: "Kính Thông Minh Mercy MCK5.1 [Bản White]", price: 5990000, image: glasses1 },
-];
-
-const formatPrice = (price: number) =>
-  new Intl.NumberFormat("vi-VN").format(price) + "đ";
 
 const sortOptions = [
   { value: "default", label: "Sắp xếp mặc định" },

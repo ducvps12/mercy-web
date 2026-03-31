@@ -4,7 +4,11 @@ import Footer from "@/components/Footer";
 import FeaturesBar from "@/components/FeaturesBar";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
+import CartDrawer from "@/components/CartDrawer";
+import CompareBar from "@/components/CompareBar";
+import { useShop } from "@/context/ShopContext";
 import { Heart, RefreshCw, ShoppingCart, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 import glasses1 from "@/assets/products/glasses-1.jpg";
 import glasses2 from "@/assets/products/glasses-2.jpg";
@@ -35,6 +39,7 @@ const sortOptions = [
 
 const Shop = () => {
   const [sortBy, setSortBy] = useState("default");
+  const { addToCart, toggleWishlist, toggleCompare, isInWishlist, isInCompare } = useShop();
 
   const sortedProducts = [...products].sort((a, b) => {
     if (sortBy === "price-asc") return a.price - b.price;
@@ -42,6 +47,27 @@ const Shop = () => {
     if (sortBy === "name") return a.name.localeCompare(b.name);
     return 0;
   });
+
+  const handleAddToCart = (product: typeof products[0]) => {
+    addToCart(product);
+    toast.success("Đã thêm vào giỏ hàng", { description: product.name });
+  };
+
+  const handleToggleWishlist = (product: typeof products[0]) => {
+    const wasIn = isInWishlist(product.id);
+    toggleWishlist(product);
+    toast(wasIn ? "Đã xoá khỏi yêu thích" : "Đã thêm vào yêu thích", { description: product.name });
+  };
+
+  const handleToggleCompare = (product: typeof products[0]) => {
+    const wasIn = isInCompare(product.id);
+    toggleCompare(product);
+    if (wasIn) {
+      toast("Đã xoá khỏi so sánh", { description: product.name });
+    } else {
+      toast.success("Đã thêm vào so sánh", { description: product.name });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
@@ -56,7 +82,7 @@ const Shop = () => {
           <div className="flex items-center justify-center gap-2 mt-3 text-sm text-muted-foreground">
             <a href="/" className="hover:text-primary transition-colors">Home</a>
             <span>—</span>
-            <span className="text-foreground">Kính Nghe Nhạc Thông Minh Bluetooth Mercy KNNT5.0</span>
+            <span className="text-foreground">Sản phẩm</span>
           </div>
         </div>
       </section>
@@ -115,15 +141,34 @@ const Shop = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center border-t border-border">
-                <button className="flex-none p-3 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200" title="So sánh">
+                <button
+                  onClick={() => handleToggleCompare(product)}
+                  className={`flex-none p-3 transition-all duration-200 ${
+                    isInCompare(product.id)
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                  }`}
+                  title="So sánh"
+                >
                   <RefreshCw className="w-4 h-4" />
                 </button>
-                <button className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 border-x border-border">
+                <button
+                  onClick={() => handleAddToCart(product)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 border-x border-border"
+                >
                   <ShoppingCart className="w-4 h-4" />
                   Thêm vào giỏ hàng
                 </button>
-                <button className="flex-none p-3 text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-all duration-200" title="Yêu thích">
-                  <Heart className="w-4 h-4" />
+                <button
+                  onClick={() => handleToggleWishlist(product)}
+                  className={`flex-none p-3 transition-all duration-200 ${
+                    isInWishlist(product.id)
+                      ? "text-red-500 bg-red-50"
+                      : "text-muted-foreground hover:text-red-500 hover:bg-red-50"
+                  }`}
+                  title="Yêu thích"
+                >
+                  <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
                 </button>
               </div>
             </div>
@@ -135,6 +180,8 @@ const Shop = () => {
       <Footer />
       <BottomNav />
       <ScrollToTop />
+      <CartDrawer />
+      <CompareBar />
     </div>
   );
 };

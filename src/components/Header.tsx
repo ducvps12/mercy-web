@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Menu, X, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, X, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus } from "lucide-react";
 
 const categories = [
   { name: "Kính Mắt Thông Minh", hasSubmenu: true },
@@ -10,19 +10,39 @@ const categories = [
   { name: "Tai Nghe Bluetooth", hasSubmenu: true },
 ];
 
+const mainMenu = [
+  { name: "Trang chủ", hasSubmenu: false },
+  { name: "Sản phẩm", hasSubmenu: true },
+  { name: "Giới thiệu", hasSubmenu: false },
+];
+
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
   return (
     <header className="sticky top-0 z-50 bg-background shadow-sm">
       {/* Top bar */}
       <div className="bg-background border-b border-border">
-        <div className="container flex items-center justify-between h-16 md:h-20 gap-4">
-          {/* Mobile menu */}
-          <button className="md:hidden p-2 text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        <div className="container flex items-center justify-between h-14 md:h-20 gap-3 md:gap-4">
+          {/* Mobile menu toggle */}
+          <button
+            className="md:hidden p-2 text-foreground"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Menu"
+          >
+            <Menu className="w-6 h-6" />
           </button>
 
           {/* Logo */}
@@ -32,7 +52,7 @@ const Header = () => {
               <span className="text-primary">e</span>
               <span className="text-secondary">rcy</span>
             </span>
-            <span className="text-[9px] md:text-[10px] text-muted-foreground tracking-[0.15em] -mt-1">Smart Vision • Smart Life</span>
+            <span className="text-[8px] md:text-[10px] text-muted-foreground tracking-[0.15em] -mt-1">Smart Vision • Smart Life</span>
           </a>
 
           {/* Search bar - desktop */}
@@ -71,31 +91,29 @@ const Header = () => {
             Flash Sale
           </a>
 
-          {/* Icons */}
-          <div className="flex items-center gap-1">
+          {/* Desktop Icons */}
+          <div className="hidden md:flex items-center gap-1">
             <button className="p-2 text-muted-foreground hover:text-primary transition-colors relative group">
               <User className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
             </button>
-            <button className="hidden sm:block p-2 text-muted-foreground hover:text-primary transition-colors relative group">
+            <button className="p-2 text-muted-foreground hover:text-primary transition-colors relative group">
               <ShoppingCart className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
               <span className="absolute -top-0 right-0 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
             </button>
-            <button className="hidden sm:block p-2 text-muted-foreground hover:text-primary transition-colors relative group">
+            <button className="p-2 text-muted-foreground hover:text-primary transition-colors relative group">
               <Heart className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
               <span className="absolute -top-0 right-0 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
             </button>
-            <button className="hidden sm:block p-2 text-muted-foreground hover:text-primary transition-colors relative group">
-              <ShoppingCart className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
-              <span className="absolute -top-0 right-0 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
-            </button>
           </div>
+
+          {/* Mobile: only collapse button on right */}
+          <div className="md:hidden" />
         </div>
       </div>
 
-      {/* Navigation bar */}
+      {/* Desktop Navigation bar */}
       <div className="hidden md:block bg-background border-b border-border">
         <div className="container flex items-center gap-6 h-12">
-          {/* Category dropdown */}
           <div className="relative">
             <button
               onClick={() => setCatOpen(!catOpen)}
@@ -105,15 +123,10 @@ const Header = () => {
               DANH MỤC SẢN PHẨM
               <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${catOpen ? 'rotate-180' : ''}`} />
             </button>
-
             {catOpen && (
               <div className="absolute top-full left-0 mt-1 w-72 bg-background rounded-lg shadow-xl border border-border animate-slide-down z-50">
                 {categories.map((cat, i) => (
-                  <a
-                    key={i}
-                    href="#"
-                    className="flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors first:rounded-t-lg last:rounded-b-lg group"
-                  >
+                  <a key={i} href="#" className="flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-muted hover:text-primary transition-colors first:rounded-t-lg last:rounded-b-lg group">
                     <span>{cat.name}</span>
                     {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-transform duration-200 group-hover:translate-x-1" />}
                   </a>
@@ -121,10 +134,8 @@ const Header = () => {
               </div>
             )}
           </div>
-
-          {/* Nav links */}
           <nav className="flex items-center gap-6">
-            {["Trang chủ", "Sản phẩm", "Giới thiệu"].map((link, i) => (
+            {mainMenu.map((link, i) => (
               <a
                 key={i}
                 href="#"
@@ -132,40 +143,79 @@ const Header = () => {
                   i === 0 ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {link}
-                {link === "Sản phẩm" && <ChevronDown className="inline w-3.5 h-3.5 ml-0.5" />}
+                {link.name}
+                {link.hasSubmenu && <ChevronDown className="inline w-3.5 h-3.5 ml-0.5" />}
               </a>
             ))}
           </nav>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-border bg-background animate-slide-down">
-          {/* Mobile search */}
-          <div className="p-4">
-            <div className="flex items-center rounded-lg border-2 border-border">
-              <input
-                type="text"
-                placeholder="Tìm kiếm sản phẩm..."
-                className="flex-1 px-4 py-2.5 text-sm bg-transparent outline-none"
-              />
-              <button className="bg-primary text-primary-foreground px-4 py-2.5 rounded-r-md">
-                <Search className="w-5 h-5" />
-              </button>
+      {/* ===== MOBILE SIDEBAR OVERLAY ===== */}
+      {/* Backdrop */}
+      <div
+        className={`md:hidden fixed inset-0 z-[60] bg-foreground/40 backdrop-blur-sm transition-opacity duration-300 ${
+          menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMenuOpen(false)}
+      />
+
+      {/* Sidebar panel */}
+      <div
+        className={`md:hidden fixed top-0 left-0 z-[70] h-full w-[85%] max-w-[340px] bg-background shadow-2xl transition-transform duration-300 ease-out flex flex-col ${
+          menuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Close button */}
+        <div className="flex items-center justify-end p-4 border-b border-border">
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Minus className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Sidebar content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Main Menu */}
+          <div className="px-5 pt-6 pb-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Main Menu</h3>
+            <div className="space-y-0">
+              {mainMenu.map((link, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="flex items-center justify-between py-3.5 text-[15px] font-medium text-foreground hover:text-primary transition-colors border-b border-border/40 last:border-0"
+                >
+                  {link.name}
+                  {link.hasSubmenu && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                </a>
+              ))}
             </div>
           </div>
-          <div className="px-4 pb-4 space-y-1">
-            {categories.map((cat, i) => (
-              <a key={i} href="#" className="flex items-center justify-between py-3 px-2 text-sm text-foreground hover:text-primary transition-colors border-b border-border/50 last:border-0">
-                {cat.name}
-                {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-              </a>
-            ))}
+
+          {/* Divider */}
+          <div className="mx-5 border-t border-border" />
+
+          {/* Danh mục sản phẩm */}
+          <div className="px-5 pt-5 pb-8">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Danh mục sản phẩm</h3>
+            <div className="space-y-0">
+              {categories.map((cat, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="flex items-center justify-between py-3.5 text-[15px] text-foreground hover:text-primary transition-colors border-b border-border/40 last:border-0"
+                >
+                  {cat.name}
+                  {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };

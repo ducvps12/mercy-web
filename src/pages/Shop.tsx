@@ -82,6 +82,7 @@ const Shop = () => {
   const clearFilters = () => {
     setSelectedCategory(null);
     setSelectedPrice(0);
+    setCurrentPage(1);
   };
 
   const hasFilters = selectedCategory !== null || selectedPrice !== 0;

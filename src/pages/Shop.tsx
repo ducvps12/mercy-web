@@ -218,96 +218,98 @@ const Shop = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {paginatedProducts.map((product, i) => (
-                  <div
-                    key={product.id}
-                    className="group bg-background rounded-xl border border-border overflow-hidden hover:shadow-xl hover:shadow-foreground/5 transition-all duration-300 hover:-translate-y-1"
-                    style={{ animationDelay: `${i * 60}ms` }}
-                  >
-                    <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-muted/30">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        loading="lazy"
-                        width={800}
-                        height={800}
-                      />
-                    </Link>
-
-                    <Link to={`/product/${product.id}`} className="block p-4">
-                      <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors duration-200">
-                        {product.name}
-                      </h3>
-                      <p className="text-primary font-bold text-base mt-2">
-                        {formatPrice(product.price)}
-                      </p>
-                    </Link>
-
-                    <div className="flex items-center border-t border-border">
-                      <button
-                        onClick={() => handleToggleCompare(product)}
-                        className={`flex-none p-3 transition-all duration-200 ${
-                          isInCompare(product.id) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                        }`}
-                        title="So sánh"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 border-x border-border"
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Thêm vào giỏ hàng
-                      </button>
-                      <button
-                        onClick={() => handleToggleWishlist(product)}
-                        className={`flex-none p-3 transition-all duration-200 ${
-                          isInWishlist(product.id) ? "text-red-500 bg-red-50" : "text-muted-foreground hover:text-red-500 hover:bg-red-50"
-                        }`}
-                        title="Yêu thích"
-                      >
-                        <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
-                  <button
-                    onClick={() => { setCurrentPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        currentPage === page
-                          ? "bg-primary text-primary-foreground shadow-md"
-                          : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                      }`}
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {paginatedProducts.map((product, i) => (
+                    <div
+                      key={product.id}
+                      className="group bg-background rounded-xl border border-border overflow-hidden hover:shadow-xl hover:shadow-foreground/5 transition-all duration-300 hover:-translate-y-1"
+                      style={{ animationDelay: `${i * 60}ms` }}
                     >
-                      {page}
-                    </button>
+                      <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-muted/30">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          loading="lazy"
+                          width={800}
+                          height={800}
+                        />
+                      </Link>
+
+                      <Link to={`/product/${product.id}`} className="block p-4">
+                        <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors duration-200">
+                          {product.name}
+                        </h3>
+                        <p className="text-primary font-bold text-base mt-2">
+                          {formatPrice(product.price)}
+                        </p>
+                      </Link>
+
+                      <div className="flex items-center border-t border-border">
+                        <button
+                          onClick={() => handleToggleCompare(product)}
+                          className={`flex-none p-3 transition-all duration-200 ${
+                            isInCompare(product.id) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                          }`}
+                          title="So sánh"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 border-x border-border"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Thêm vào giỏ hàng
+                        </button>
+                        <button
+                          onClick={() => handleToggleWishlist(product)}
+                          className={`flex-none p-3 transition-all duration-200 ${
+                            isInWishlist(product.id) ? "text-red-500 bg-red-50" : "text-muted-foreground hover:text-red-500 hover:bg-red-50"
+                          }`}
+                          title="Yêu thích"
+                        >
+                          <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                  <button
-                    onClick={() => { setCurrentPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
                 </div>
-              )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <button
+                      onClick={() => { setCurrentPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          currentPage === page
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => { setCurrentPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

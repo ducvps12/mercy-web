@@ -36,7 +36,7 @@ const Header = () => {
   return (
     <header className={`sticky top-0 z-50 bg-background transition-shadow duration-500 ${scrolled ? 'shadow-lg shadow-foreground/5' : 'shadow-sm'}`}>
       {/* Top bar */}
-      <div className="bg-background border-b border-border">
+      <div className={`bg-background border-b border-border transition-all duration-500 overflow-hidden ${scrolled ? 'max-h-0 border-transparent' : 'max-h-24'}`}>
         <div className="container flex items-center justify-between h-14 md:h-20 gap-3 md:gap-4">
           {/* Mobile hamburger */}
           <button

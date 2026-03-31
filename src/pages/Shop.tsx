@@ -219,7 +219,7 @@ const Shop = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {filteredProducts.map((product, i) => (
+                {paginatedProducts.map((product, i) => (
                   <div
                     key={product.id}
                     className="group bg-background rounded-xl border border-border overflow-hidden hover:shadow-xl hover:shadow-foreground/5 transition-all duration-300 hover:-translate-y-1"
@@ -275,6 +275,39 @@ const Shop = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button
+                    onClick={() => { setCurrentPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        currentPage === page
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => { setCurrentPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             )}
           </div>
         </div>

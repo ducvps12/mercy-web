@@ -76,17 +76,31 @@ const HeroSection = () => {
         <div className="hidden lg:block w-[280px] shrink-0">
           <div className="bg-background rounded-xl border border-border shadow-sm overflow-hidden h-full">
             {categories.map((cat, i) => (
-              <a
-                key={i}
-                href="#"
-                className={`flex items-center justify-between px-5 py-3.5 text-sm text-foreground hover:bg-primary/5 hover:text-primary transition-all duration-250 border-b border-border/50 last:border-0 group ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
-                style={{ transitionDelay: `${200 + i * 60}ms` }}
-              >
-                <span className="transition-transform duration-200 group-hover:translate-x-2">{cat.name}</span>
-                {cat.hasSubmenu && (
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-all duration-200 group-hover:translate-x-1" />
+              <div key={i} className="relative group/cat">
+                <a
+                  href="#"
+                  className={`flex items-center justify-between px-5 py-3.5 text-sm text-foreground hover:bg-primary/5 hover:text-primary transition-all duration-250 border-b border-border/50 last:border-0 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+                  style={{ transitionDelay: `${200 + i * 60}ms` }}
+                >
+                  <span className="transition-transform duration-200 group-hover/cat:translate-x-2">{cat.name}</span>
+                  {cat.hasSubmenu && (
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover/cat:text-primary transition-all duration-200 group-hover/cat:translate-x-1" />
+                  )}
+                </a>
+                {cat.hasSubmenu && cat.submenu.length > 0 && (
+                  <div className="absolute left-full top-0 ml-1 w-64 bg-background rounded-xl border border-border shadow-xl z-50 py-1 opacity-0 invisible group-hover/cat:opacity-100 group-hover/cat:visible transition-all duration-200 translate-x-2 group-hover/cat:translate-x-0">
+                    {cat.submenu.map((sub, j) => (
+                      <a
+                        key={j}
+                        href="#"
+                        className="block px-5 py-3 text-sm text-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                      >
+                        {sub}
+                      </a>
+                    ))}
+                  </div>
                 )}
-              </a>
+              </div>
             ))}
           </div>
         </div>

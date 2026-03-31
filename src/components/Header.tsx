@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Menu, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus, RefreshCw } from "lucide-react";
+import { useShop } from "@/context/ShopContext";
 
 const categories = [
   { name: "Kính Mắt Thông Minh", hasSubmenu: true },

@@ -22,6 +22,7 @@ const Header = () => {
   const [catOpen, setCatOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { cartCount, wishlist, compare } = useShop();
 
   const [isSticky, setIsSticky] = useState(false);
 

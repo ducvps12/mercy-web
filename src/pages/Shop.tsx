@@ -94,7 +94,7 @@ const Shop = () => {
         <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-3">Danh mục</h3>
         <div className="space-y-1">
           <button
-            onClick={() => setSelectedCategory(null)}
+            onClick={() => handleCategoryChange(null)}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
               !selectedCategory ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}

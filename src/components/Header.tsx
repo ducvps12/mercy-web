@@ -23,7 +23,9 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { cartCount, wishlist, compare } = useShop();
   const navigate = useNavigate();
 
   const searchResults = useMemo(() => {
@@ -34,14 +36,14 @@ const Header = () => {
 
   const handleSearchSelect = (id: number) => {
     setSearchQuery("");
-    setSearchOpen(false);
+    setSearchFocused(false);
     navigate(`/product/${id}`);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setSearchOpen(false);
+      setSearchFocused(false);
       navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
     }

@@ -108,6 +108,12 @@ const HeroSection = () => {
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-mercy-dark/85 via-mercy-dark/50 to-transparent" />
 
+            {/* Mercy logo inside slider */}
+            <div className={`absolute top-5 left-1/2 -translate-x-1/2 text-center transition-all duration-600 ${isTransitioning ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}>
+              <h3 className="text-primary-foreground text-xl md:text-2xl font-bold tracking-wide" style={{ fontFamily: 'Georgia, serif' }}>Mercy</h3>
+              <p className="text-primary-foreground/50 text-[8px] md:text-[10px] tracking-[0.2em]">Smart Vision - Smart Life</p>
+            </div>
+
             {/* Content */}
             <div className={`absolute inset-0 flex flex-col justify-center px-6 md:px-10 max-w-lg transition-all duration-600 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
               <p className="text-primary font-semibold text-xs md:text-sm mb-2 tracking-wide"
@@ -145,6 +151,14 @@ const HeroSection = () => {
               >
                 {slide.cta}
               </a>
+            </div>
+
+            {/* Avatar thumbnail bottom-right */}
+            <div className="absolute bottom-4 right-4 flex items-end gap-2">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden border-2 border-primary shadow-lg">
+                <img src={slide.image} alt="Avatar" className="w-full h-full object-cover" />
+              </div>
+              <span className="text-primary-foreground font-bold text-sm md:text-base drop-shadow-lg" style={{ fontFamily: 'Georgia, serif' }}>Alex</span>
             </div>
 
             {/* Nav arrows - appear on hover */}

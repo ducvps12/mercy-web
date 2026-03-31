@@ -7,6 +7,7 @@ import { ShopProvider } from "@/context/ShopContext";
 import LoadingScreen from "@/components/LoadingScreen";
 import Index from "./pages/Index.tsx";
 import Shop from "./pages/Shop.tsx";
+import ProductDetail from "./pages/ProductDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();

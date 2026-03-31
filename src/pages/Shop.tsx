@@ -101,7 +101,7 @@ const Shop = () => {
               style={{ animationDelay: `${i * 60}ms` }}
             >
               {/* Product Image */}
-              <div className="relative aspect-square overflow-hidden bg-muted/30">
+              <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-muted/30">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -110,17 +110,17 @@ const Shop = () => {
                   width={800}
                   height={800}
                 />
-              </div>
+              </Link>
 
               {/* Product Info */}
-              <div className="p-4">
+              <Link to={`/product/${product.id}`} className="block p-4">
                 <h3 className="text-sm font-medium text-foreground leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors duration-200">
                   {product.name}
                 </h3>
                 <p className="text-primary font-bold text-base mt-2">
                   {formatPrice(product.price)}
                 </p>
-              </div>
+              </Link>
 
               {/* Action Buttons */}
               <div className="flex items-center border-t border-border">

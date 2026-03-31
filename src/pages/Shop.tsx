@@ -8,7 +8,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import CartDrawer from "@/components/CartDrawer";
 import CompareBar from "@/components/CompareBar";
 import { useShop } from "@/context/ShopContext";
-import { Heart, RefreshCw, ShoppingCart, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { Heart, RefreshCw, ShoppingCart, ChevronDown, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { products, formatPrice } from "@/data/products";
 

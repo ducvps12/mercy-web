@@ -3,21 +3,44 @@ import { useEffect, useState } from "react";
 
 const ScrollToTop = () => {
   const [show, setShow] = useState(false);
+  const [scrollPercent, setScrollPercent] = useState(0);
 
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll);
+    const onScroll = () => {
+      setShow(window.scrollY > 400);
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollPercent(docHeight > 0 ? window.scrollY / docHeight : 0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const circumference = 2 * Math.PI * 18;
 
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className={`fixed bottom-20 md:bottom-8 right-4 z-40 w-11 h-11 bg-primary hover:bg-mercy-orange-light text-primary-foreground rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 ${
-        show ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-75 pointer-events-none'
+      className={`fixed bottom-20 md:bottom-8 right-4 z-40 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 group ${
+        show ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-50 pointer-events-none'
       }`}
     >
-      <ArrowUp className="w-5 h-5" />
+      {/* Circular progress ring */}
+      <svg className="absolute inset-0 -rotate-90" viewBox="0 0 44 44">
+        <circle cx="22" cy="22" r="18" fill="hsl(var(--mercy-dark))" stroke="hsl(var(--border))" strokeWidth="2" />
+        <circle
+          cx="22"
+          cy="22"
+          r="18"
+          fill="none"
+          stroke="hsl(var(--mercy-orange))"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - scrollPercent)}
+          className="transition-all duration-100"
+        />
+      </svg>
+      <ArrowUp className="w-4 h-4 text-primary relative z-10 transition-transform duration-300 group-hover:-translate-y-0.5" />
     </button>
   );
 };

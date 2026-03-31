@@ -21,3 +21,22 @@ export const useScrollReveal = (threshold = 0.15) => {
 
   return { ref, isVisible };
 };
+
+/** Counter animation hook - counts up from 0 to target */
+export const useCountUp = (target: number, duration = 1500, start = false) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!start) return;
+    let startTime: number;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration, start]);
+
+  return count;
+};

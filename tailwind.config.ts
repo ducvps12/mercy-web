@@ -7,10 +7,13 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
+    },
+    fontFamily: {
+      sans: ['"Be Vietnam Pro"', 'system-ui', 'sans-serif'],
     },
     extend: {
       colors: {
@@ -56,6 +59,13 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        mercy: {
+          dark: "hsl(var(--mercy-dark))",
+          charcoal: "hsl(var(--mercy-charcoal))",
+          orange: "hsl(var(--mercy-orange))",
+          "orange-light": "hsl(var(--mercy-orange-light))",
+          gray: "hsl(var(--mercy-gray))",
+          light: "hsl(var(--mercy-light))",
         },
       },
       borderRadius: {

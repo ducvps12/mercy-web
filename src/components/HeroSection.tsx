@@ -70,7 +70,7 @@ const HeroSection = () => {
   const slide = slides[current];
 
   return (
-    <section className={`container py-4 md:py-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+    <section id="hero-section" className={`container py-4 md:py-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
       <div className="flex gap-4">
         {/* Category sidebar - desktop */}
         <div className="hidden lg:block w-[280px] shrink-0">

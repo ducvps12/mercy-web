@@ -7,7 +7,7 @@ const items = [
   { icon: Store, label: "Cửa hàng", href: "/shop" },
   { icon: ShoppingCart, label: "Giỏ hàng", href: "/cart" },
   { icon: User, label: "Tài khoản", href: "/login" },
-  { icon: Heart, label: "Yêu thích", href: "/shop" },
+  { icon: Heart, label: "Yêu thích", href: "/wishlist" },
 ];
 
 const BottomNav = () => {

@@ -7,6 +7,7 @@ import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import CartDrawer from "@/components/CartDrawer";
 import CompareBar from "@/components/CompareBar";
+import SEOHead from "@/components/SEOHead";
 import { useShop } from "@/context/ShopContext";
 import { Heart, RefreshCw, ShoppingCart, ChevronDown, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -148,6 +149,11 @@ const Shop = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
+      <SEOHead
+        title="Cửa hàng"
+        description="Khám phá bộ sưu tập kính mắt thông minh, balo thông minh, tai nghe bluetooth và phụ kiện công nghệ Mercy."
+        canonical="https://mercy.vn/shop"
+      />
       <Header />
 
       {/* Page Header */}

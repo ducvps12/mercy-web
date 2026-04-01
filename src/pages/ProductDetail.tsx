@@ -6,6 +6,7 @@ import FeaturesBar from "@/components/FeaturesBar";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import CartDrawer from "@/components/CartDrawer";
+import SEOHead from "@/components/SEOHead";
 import { useShop } from "@/context/ShopContext";
 import { products, formatPrice } from "@/data/products";
 import { Heart, RefreshCw, ShoppingCart, Minus, Plus, ChevronRight, Truck, ShieldCheck, RotateCcw, Star } from "lucide-react";
@@ -41,8 +42,30 @@ const ProductDetail = () => {
     toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`, { description: product.name });
   };
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images,
+    category: product.category,
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "VND",
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
+      <SEOHead
+        title={product.name}
+        description={product.description}
+        canonical={`https://mercy.vn/product/${product.id}`}
+        ogType="product"
+        jsonLd={productJsonLd}
+      />
       <Header />
 
       {/* Breadcrumb */}

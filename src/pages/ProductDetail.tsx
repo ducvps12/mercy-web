@@ -42,9 +42,30 @@ const ProductDetail = () => {
     toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`, { description: product.name });
   };
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images,
+    category: product.category,
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "VND",
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
-      <Header />
+      <SEOHead
+        title={product.name}
+        description={product.description}
+        canonical={`https://mercy.vn/product/${product.id}`}
+        ogType="product"
+        jsonLd={productJsonLd}
+      />
 
       {/* Breadcrumb */}
       <div className="bg-muted/30 border-b border-border">

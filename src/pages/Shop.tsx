@@ -149,6 +149,11 @@ const Shop = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
+      <SEOHead
+        title="Cửa hàng"
+        description="Khám phá bộ sưu tập kính mắt thông minh, balo thông minh, tai nghe bluetooth và phụ kiện công nghệ Mercy."
+        canonical="https://mercy.vn/shop"
+      />
       <Header />
 
       {/* Page Header */}

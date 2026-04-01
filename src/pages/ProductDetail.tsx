@@ -6,6 +6,7 @@ import FeaturesBar from "@/components/FeaturesBar";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import CartDrawer from "@/components/CartDrawer";
+import SEOHead from "@/components/SEOHead";
 import { useShop } from "@/context/ShopContext";
 import { products, formatPrice } from "@/data/products";
 import { Heart, RefreshCw, ShoppingCart, Minus, Plus, ChevronRight, Truck, ShieldCheck, RotateCcw, Star } from "lucide-react";

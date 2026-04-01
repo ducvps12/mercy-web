@@ -14,9 +14,9 @@ const categories = [
 ];
 
 const mainMenu = [
-  { name: "Trang chủ", hasSubmenu: false },
-  { name: "Sản phẩm", hasSubmenu: true },
-  { name: "Giới thiệu", hasSubmenu: false },
+  { name: "Trang chủ", hasSubmenu: false, href: "/" },
+  { name: "Sản phẩm", hasSubmenu: true, href: "/shop" },
+  { name: "Giới thiệu", hasSubmenu: false, href: "/about" },
 ];
 
 const Header = () => {

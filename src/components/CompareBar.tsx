@@ -33,6 +33,11 @@ const CompareBar = () => {
               </button>
             </div>
           ))}
+          <Button asChild size="sm" className="shrink-0 gap-1.5 ml-auto">
+            <Link to="/compare">
+              So sánh ngay <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

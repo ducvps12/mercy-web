@@ -7,6 +7,7 @@ import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import CartDrawer from "@/components/CartDrawer";
 import CompareBar from "@/components/CompareBar";
+import SEOHead from "@/components/SEOHead";
 import { useShop } from "@/context/ShopContext";
 import { Heart, RefreshCw, ShoppingCart, ChevronDown, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";

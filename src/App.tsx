@@ -8,6 +8,8 @@ import LoadingScreen from "@/components/LoadingScreen";
 import Index from "./pages/Index.tsx";
 import Shop from "./pages/Shop.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
+import Login from "./pages/Login.tsx";
+import Register from "./pages/Register.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();

@@ -225,7 +225,7 @@ const Header = () => {
               { Icon: User, badge: null, label: "Tài khoản", href: "/login" },
               { Icon: RefreshCw, badge: compare.length > 0 ? String(compare.length) : null, label: "So sánh", href: undefined },
               { Icon: Heart, badge: wishlist.length > 0 ? String(wishlist.length) : null, label: "Yêu thích", href: undefined },
-              { Icon: ShoppingCart, badge: cartCount > 0 ? String(cartCount) : "0", label: "Giỏ hàng", href: undefined },
+              { Icon: ShoppingCart, badge: cartCount > 0 ? String(cartCount) : "0", label: "Giỏ hàng", href: "/cart" },
             ].map(({ Icon, badge, label, href }, idx) => (
               <button
                 key={idx}

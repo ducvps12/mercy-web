@@ -211,7 +211,7 @@ const Header = () => {
             {/* Nav links */}
             <nav className="flex items-center gap-6">
               {mainMenu.map((link, i) => (
-                <a key={i} href="#" className={`text-sm font-medium transition-all duration-200 underline-animate py-1 ${i === 0 ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                <a key={i} href={link.href} className={`text-sm font-medium transition-all duration-200 underline-animate py-1 ${i === 0 ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   {link.name}
                   {link.hasSubmenu && <ChevronDown className="inline w-3.5 h-3.5 ml-0.5 transition-transform duration-200" />}
                 </a>

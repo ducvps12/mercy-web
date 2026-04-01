@@ -1,5 +1,7 @@
+import { Link } from "react-router-dom";
 import { useShop } from "@/context/ShopContext";
-import { X } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("vi-VN").format(price) + "đ";
@@ -31,6 +33,11 @@ const CompareBar = () => {
               </button>
             </div>
           ))}
+          <Button asChild size="sm" className="shrink-0 gap-1.5 ml-auto">
+            <Link to="/compare">
+              So sánh ngay <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

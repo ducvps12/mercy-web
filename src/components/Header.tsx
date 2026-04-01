@@ -317,7 +317,7 @@ const Header = () => {
             {mainMenu.map((link, i) => (
               <a
                 key={i}
-                href="#"
+                href={link.href}
                 className={`flex items-center justify-between py-3.5 text-[15px] font-medium text-foreground hover:text-primary transition-all duration-300 border-b border-border/40 last:border-0 tap-ripple group ${menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
                 style={{ transitionDelay: `${200 + i * 80}ms` }}
               >

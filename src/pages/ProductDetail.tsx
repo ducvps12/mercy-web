@@ -57,6 +57,31 @@ const ProductDetail = () => {
     },
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Trang chủ",
+        item: "https://mercy.vn/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Cửa hàng",
+        item: "https://mercy.vn/shop",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+        item: `https://mercy.vn/product/${product.id}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
       <SEOHead
@@ -66,18 +91,23 @@ const ProductDetail = () => {
         ogType="product"
         jsonLd={productJsonLd}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       <Header />
 
       {/* Breadcrumb */}
-      <div className="bg-muted/30 border-b border-border">
-        <div className="container py-3 flex items-center gap-2 text-sm text-muted-foreground overflow-x-auto">
-          <Link to="/" className="hover:text-primary transition-colors shrink-0">Home</Link>
-          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-          <Link to="/shop" className="hover:text-primary transition-colors shrink-0">Shop</Link>
-          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-          <span className="text-foreground truncate">{product.name}</span>
-        </div>
-      </div>
+      <nav aria-label="Breadcrumb" className="bg-muted/30 border-b border-border">
+        <ol className="container py-3 flex items-center gap-2 text-sm text-muted-foreground overflow-x-auto list-none m-0 p-0 px-4 md:px-8">
+          <li className="shrink-0">
+            <Link to="/" className="hover:text-primary transition-colors">Trang chủ</Link>
+          </li>
+          <li className="shrink-0" aria-hidden="true"><ChevronRight className="w-3.5 h-3.5" /></li>
+          <li className="shrink-0">
+            <Link to="/shop" className="hover:text-primary transition-colors">Cửa hàng</Link>
+          </li>
+          <li className="shrink-0" aria-hidden="true"><ChevronRight className="w-3.5 h-3.5" /></li>
+          <li className="text-foreground truncate" aria-current="page">{product.name}</li>
+        </ol>
+      </nav>
 
       {/* Product Section */}
       <div className="container py-8 md:py-12">

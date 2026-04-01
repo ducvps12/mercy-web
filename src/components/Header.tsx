@@ -222,15 +222,16 @@ const Header = () => {
           {/* Right side icons with badges */}
           <div className="flex items-center gap-1">
             {[
-              { Icon: User, badge: null, label: "Tài khoản" },
-              { Icon: RefreshCw, badge: compare.length > 0 ? String(compare.length) : null, label: "So sánh" },
-              { Icon: Heart, badge: wishlist.length > 0 ? String(wishlist.length) : null, label: "Yêu thích" },
-              { Icon: ShoppingCart, badge: cartCount > 0 ? String(cartCount) : "0", label: "Giỏ hàng" },
-            ].map(({ Icon, badge, label }, idx) => (
+              { Icon: User, badge: null, label: "Tài khoản", href: "/login" },
+              { Icon: RefreshCw, badge: compare.length > 0 ? String(compare.length) : null, label: "So sánh", href: undefined },
+              { Icon: Heart, badge: wishlist.length > 0 ? String(wishlist.length) : null, label: "Yêu thích", href: undefined },
+              { Icon: ShoppingCart, badge: cartCount > 0 ? String(cartCount) : "0", label: "Giỏ hàng", href: undefined },
+            ].map(({ Icon, badge, label, href }, idx) => (
               <button
                 key={idx}
                 className="p-2.5 text-muted-foreground hover:text-primary transition-all duration-200 relative group icon-hover-bounce"
                 title={label}
+                onClick={() => href && navigate(href)}
               >
                 <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
                 {badge !== null && (

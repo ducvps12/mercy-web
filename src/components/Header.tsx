@@ -14,9 +14,9 @@ const categories = [
 ];
 
 const mainMenu = [
-  { name: "Trang chủ", hasSubmenu: false },
-  { name: "Sản phẩm", hasSubmenu: true },
-  { name: "Giới thiệu", hasSubmenu: false },
+  { name: "Trang chủ", hasSubmenu: false, href: "/" },
+  { name: "Sản phẩm", hasSubmenu: true, href: "/shop" },
+  { name: "Giới thiệu", hasSubmenu: false, href: "/about" },
 ];
 
 const Header = () => {
@@ -211,7 +211,7 @@ const Header = () => {
             {/* Nav links */}
             <nav className="flex items-center gap-6">
               {mainMenu.map((link, i) => (
-                <a key={i} href="#" className={`text-sm font-medium transition-all duration-200 underline-animate py-1 ${i === 0 ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                <a key={i} href={link.href} className={`text-sm font-medium transition-all duration-200 underline-animate py-1 ${i === 0 ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   {link.name}
                   {link.hasSubmenu && <ChevronDown className="inline w-3.5 h-3.5 ml-0.5 transition-transform duration-200" />}
                 </a>
@@ -317,7 +317,7 @@ const Header = () => {
             {mainMenu.map((link, i) => (
               <a
                 key={i}
-                href="#"
+                href={link.href}
                 className={`flex items-center justify-between py-3.5 text-[15px] font-medium text-foreground hover:text-primary transition-all duration-300 border-b border-border/40 last:border-0 tap-ripple group ${menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
                 style={{ transitionDelay: `${200 + i * 80}ms` }}
               >

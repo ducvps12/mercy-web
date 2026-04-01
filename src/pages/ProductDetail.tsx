@@ -66,6 +66,7 @@ const ProductDetail = () => {
         ogType="product"
         jsonLd={productJsonLd}
       />
+      <Header />
 
       {/* Breadcrumb */}
       <div className="bg-muted/30 border-b border-border">

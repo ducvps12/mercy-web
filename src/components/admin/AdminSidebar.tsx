@@ -6,7 +6,6 @@ import {
   BarChart3,
   Settings,
   Package,
-  MessageSquare,
   Bell,
   LogOut,
 } from "lucide-react";

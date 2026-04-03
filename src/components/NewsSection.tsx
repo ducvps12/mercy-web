@@ -1,8 +1,7 @@
 import { Eye, MessageCircle, ArrowRight, Share2 } from "lucide-react";
 import { useScrollReveal, useCountUp } from "@/hooks/useScrollReveal";
-import news1 from "@/assets/news-1.jpg";
-import news2 from "@/assets/news-2.jpg";
-import news3 from "@/assets/news-3.jpg";
+import { articles } from "@/data/articles";
+import { Link } from "react-router-dom";
 
 const articles = [
   {

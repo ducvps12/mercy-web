@@ -119,8 +119,8 @@ const HeroSection = () => {
               />
             </div>
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-mercy-dark/85 via-mercy-dark/50 to-transparent" />
+            {/* Gradient overlay - stronger on mobile for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-mercy-dark/95 via-mercy-dark/70 to-mercy-dark/30 md:from-mercy-dark/85 md:via-mercy-dark/50 md:to-transparent" />
 
             {/* Mercy logo inside slider */}
             <div className={`absolute top-5 left-1/2 -translate-x-1/2 text-center transition-all duration-600 ${isTransitioning ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}>
@@ -129,14 +129,14 @@ const HeroSection = () => {
             </div>
 
             {/* Content */}
-            <div className={`absolute inset-0 flex flex-col justify-center px-6 md:px-10 max-w-lg transition-all duration-600 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
-              <p className="text-primary font-semibold text-xs md:text-sm mb-2 tracking-wide"
+            <div className={`absolute inset-0 flex flex-col justify-center px-5 md:px-10 max-w-lg transition-all duration-600 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
+              <p className="text-primary font-semibold text-[11px] md:text-sm mb-1.5 md:mb-2 tracking-wide drop-shadow-md"
                 style={{ transitionDelay: '100ms' }}
               >
                 {slide.subtitle}
               </p>
 
-              <h2 className="text-primary-foreground text-xl md:text-3xl lg:text-4xl font-extrabold mb-4 italic overflow-hidden"
+              <h2 className="text-primary-foreground text-lg sm:text-xl md:text-3xl lg:text-4xl font-extrabold mb-2 md:mb-4 italic overflow-hidden drop-shadow-lg"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
                 <span className={`inline-block transition-all duration-700 ${isTransitioning ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}
@@ -146,11 +146,11 @@ const HeroSection = () => {
                 </span>
               </h2>
 
-              <div className="space-y-1 mb-5">
+              <div className="space-y-0.5 md:space-y-1 mb-3 md:mb-5">
                 {slide.times.map((t, j) => (
                   <p
                     key={j}
-                    className={`text-primary-foreground/70 text-xs md:text-sm transition-all duration-500 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
+                    className={`text-primary-foreground/80 text-[11px] md:text-sm transition-all duration-500 drop-shadow-sm ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
                     style={{ transitionDelay: `${200 + j * 80}ms` }}
                   >
                     {t}

@@ -129,14 +129,14 @@ const HeroSection = () => {
             </div>
 
             {/* Content */}
-            <div className={`absolute inset-0 flex flex-col justify-center px-6 md:px-10 max-w-lg transition-all duration-600 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
-              <p className="text-primary font-semibold text-xs md:text-sm mb-2 tracking-wide"
+            <div className={`absolute inset-0 flex flex-col justify-center px-5 md:px-10 max-w-lg transition-all duration-600 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
+              <p className="text-primary font-semibold text-[11px] md:text-sm mb-1.5 md:mb-2 tracking-wide drop-shadow-md"
                 style={{ transitionDelay: '100ms' }}
               >
                 {slide.subtitle}
               </p>
 
-              <h2 className="text-primary-foreground text-xl md:text-3xl lg:text-4xl font-extrabold mb-4 italic overflow-hidden"
+              <h2 className="text-primary-foreground text-lg sm:text-xl md:text-3xl lg:text-4xl font-extrabold mb-2 md:mb-4 italic overflow-hidden drop-shadow-lg"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
                 <span className={`inline-block transition-all duration-700 ${isTransitioning ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}

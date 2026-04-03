@@ -145,7 +145,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tables */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
           <Card className="lg:col-span-2 border-border">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Đơn hàng gần đây</CardTitle>

@@ -151,20 +151,14 @@ const HeroSection = () => {
 
             {/* Content */}
             <div className={`absolute inset-0 flex flex-col justify-center px-5 md:px-10 max-w-lg transition-all duration-600 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
-              <p className="text-primary font-semibold text-[11px] md:text-sm mb-1.5 md:mb-2 tracking-wide drop-shadow-md"
-                style={{ transitionDelay: '100ms' }}
-              >
-                {slide.subtitle}
+              <p className="text-primary font-semibold text-[11px] md:text-sm mb-1.5 md:mb-2 tracking-wide drop-shadow-md">
+                <FadeWords text={slide.subtitle} isVisible={!isTransitioning} baseDelay={100} />
               </p>
 
-              <h2 className="text-primary-foreground text-lg sm:text-xl md:text-3xl lg:text-4xl font-extrabold mb-2 md:mb-4 italic overflow-hidden drop-shadow-lg"
+              <h2 className="text-primary-foreground text-lg sm:text-xl md:text-3xl lg:text-4xl font-extrabold mb-2 md:mb-4 italic drop-shadow-lg"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
-                <span className={`inline-block transition-all duration-700 ${isTransitioning ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}
-                  style={{ transitionDelay: '150ms' }}
-                >
-                  {slide.title}
-                </span>
+                <FadeWords text={slide.title} isVisible={!isTransitioning} baseDelay={300} />
               </h2>
 
               <div className="space-y-0.5 md:space-y-1 mb-3 md:mb-5">

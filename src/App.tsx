@@ -26,9 +26,13 @@ import Compare from "./pages/Compare.tsx";
 import About from "./pages/About.tsx";
 import NewsDetail from "./pages/NewsDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
+import AdminOrders from "./pages/admin/AdminOrders.tsx";
+import AdminProducts from "./pages/admin/AdminProducts.tsx";
+import AdminCustomers from "./pages/admin/AdminCustomers.tsx";
+import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 
 const queryClient = new QueryClient();
-
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -52,6 +56,11 @@ const App = () => (
               <Route path="/compare" element={<Compare />} />
               <Route path="/about" element={<About />} />
               <Route path="/news/:slug" element={<NewsDetail />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/orders" element={<AdminOrders />} />
+              <Route path="/admin/products" element={<AdminProducts />} />
+              <Route path="/admin/customers" element={<AdminCustomers />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -65,13 +65,13 @@ const NewsCard = ({ article, index, isVisible }: { article: typeof articles[0]; 
           {article.excerpt}
         </p>
 
-        <a
-          href="#"
+        <Link
+          to={`/news/${article.slug}`}
           className="inline-flex items-center gap-1.5 text-foreground font-semibold text-xs hover:text-primary transition-all duration-200 group/link underline-animate py-0.5"
         >
           Đọc Thêm
           <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/link:translate-x-2" />
-        </a>
+        </Link>
       </div>
     </article>
   );

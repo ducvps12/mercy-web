@@ -119,8 +119,8 @@ const HeroSection = () => {
               />
             </div>
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-mercy-dark/85 via-mercy-dark/50 to-transparent" />
+            {/* Gradient overlay - stronger on mobile for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-mercy-dark/95 via-mercy-dark/70 to-mercy-dark/30 md:from-mercy-dark/85 md:via-mercy-dark/50 md:to-transparent" />
 
             {/* Mercy logo inside slider */}
             <div className={`absolute top-5 left-1/2 -translate-x-1/2 text-center transition-all duration-600 ${isTransitioning ? 'opacity-0 -translate-y-4' : 'opacity-100 translate-y-0'}`}>

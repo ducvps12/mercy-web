@@ -39,7 +39,7 @@ const otherItems = [
 ];
 
 export function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const isActive = (path: string) =>
@@ -48,7 +48,7 @@ export function AdminSidebar() {
       : location.pathname.startsWith(path);
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
+    <Sidebar collapsible={isMobile ? "offcanvas" : "icon"} className="border-r border-border">
       <SidebarContent className="bg-secondary text-secondary-foreground">
         <div className="p-4 flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">

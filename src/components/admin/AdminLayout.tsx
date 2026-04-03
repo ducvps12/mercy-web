@@ -13,13 +13,13 @@ export function AdminLayout({ children, title = "Dashboard" }: AdminLayoutProps)
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-muted/30">
         <AdminSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-16 flex items-center justify-between border-b border-border bg-background px-4 lg:px-6">
-            <div className="flex items-center gap-4">
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 md:h-16 flex items-center justify-between border-b border-border bg-background px-3 md:px-4 lg:px-6 sticky top-0 z-30">
+            <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="text-foreground" />
-              <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+              <h1 className="text-base md:text-lg font-semibold text-foreground truncate">{title}</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <div className="relative hidden md:block">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -36,7 +36,7 @@ export function AdminLayout({ children, title = "Dashboard" }: AdminLayoutProps)
               </div>
             </div>
           </header>
-          <main className="flex-1 p-4 lg:p-6 overflow-auto">{children}</main>
+          <main className="flex-1 p-3 md:p-4 lg:p-6 overflow-auto">{children}</main>
         </div>
       </div>
     </SidebarProvider>

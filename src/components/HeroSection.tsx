@@ -1,8 +1,29 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import heroBanner1 from "@/assets/hero-banner-1.jpg";
 import heroBanner2 from "@/assets/hero-banner-2.jpg";
 import kolBanner from "@/assets/kol-banner.jpg";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+const FadeWords = ({ text, isVisible, baseDelay = 0, className = "" }: { text: string; isVisible: boolean; baseDelay?: number; className?: string }) => {
+  const words = text.split(" ");
+  return (
+    <span className={className}>
+      {words.map((word, i) => (
+        <span
+          key={`${word}-${i}`}
+          className="inline-block transition-all duration-500"
+          style={{
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? 'translateY(0)' : 'translateY(12px)',
+            transitionDelay: `${baseDelay + i * 100}ms`,
+          }}
+        >
+          {word}{i < words.length - 1 ? "\u00A0" : ""}
+        </span>
+      ))}
+    </span>
+  );
+};
 
 const slides = [
   {

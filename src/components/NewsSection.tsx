@@ -1,47 +1,7 @@
 import { Eye, MessageCircle, ArrowRight, Share2 } from "lucide-react";
 import { useScrollReveal, useCountUp } from "@/hooks/useScrollReveal";
-import news1 from "@/assets/news-1.jpg";
-import news2 from "@/assets/news-2.jpg";
-import news3 from "@/assets/news-3.jpg";
-
-const articles = [
-  {
-    image: news1,
-    date: "6",
-    month: "THÁNG MƯỜI MỘT",
-    title: "Công Ty TNHH Công Nghệ Mercy Đồng Hành Cùng Ngày Hội Việc Làm Phường Thủ Đức TP. HCM 2025",
-    excerpt: "Mercy – Thương hiệu công nghệ Việt mở rộng cơ hội việc làm cho giới trẻ Sáng ngày 06/11/2025, Công ty TNHH Công Nghệ Mercy – thương hiệu tiên phong…",
-    views: 217,
-    comments: 0,
-  },
-  {
-    image: news2,
-    date: "30",
-    month: "THÁNG 10",
-    title: "THƯ NGỎ TỪ GIÁM ĐỐC MERCY – VY THIÊN HÙNG",
-    excerpt: "\"Công nghệ chỉ thật sự thông minh, hữu ích khi được sử dụng đúng cách, đúng pháp luật.\" — Vy Thiên Hùng, Giám đốc Công Ty TNHH Công Nghệ Mercy…",
-    views: 154,
-    comments: 0,
-  },
-  {
-    image: null,
-    date: "",
-    month: "",
-    title: "HƯỚNG DẪN SỬ DỤNG KÍNH THÔNG MINH MERCY MCK 5.0",
-    excerpt: "Hướng dẫn sử dụng Kính thông minh Mercy MCK 5.0 – Chi tiết A-Z cho người mới bắt đầu…",
-    views: 254,
-    comments: 0,
-  },
-  {
-    image: news3,
-    date: "11",
-    month: "THÁNG 10",
-    title: "So sánh Kính Thông Minh Xiaomi AI Glasses và Kính Thông Minh Mercy",
-    excerpt: "Xiaomi vừa ra mắt kính thông minh AI Glasses với nhiều tính năng cao cấp. Tuy nhiên, Kính Thông Minh Mercy MCK 5.0 lại là lựa chọn thực tế hơn…",
-    views: 469,
-    comments: 0,
-  },
-];
+import { articles } from "@/data/articles";
+import { Link } from "react-router-dom";
 
 const NewsCard = ({ article, index, isVisible }: { article: typeof articles[0]; index: number; isVisible: boolean }) => {
   const viewCount = useCountUp(article.views, 1200, isVisible);
@@ -105,13 +65,13 @@ const NewsCard = ({ article, index, isVisible }: { article: typeof articles[0]; 
           {article.excerpt}
         </p>
 
-        <a
-          href="#"
+        <Link
+          to={`/news/${article.slug}`}
           className="inline-flex items-center gap-1.5 text-foreground font-semibold text-xs hover:text-primary transition-all duration-200 group/link underline-animate py-0.5"
         >
           Đọc Thêm
           <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover/link:translate-x-2" />
-        </a>
+        </Link>
       </div>
     </article>
   );

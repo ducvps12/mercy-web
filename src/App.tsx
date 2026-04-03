@@ -43,6 +43,7 @@ const App = () => (
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/compare" element={<Compare />} />
               <Route path="/about" element={<About />} />
+              <Route path="/news/:slug" element={<NewsDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

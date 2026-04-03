@@ -57,9 +57,13 @@ const Header = () => {
       if (hero) {
         const heroBottom = hero.offsetTop + hero.offsetHeight;
         setIsSticky(window.scrollY >= heroBottom);
+      } else {
+        // No hero section (Shop, About, etc.) → always sticky
+        setIsSticky(window.scrollY > 10);
       }
       setScrolled(window.scrollY > 10);
     };
+    onScroll(); // run once on mount
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);

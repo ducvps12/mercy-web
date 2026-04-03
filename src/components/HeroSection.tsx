@@ -146,11 +146,11 @@ const HeroSection = () => {
                 </span>
               </h2>
 
-              <div className="space-y-1 mb-5">
+              <div className="space-y-0.5 md:space-y-1 mb-3 md:mb-5">
                 {slide.times.map((t, j) => (
                   <p
                     key={j}
-                    className={`text-primary-foreground/70 text-xs md:text-sm transition-all duration-500 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
+                    className={`text-primary-foreground/80 text-[11px] md:text-sm transition-all duration-500 drop-shadow-sm ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
                     style={{ transitionDelay: `${200 + j * 80}ms` }}
                   >
                     {t}

@@ -26,9 +26,13 @@ import Compare from "./pages/Compare.tsx";
 import About from "./pages/About.tsx";
 import NewsDetail from "./pages/NewsDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
+import AdminOrders from "./pages/admin/AdminOrders.tsx";
+import AdminProducts from "./pages/admin/AdminProducts.tsx";
+import AdminCustomers from "./pages/admin/AdminCustomers.tsx";
+import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 
 const queryClient = new QueryClient();
-
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>

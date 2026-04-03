@@ -6,7 +6,6 @@ import {
   BarChart3,
   Settings,
   Package,
-  MessageSquare,
   Bell,
   LogOut,
 } from "lucide-react";
@@ -35,7 +34,6 @@ const mainItems = [
 
 const otherItems = [
   { title: "Bài viết", url: "/admin/posts", icon: FileText },
-  { title: "Tin nhắn", url: "/admin/messages", icon: MessageSquare },
   { title: "Thông báo", url: "/admin/notifications", icon: Bell },
   { title: "Cài đặt", url: "/admin/settings", icon: Settings },
 ];

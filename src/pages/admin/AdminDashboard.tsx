@@ -64,18 +64,18 @@ const topProducts = [
 export default function AdminDashboard() {
   return (
     <AdminLayout title="Dashboard">
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {stats.map((stat) => (
             <Card key={stat.label} className="border-border">
-              <CardContent className="p-5">
+              <CardContent className="p-3 md:p-5">
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <stat.icon className="h-5 w-5 text-primary" />
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <stat.icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                   </div>
                   <span
-                    className={`flex items-center gap-1 text-xs font-medium ${
+                    className={`flex items-center gap-0.5 text-[10px] md:text-xs font-medium ${
                       stat.up ? "text-green-600" : "text-destructive"
                     }`}
                   >
@@ -83,9 +83,9 @@ export default function AdminDashboard() {
                     {stat.change}
                   </span>
                 </div>
-                <div className="mt-3">
-                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <div className="mt-2 md:mt-3">
+                  <p className="text-lg md:text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               </CardContent>
             </Card>

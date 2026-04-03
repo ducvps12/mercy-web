@@ -131,7 +131,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-base font-semibold">Danh mục bán chạy</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={categoryData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" tick={{ fill: "hsl(220, 10%, 46%)", fontSize: 12 }} />

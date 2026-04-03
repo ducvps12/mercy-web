@@ -31,6 +31,9 @@ import AdminOrders from "./pages/admin/AdminOrders.tsx";
 import AdminProducts from "./pages/admin/AdminProducts.tsx";
 import AdminCustomers from "./pages/admin/AdminCustomers.tsx";
 import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
+import AdminPosts from "./pages/admin/AdminPosts.tsx";
+import AdminNotifications from "./pages/admin/AdminNotifications.tsx";
+import AdminSettings from "./pages/admin/AdminSettings.tsx";
 
 const queryClient = new QueryClient();
 const App = () => (

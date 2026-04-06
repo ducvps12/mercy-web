@@ -140,42 +140,6 @@ const HeroSection = () => {
               />
             </div>
 
-            {/* Gradient overlay - stronger on mobile for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-mercy-dark/95 via-mercy-dark/70 to-mercy-dark/30 md:from-mercy-dark/85 md:via-mercy-dark/50 md:to-transparent" />
-
-
-            {/* Content */}
-            <div className={`absolute inset-0 flex flex-col justify-center px-5 md:px-10 max-w-lg transition-all duration-600 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
-              <p className="text-primary font-semibold text-[11px] md:text-sm mb-1.5 md:mb-2 tracking-wide drop-shadow-md">
-                <FadeWords text={slide.subtitle} isVisible={!isTransitioning} baseDelay={100} />
-              </p>
-
-              <h2 className="text-primary-foreground text-lg sm:text-xl md:text-3xl lg:text-4xl font-extrabold mb-2 md:mb-4 italic drop-shadow-lg"
-                style={{ fontFamily: 'Georgia, serif' }}
-              >
-                <FadeWords text={slide.title} isVisible={!isTransitioning} baseDelay={300} />
-              </h2>
-
-              <div className="space-y-0.5 md:space-y-1 mb-3 md:mb-5">
-                {slide.times.map((t, j) => (
-                  <p
-                    key={j}
-                    className={`text-primary-foreground/80 text-[11px] md:text-sm transition-all duration-500 drop-shadow-sm ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
-                    style={{ transitionDelay: `${200 + j * 80}ms` }}
-                  >
-                    {t}
-                  </p>
-                ))}
-              </div>
-
-              <a
-                href="#"
-                className={`self-start border border-primary-foreground/40 text-primary-foreground text-xs md:text-sm px-5 py-2.5 rounded-md hover:bg-primary hover:border-primary transition-all duration-300 hover:shadow-lg hover:shadow-primary/30 active:scale-95 ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}
-                style={{ transitionDelay: '350ms' }}
-              >
-                {slide.cta}
-              </a>
-            </div>
 
             {/* Avatar thumbnail bottom-right */}
             <div className="absolute bottom-4 right-4 flex items-end gap-2">

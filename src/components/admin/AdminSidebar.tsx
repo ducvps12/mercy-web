@@ -8,6 +8,7 @@ import {
   Package,
   Bell,
   LogOut,
+  Image,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -33,6 +34,7 @@ const mainItems = [
 ];
 
 const otherItems = [
+  { title: "Banner", url: "/admin/banners", icon: Image },
   { title: "Bài viết", url: "/admin/posts", icon: FileText },
   { title: "Thông báo", url: "/admin/notifications", icon: Bell },
   { title: "Cài đặt", url: "/admin/settings", icon: Settings },

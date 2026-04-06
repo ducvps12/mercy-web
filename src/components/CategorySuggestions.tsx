@@ -1,21 +1,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
-const categories = [
-  { name: "Kính bluetooth", image: "https://images.unsplash.com/photo-1574258495973-f7977603b6d2?w=200&h=200&fit=crop", badge: null },
-  { name: "Kính thời trang", image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=200&h=200&fit=crop", badge: null },
-  { name: "Kính râm", image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=200&h=200&fit=crop", badge: "Hot" },
-  { name: "Kính cận", image: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=200&h=200&fit=crop", badge: null },
-  { name: "Kính chống ánh sáng xanh", image: "https://images.unsplash.com/photo-1574258495973-f7977603b6d2?w=200&h=200&fit=crop", badge: "1 đổi 1" },
-  { name: "Kính thể thao", image: "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=200&h=200&fit=crop", badge: null },
-  { name: "Gọng kính", image: "https://images.unsplash.com/photo-1533139143976-30918502365b?w=200&h=200&fit=crop", badge: null },
-  { name: "Tròng kính", image: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=200&h=200&fit=crop", badge: "1 đổi 1" },
-  { name: "Phụ kiện kính", image: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=200&h=200&fit=crop", badge: null },
-  { name: "Hộp đựng kính", image: "https://images.unsplash.com/photo-1556306535-38febf6782e7?w=200&h=200&fit=crop", badge: null },
-  { name: "Dây đeo kính", image: "https://images.unsplash.com/photo-1509695507497-903c140c43b0?w=200&h=200&fit=crop", badge: null },
-  { name: "Khăn lau kính", image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=200&h=200&fit=crop", badge: null },
-];
+import { products, formatPrice } from "@/data/products";
 
 const CategorySuggestions = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -46,33 +32,49 @@ const CategorySuggestions = () => {
 
           <div
             ref={scrollRef}
-            className="grid grid-rows-2 grid-flow-col gap-x-4 gap-y-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
+            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {categories.map((cat, i) => (
-              <Link
-                key={i}
-                to={`/shop?category=${encodeURIComponent(cat.name)}`}
-                className="snap-start flex flex-col items-center gap-2 w-[100px] md:w-[120px] flex-shrink-0 group/item"
-              >
-                <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-300"
-                  />
-                  {cat.badge && (
-                    <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
-                      {cat.badge}
+            {products.map((product) => {
+              const discount = product.originalPrice
+                ? Math.round((1 - product.price / product.originalPrice) * 100)
+                : 0;
+
+              return (
+                <Link
+                  key={product.id}
+                  to={`/product/${product.id}`}
+                  className="snap-start flex-shrink-0 w-[140px] md:w-[180px] group/item"
+                >
+                  <div className="relative rounded-lg overflow-hidden bg-muted aspect-square mb-2">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
+                    />
+                    {discount > 0 && (
+                      <span className="absolute top-1.5 left-1.5 bg-destructive text-destructive-foreground text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded">
+                        -{discount}%
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-xs md:text-sm text-foreground leading-tight line-clamp-2 mb-1 group-hover/item:text-primary transition-colors">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm md:text-base font-bold text-destructive">
+                      {formatPrice(product.price)}
                     </span>
-                  )}
-                </div>
-                <span className="text-xs md:text-sm text-foreground text-center leading-tight group-hover/item:text-primary transition-colors">
-                  {cat.name}
-                </span>
-              </Link>
-            ))}
+                    {product.originalPrice && (
+                      <span className="text-[10px] md:text-xs text-muted-foreground line-through">
+                        {formatPrice(product.originalPrice)}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
 
           <button
@@ -81,13 +83,6 @@ const CategorySuggestions = () => {
           >
             <ChevronRight className="w-5 h-5 text-foreground" />
           </button>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="flex justify-center mt-4">
-          <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-            <div className="w-8 h-full bg-foreground/40 rounded-full" />
-          </div>
         </div>
       </div>
     </section>

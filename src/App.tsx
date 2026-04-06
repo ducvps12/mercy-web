@@ -34,6 +34,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AdminPosts from "./pages/admin/AdminPosts.tsx";
 import AdminNotifications from "./pages/admin/AdminNotifications.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
+import AdminBanners from "./pages/admin/AdminBanners.tsx";
 
 const queryClient = new QueryClient();
 const App = () => (
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/posts" element={<AdminPosts />} />
               <Route path="/admin/notifications" element={<AdminNotifications />} />
+              <Route path="/admin/banners" element={<AdminBanners />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

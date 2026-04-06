@@ -1,19 +1,16 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import banner1 from "@/assets/banners/banner-1.jpg";
-import banner2 from "@/assets/banners/banner-2.jpg";
-import banner3 from "@/assets/banners/banner-3.jpg";
-import banner4 from "@/assets/banners/banner-4.jpg";
-
-const banners = [
-  { id: 1, image: banner1, alt: "Phụ kiện công nghệ" },
-  { id: 2, image: banner2, alt: "Samsung Galaxy" },
-  { id: 3, image: banner3, alt: "Smart Home" },
-  { id: 4, image: banner4, alt: "Camera hành động" },
-];
+import { getBanners } from "@/pages/admin/AdminBanners";
 
 const BannerSlider = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [banners, setBanners] = useState(getBanners());
+
+  useEffect(() => {
+    const handleStorage = () => setBanners(getBanners());
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;

@@ -5,6 +5,9 @@ interface User {
   name: string;
   email: string;
   role: string;
+  phone?: string;
+  address?: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -12,6 +15,7 @@ interface AuthContextType {
   token: string | null;
   login: (userData: User, token: string) => void;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -21,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   token: null,
   login: () => {},
   logout: () => {},
+  updateUser: () => {},
   isAuthenticated: false,
   isAdmin: false,
 });
@@ -52,14 +57,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...userData };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAuthenticated, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+

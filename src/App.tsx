@@ -47,6 +47,7 @@ import NotFound from "./pages/NotFound.tsx";
 import OrderWarehouse from "./pages/OrderWarehouse.tsx";
 import Policy from "./pages/Policy.tsx";
 import FlashSale from "./pages/FlashSale.tsx";
+import Account from "./pages/Account.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import AdminOrders from "./pages/admin/AdminOrders.tsx";
 import AdminProducts from "./pages/admin/AdminProducts.tsx";
@@ -87,6 +88,7 @@ const App = () => (
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/compare" element={<Compare />} />
                 <Route path="/orders" element={<OrderWarehouse />} />
+                <Route path="/account" element={<Account />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/tuyen-dung" element={<Recruitment />} />
                 <Route path="/lien-he" element={<Contact />} />

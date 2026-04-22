@@ -4,6 +4,7 @@ import { useShop } from "@/context/ShopContext";
 import { products } from "@/data/products";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const categories = [
   { name: "Kính Mắt Thông Minh", hasSubmenu: true, href: "/shop?category=Kính Mắt Thông Minh" },
@@ -260,6 +261,12 @@ const Header = () => {
                         </div>
                         <div className="py-1">
                           <button
+                            onClick={() => { setUserMenuOpen(false); navigate("/account"); }}
+                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                          >
+                            👤 Tài khoản của tôi
+                          </button>
+                          <button
                             onClick={() => { setUserMenuOpen(false); navigate("/orders"); }}
                             className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
                           >
@@ -383,6 +390,8 @@ const Header = () => {
             </div>
             <span className="text-gray-300">|</span>
             <button onClick={() => setStoreModalOpen(true)} className="hover:text-red-600 px-2 pl-3 py-1 transition-colors font-medium text-xs">Cửa hàng</button>
+            <span className="text-gray-300">|</span>
+            <LanguageSwitcher />
           </div>
         </div>
       </div>
@@ -443,6 +452,11 @@ const Header = () => {
 
           {/* Menu + Categories */}
           <div className="px-4 pb-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Ngôn ngữ</h3>
+              <LanguageSwitcher />
+            </div>
+
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Menu</h3>
             {mainMenu.map((link, i) => (
               <a key={i} href={link.href} className="flex items-center justify-between py-3 text-[15px] font-medium text-gray-800 hover:text-red-600 border-b border-gray-100 last:border-0">

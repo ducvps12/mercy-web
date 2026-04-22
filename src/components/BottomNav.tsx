@@ -15,7 +15,7 @@ const BottomNav = () => {
     { icon: Home, label: "Trang chủ", href: "/", action: () => navigate("/") },
     { icon: Store, label: "Cửa hàng", href: "#", action: () => setStoreModalOpen(true) },
     { icon: Phone, label: "Liên hệ", href: "#", action: () => setContactModalOpen(true) },
-    { icon: isAuthenticated ? User : LogIn, label: isAuthenticated ? "Tài khoản" : "Đăng nhập", href: isAuthenticated ? "/orders" : "/login", action: () => navigate(isAuthenticated ? "/orders" : "/login") },
+    { icon: isAuthenticated ? User : LogIn, label: isAuthenticated ? "Tài khoản" : "Đăng nhập", href: isAuthenticated ? "/account" : "/login", action: () => navigate(isAuthenticated ? "/account" : "/login") },
     { icon: Heart, label: "Yêu thích", href: "/wishlist", action: () => navigate("/wishlist") },
   ];
 

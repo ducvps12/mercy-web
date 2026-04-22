@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 
 export default function AdminSettings() {
   return (
@@ -18,19 +17,31 @@ export default function AdminSettings() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tên cửa hàng</Label>
-              <Input defaultValue="Mercy Store" />
+              <Input defaultValue="Mercy - Smart Vision • Smart Life" />
             </div>
             <div className="space-y-2">
-              <Label>Email liên hệ</Label>
-              <Input defaultValue="contact@mercystore.vn" />
+              <Label>Website</Label>
+              <Input defaultValue="https://mercysmartlife.com" />
             </div>
             <div className="space-y-2">
-              <Label>Số điện thoại</Label>
-              <Input defaultValue="0901 234 567" />
+              <Label>Hotline (Mr. Hùng)</Label>
+              <Input defaultValue="0763 068 614" />
             </div>
             <div className="space-y-2">
-              <Label>Địa chỉ</Label>
-              <Input defaultValue="123 Nguyễn Huệ, Q.1, TP.HCM" />
+              <Label>Hotline (Mr. Mạnh)</Label>
+              <Input defaultValue="0398 684 921" />
+            </div>
+            <div className="space-y-2">
+              <Label>Zalo OA</Label>
+              <Input defaultValue="https://zalo.me/0763068614" />
+            </div>
+            <div className="space-y-2">
+              <Label>Địa chỉ CS TP.HCM</Label>
+              <Input defaultValue="Số 109, Nguyễn Thị Nhung, KĐT Vạn Phúc, Hiệp Bình Phước, TP. Thủ Đức" />
+            </div>
+            <div className="space-y-2">
+              <Label>Địa chỉ CS Hà Nội</Label>
+              <Input defaultValue="Số 10, Đường Thanh Niên, Xã Ba Vì, Hà Nội" />
             </div>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Lưu thay đổi</Button>
           </CardContent>
@@ -46,6 +57,7 @@ export default function AdminSettings() {
               { label: "Email khi có đơn hàng mới", desc: "Nhận email mỗi khi có đơn hàng mới", default: true },
               { label: "Cảnh báo hết hàng", desc: "Thông báo khi sản phẩm sắp hết tồn kho", default: true },
               { label: "Báo cáo hàng tuần", desc: "Nhận email tóm tắt doanh thu mỗi tuần", default: false },
+              { label: "Thông báo Zalo OA", desc: "Gửi cập nhật đơn hàng qua Zalo cho khách", default: true },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between">
                 <div>

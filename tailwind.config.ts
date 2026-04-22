@@ -13,7 +13,7 @@ export default {
       },
     },
     fontFamily: {
-      sans: ['"Be Vietnam Pro"', 'system-ui', 'sans-serif'],
+      sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', 'Inter', '"Segoe UI"', 'Roboto', 'sans-serif'],
     },
     extend: {
       colors: {

@@ -13,6 +13,7 @@ interface ShopContextType {
   wishlist: Product[];
   compare: Product[];
   addToCart: (product: Product) => void;
+  addToCartWithQuantity: (product: Product, quantity: number) => void;
   removeFromCart: (id: number) => void;
   updateCartQuantity: (id: number, quantity: number) => void;
   toggleWishlist: (product: Product) => void;
@@ -21,6 +22,7 @@ interface ShopContextType {
   isInCompare: (id: number) => boolean;
   cartTotal: number;
   cartCount: number;
+  clearCart: () => void;
 }
 
 const ShopContext = createContext<ShopContextType | null>(null);
@@ -45,6 +47,18 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
         );
       }
       return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const addToCartWithQuantity = (product: Product, quantity: number) => {
+    setCart((prev) => {
+      const existing = prev.find((p) => p.id === product.id);
+      if (existing) {
+        return prev.map((p) =>
+          p.id === product.id ? { ...p, quantity } : p
+        );
+      }
+      return [...prev, { ...product, quantity }];
     });
   };
 
@@ -78,15 +92,16 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
 
   const cartTotal = cart.reduce((sum, p) => sum + p.price * (p.quantity || 1), 0);
   const cartCount = cart.reduce((sum, p) => sum + (p.quantity || 1), 0);
+  const clearCart = () => setCart([]);
 
   return (
     <ShopContext.Provider
       value={{
         cart, wishlist, compare,
-        addToCart, removeFromCart, updateCartQuantity,
+        addToCart, addToCartWithQuantity, removeFromCart, updateCartQuantity,
         toggleWishlist, toggleCompare,
         isInWishlist, isInCompare,
-        cartTotal, cartCount,
+        cartTotal, cartCount, clearCart,
       }}
     >
       {children}

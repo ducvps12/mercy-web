@@ -1,88 +1,137 @@
-import { useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useState, useMemo } from "react";
 import { products, formatPrice } from "@/data/products";
+import { useNavigate } from "react-router-dom";
+import { useShop } from "@/context/ShopContext";
+import { ShoppingCart, Eye } from "lucide-react";
+
+const categoryTabs = [
+  { label: "Tất cả", value: "all" },
+  { label: "Kính Thông Minh", value: "Kính Mắt Thông Minh" },
+  { label: "Kính Dịch Thuật", value: "Kính Dịch Thuật" },
+  { label: "Camera POV", value: "Kính Camera POV" },
+  { label: "Robot AI", value: "Robot AI" },
+];
 
 const CategorySuggestions = () => {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { addToCart } = useShop();
+  const [activeTab, setActiveTab] = useState("all");
 
-  const scroll = (dir: "left" | "right") => {
-    if (!scrollRef.current) return;
-    const amount = scrollRef.current.offsetWidth * 0.6;
-    scrollRef.current.scrollBy({
-      left: dir === "left" ? -amount : amount,
-      behavior: "smooth",
-    });
-  };
+  // Filter products based on active tab
+  const displayProducts = useMemo(() => {
+    const filtered = activeTab === "all"
+      ? products.filter(p => p.category !== "Phụ Kiện")
+      : products.filter(p => p.category === activeTab);
+    return filtered.slice(0, 12);
+  }, [activeTab]);
 
   return (
-    <section className="py-6 md:py-10 bg-background">
-      <div className="container mx-auto px-4">
-        <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6 italic">
-          Gợi ý cho bạn
-        </h2>
+    <section className="py-4 md:py-6">
+      <div className="container">
+        {/* FPT-style white card wrapper */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 md:p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">Gợi ý cho bạn</h2>
+            <a href="/shop" className="text-sm font-semibold text-red-600 hover:underline">
+              Xem tất cả →
+            </a>
+          </div>
 
-        <div className="relative group">
-          <button
-            onClick={() => scroll("left")}
-            className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-background border border-border rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
-          >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
+          {/* Category Tabs */}
+          <div className="flex gap-2 mb-5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+            {categoryTabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 border ${
+                  activeTab === tab.value
+                    ? "bg-red-600 text-white border-red-600 shadow-sm"
+                    : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-          <div
-            ref={scrollRef}
-            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-2"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {products.map((product) => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+            {displayProducts.map((product) => {
               const discount = product.originalPrice
-                ? Math.round((1 - product.price / product.originalPrice) * 100)
+                ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
                 : 0;
 
               return (
-                <Link
+                <div
                   key={product.id}
-                  to={`/product/${product.id}`}
-                  className="snap-start flex-shrink-0 w-[140px] md:w-[180px] group/item"
+                  className="bg-white border border-gray-100 rounded-xl overflow-hidden group cursor-pointer card-lift hover:border-red-200"
+                  onClick={() => navigate(`/product/${product.id}`)}
                 >
-                  <div className="relative rounded-lg overflow-hidden bg-muted aspect-square mb-2">
+                  {/* Image */}
+                  <div className="relative p-2 bg-gray-50">
                     <img
                       src={product.image}
                       alt={product.name}
+                      className="w-full h-28 md:h-32 object-contain group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
-                      className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
                     />
                     {discount > 0 && (
-                      <span className="absolute top-1.5 left-1.5 bg-destructive text-destructive-foreground text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded">
+                      <span className="absolute top-1.5 right-1.5 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                         -{discount}%
                       </span>
                     )}
+
+                    {/* Feature tags */}
+                    {product.features && product.features.length > 0 && (
+                      <div className="absolute bottom-1.5 left-1.5 flex gap-1">
+                        <span className="bg-blue-100/90 text-blue-700 text-[8px] font-semibold px-1.5 py-0.5 rounded backdrop-blur-sm">AI</span>
+                        <span className="bg-green-100/90 text-green-700 text-[8px] font-semibold px-1.5 py-0.5 rounded backdrop-blur-sm">2K</span>
+                        <span className="bg-purple-100/90 text-purple-700 text-[8px] font-semibold px-1.5 py-0.5 rounded backdrop-blur-sm">IP65</span>
+                      </div>
+                    )}
+
+                    {/* Hover actions */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/product/${product.id}`);
+                        }}
+                        className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart({ id: product.id, name: product.name, price: product.price, image: product.image, quantity: 1 });
+                        }}
+                        className="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <h3 className="text-xs md:text-sm text-foreground leading-tight line-clamp-2 mb-1 group-hover/item:text-primary transition-colors">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm md:text-base font-bold text-destructive">
-                      {formatPrice(product.price)}
-                    </span>
-                    {product.originalPrice && (
-                      <span className="text-[10px] md:text-xs text-muted-foreground line-through">
-                        {formatPrice(product.originalPrice)}
+
+                  {/* Info */}
+                  <div className="p-2.5">
+                    <h3 className="text-[11px] font-medium text-gray-700 line-clamp-2 mb-2 min-h-[28px] group-hover:text-red-600 transition-colors leading-tight">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span className="text-red-600 font-extrabold text-sm">
+                        {formatPrice(product.price)}
                       </span>
+                    </div>
+                    {product.originalPrice && product.originalPrice > product.price && (
+                      <p className="text-gray-400 text-[10px] line-through">
+                        {formatPrice(product.originalPrice)}
+                      </p>
                     )}
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
-
-          <button
-            onClick={() => scroll("right")}
-            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-background border border-border rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
-          >
-            <ChevronRight className="w-5 h-5 text-foreground" />
-          </button>
         </div>
       </div>
     </section>

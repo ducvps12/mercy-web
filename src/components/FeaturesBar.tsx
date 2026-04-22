@@ -1,37 +1,95 @@
+import { Shield, Truck, RotateCcw, Headphones, Lock, Sparkles } from "lucide-react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { Shield, Truck, RefreshCw, Headphones } from "lucide-react";
 
 const features = [
-  { icon: Shield, title: "Độc quyền tại Việt Nam", desc: "Phiên bản tiếng Việt cho người Việt" },
-  { icon: Truck, title: "Miễn phí vận chuyển", desc: "Toàn quốc" },
-  { icon: RefreshCw, title: "Đổi trả hoàn tiền", desc: "Chính hãng" },
-  { icon: Headphones, title: "24/7 Hỗ trợ", desc: "Luôn hỗ trợ khi bạn cần" },
+  {
+    icon: Shield,
+    title: "Thương hiệu đảm bảo",
+    desc: "Cam kết chính hãng 100%, nguồn gốc rõ ràng",
+    iconBg: "bg-red-50 text-red-600",
+  },
+  {
+    icon: Sparkles,
+    title: "Cải tiến liên tục",
+    desc: "Luôn cập nhật công nghệ mới, nâng cấp trải nghiệm",
+    iconBg: "bg-amber-50 text-amber-600",
+  },
+  {
+    icon: Headphones,
+    title: "Hỗ trợ kỹ thuật 24/7",
+    desc: "Phản hồi nhanh trong 15 phút, đội ngũ chuyên nghiệp",
+    iconBg: "bg-blue-50 text-blue-600",
+  },
+  {
+    icon: Lock,
+    title: "Bảo mật an toàn",
+    desc: "Bảo vệ thông tin khách hàng, thanh toán an toàn",
+    iconBg: "bg-emerald-50 text-emerald-600",
+  },
+  {
+    icon: RotateCcw,
+    title: "Đổi trả dễ dàng",
+    desc: "Chính sách đổi trả linh hoạt trong 7 ngày",
+    iconBg: "bg-purple-50 text-purple-600",
+  },
+  {
+    icon: Truck,
+    title: "Giao hàng tận nơi",
+    desc: "Miễn phí vận chuyển toàn quốc, giao nhanh 2h nội thành",
+    iconBg: "bg-cyan-50 text-cyan-600",
+  },
 ];
 
 const FeaturesBar = () => {
-  const { ref, isVisible } = useScrollReveal(0.2);
+  const { ref, isVisible } = useScrollReveal(0.1);
 
   return (
-    <section ref={ref} className="bg-mercy-warm-bg border-y border-border overflow-hidden">
-      <div className="container py-8 md:py-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4">
-          {features.map((feature, i) => (
-            <div
-              key={i}
-              className={`flex items-center gap-3 md:gap-4 group cursor-default transition-all duration-600 ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{ transitionDelay: `${i * 120}ms` }}
-            >
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-primary flex items-center justify-center shrink-0 transition-all duration-400 group-hover:bg-primary group-hover:border-primary group-hover:shadow-lg group-hover:shadow-primary/20 group-hover:scale-110">
-                <feature.icon className="w-5 h-5 md:w-6 md:h-6 text-primary transition-all duration-300 group-hover:text-primary-foreground group-hover:scale-110" />
+    <section ref={ref} className="py-4 md:py-6">
+      <div className="container">
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-8">
+          {/* Section Header */}
+          <div
+            className={`text-center mb-6 md:mb-8 transition-all duration-700 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            }`}
+          >
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+              Lý do Mercy được khách hàng tin tưởng
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Mercy mang đến sự an tâm thông qua sản phẩm chất lượng và dịch vụ chuyên nghiệp
+            </p>
+          </div>
+
+          {/* Features Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            {features.map((f, i) => (
+              <div
+                key={i}
+                className={`group text-center p-4 md:p-5 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-500 ${
+                  isVisible
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-8"
+                }`}
+                style={{ transitionDelay: `${150 + i * 80}ms` }}
+              >
+                {/* Icon */}
+                <div
+                  className={`w-12 h-12 mx-auto rounded-xl ${f.iconBg} flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-105`}
+                >
+                  <f.icon className="w-6 h-6" />
+                </div>
+
+                {/* Text */}
+                <h3 className="font-semibold text-sm text-gray-900 mb-1">
+                  {f.title}
+                </h3>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                  {f.desc}
+                </p>
               </div>
-              <div>
-                <h4 className="font-bold text-foreground text-sm md:text-base leading-tight transition-colors duration-200 group-hover:text-primary">{feature.title}</h4>
-                <p className="text-muted-foreground text-xs md:text-sm mt-0.5">{feature.desc}</p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

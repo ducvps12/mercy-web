@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -28,13 +28,32 @@ const priceRanges = [
 ];
 
 const Shop = () => {
+  const [searchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState("default");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchFilter, setSearchFilter] = useState<string>("");
   const [selectedPrice, setSelectedPrice] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 9;
   const { addToCart, toggleWishlist, toggleCompare, isInWishlist, isInCompare } = useShop();
+
+  // Sync URL params with state
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    const searchParam = searchParams.get("search");
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    } else {
+      setSelectedCategory(null);
+    }
+    if (searchParam) {
+      setSearchFilter(searchParam);
+    } else {
+      setSearchFilter("");
+    }
+    setCurrentPage(1);
+  }, [searchParams]);
 
   const categories = useMemo(() => {
     const cats = [...new Set(products.map((p) => p.category))];
@@ -44,13 +63,17 @@ const Shop = () => {
   const filteredProducts = useMemo(() => {
     let result = [...products];
     if (selectedCategory) result = result.filter((p) => p.category === selectedCategory);
+    if (searchFilter) {
+      const q = searchFilter.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q));
+    }
     const range = priceRanges[selectedPrice];
     result = result.filter((p) => p.price >= range.min && p.price < range.max);
     if (sortBy === "price-asc") result.sort((a, b) => a.price - b.price);
     else if (sortBy === "price-desc") result.sort((a, b) => b.price - a.price);
     else if (sortBy === "name") result.sort((a, b) => a.name.localeCompare(b.name));
     return result;
-  }, [selectedCategory, selectedPrice, sortBy]);
+  }, [selectedCategory, searchFilter, selectedPrice, sortBy]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = useMemo(() => {
@@ -262,13 +285,13 @@ const Shop = () => {
                         >
                           <RefreshCw className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium text-foreground hover:text-primary hover:bg-primary/5 transition-all duration-200 border-x border-border"
+                        <Link
+                          to={`/product/${product.id}`}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-all duration-200 border-x border-border"
                         >
                           <ShoppingCart className="w-4 h-4" />
-                          Thêm vào giỏ hàng
-                        </button>
+                          Đặt hàng ngay
+                        </Link>
                         <button
                           onClick={() => handleToggleWishlist(product)}
                           className={`flex-none p-3 transition-all duration-200 ${

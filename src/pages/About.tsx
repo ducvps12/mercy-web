@@ -36,10 +36,9 @@ const About = () => {
       <main>
         {/* Hero Banner */}
         <section className="relative bg-secondary text-secondary-foreground overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-secondary via-[hsl(var(--mercy-navy))] to-[hsl(var(--mercy-charcoal))]" />
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary rounded-full blur-[120px]" />
-            <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-[hsl(var(--mercy-orange-glow))] rounded-full blur-[100px]" />
+          <div className="absolute inset-0 bg-[#1a1a2e]" />
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-white rounded-full blur-[120px]" />
           </div>
           <div className="relative container mx-auto px-4 py-20 md:py-32 text-center">
             <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-4">Về chúng tôi</p>
@@ -80,7 +79,7 @@ const About = () => {
               {features.map((f, i) => (
                 <div
                   key={i}
-                  className="bg-card rounded-xl p-6 text-center border border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 group"
+                  className="bg-card rounded-xl p-6 text-center border border-border/60 hover:border-gray-300 hover:shadow-sm transition-all duration-200 group"
                 >
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                     <f.icon className="w-5 h-5 text-primary" />

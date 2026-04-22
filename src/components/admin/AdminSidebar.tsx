@@ -9,6 +9,8 @@ import {
   Bell,
   LogOut,
   Image,
+  UserCheck,
+  CreditCard,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -29,11 +31,13 @@ const mainItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Đơn hàng", url: "/admin/orders", icon: ShoppingBag },
   { title: "Sản phẩm", url: "/admin/products", icon: Package },
+  { title: "Thành viên", url: "/admin/members", icon: UserCheck },
   { title: "Khách hàng", url: "/admin/customers", icon: Users },
   { title: "Thống kê", url: "/admin/analytics", icon: BarChart3 },
 ];
 
 const otherItems = [
+  { title: "Thanh toán", url: "/admin/payments", icon: CreditCard },
   { title: "Banner", url: "/admin/banners", icon: Image },
   { title: "Bài viết", url: "/admin/posts", icon: FileText },
   { title: "Thông báo", url: "/admin/notifications", icon: Bell },

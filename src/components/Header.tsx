@@ -1,31 +1,81 @@
 import { useState, useEffect, useMemo } from "react";
-import { Menu, Search, ShoppingCart, User, Heart, Phone, Zap, ChevronDown, ChevronRight, Minus, RefreshCw, X } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X, ChevronDown, ChevronRight, Zap, Shield, Smartphone, Gift, Store } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { products } from "@/data/products";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const categories = [
-  { name: "Kính Mắt Thông Minh", hasSubmenu: true },
-  { name: "Balo Thông Minh", hasSubmenu: false },
-  { name: "Bút Thông Minh", hasSubmenu: false },
-  { name: "Đồng Hồ, Vòng Đeo Tay Thông Minh", hasSubmenu: false },
-  { name: "Flash Sale", hasSubmenu: false },
-  { name: "Tai Nghe Bluetooth", hasSubmenu: true },
+  { name: "Kính Mắt Thông Minh", hasSubmenu: true, href: "/shop?category=Kính Mắt Thông Minh" },
+  { name: "Kính Dịch Thuật", hasSubmenu: true, href: "/shop?category=Kính Dịch Thuật" },
+  { name: "Kính Camera POV", hasSubmenu: true, href: "/shop?category=Kính Camera POV" },
+  { name: "Robot AI", hasSubmenu: false, href: "/shop?category=Robot AI" },
+  { name: "Phụ Kiện", hasSubmenu: false, href: "/shop?category=Phụ Kiện" },
+  { name: "Flash Sale", hasSubmenu: false, href: "/flash-sale" },
 ];
 
 const mainMenu = [
   { name: "Trang chủ", hasSubmenu: false, href: "/" },
-  { name: "Sản phẩm", hasSubmenu: true, href: "/shop" },
+  { name: "Sản phẩm", hasSubmenu: false, href: "/shop" },
   { name: "Giới thiệu", hasSubmenu: false, href: "/about" },
 ];
+
+// Product dropdown sub-items for "Sản phẩm"
+const productDropdown = [
+  {
+    title: "Kính Thông Minh",
+    items: [
+      { name: "Mercy MCK 5.0", href: "/shop?search=MCK 5.0" },
+      { name: "Mercy MCK 5.1", href: "/shop?search=MCK 5.1" },
+    ],
+  },
+  {
+    title: "Kính Dịch Thuật",
+    items: [
+      { name: "Mercy KDT 5.0", href: "/shop?search=KDT 5.0" },
+      { name: "Mercy KDT 5.1", href: "/shop?search=KDT 5.1" },
+    ],
+  },
+  {
+    title: "Kính Camera POV",
+    items: [
+      { name: "Mercy POV 5.0", href: "/shop?search=POV 5.0" },
+      { name: "Mercy POV 5.1", href: "/shop?search=POV 5.1" },
+    ],
+  },
+  {
+    title: "Robot AI & Phụ kiện",
+    items: [
+      { name: "Robot AI", href: "/shop?category=Robot AI" },
+      { name: "Phụ kiện", href: "/shop?category=Phụ Kiện" },
+    ],
+  },
+];
+
+// const trendingKeywords = ["Kính AI", "MCK 5.1", "Dịch thuật", "Camera POV 2K", "Robot AI"];
+
+const promoLinks = [
+  { icon: Zap, text: "Sản phẩm đang giảm giá", color: "text-red-600", href: "/flash-sale" },
+  { icon: Shield, text: "Bảo hành lên đến 12 tháng", color: "text-blue-600", href: "/chinh-sach/bao-hanh" },
+  { icon: Smartphone, text: "Trả góp 0%", color: "text-green-600", href: "/chinh-sach/tra-gop" },
+  { icon: Gift, text: "Quà tặng hấp dẫn", color: "text-orange-500", href: "/chinh-sach/khach-hang-than-thiet" },
+];
+
+import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [productMenuOpen, setProductMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [storeModalOpen, setStoreModalOpen] = useState(false);
+  const [contactMenuOpen, setContactMenuOpen] = useState(false);
+  const [mobileContactMenuOpen, setMobileContactMenuOpen] = useState(false);
   const { cartCount, wishlist, compare } = useShop();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
 
   const searchResults = useMemo(() => {
@@ -49,21 +99,11 @@ const Header = () => {
     }
   };
 
-  const [isSticky, setIsSticky] = useState(false);
-
   useEffect(() => {
     const onScroll = () => {
-      const hero = document.getElementById("hero-section");
-      if (hero) {
-        const heroBottom = hero.offsetTop + hero.offsetHeight;
-        setIsSticky(window.scrollY >= heroBottom);
-      } else {
-        // No hero section (Shop, About, etc.) → always sticky
-        setIsSticky(window.scrollY > 10);
-      }
       setScrolled(window.scrollY > 10);
     };
-    onScroll(); // run once on mount
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -74,13 +114,15 @@ const Header = () => {
   }, [menuOpen]);
 
   return (
-    <header className={`${isSticky ? 'fixed top-0 left-0 right-0' : 'relative'} z-50 bg-background transition-shadow duration-500 ${scrolled ? 'shadow-lg shadow-foreground/5' : 'shadow-sm'}`}>
-      {/* Top bar */}
-      <div className={`bg-background border-b border-border transition-all duration-500 overflow-hidden ${scrolled ? 'max-h-0 border-transparent' : 'max-h-24'}`}>
-        <div className="container flex items-center justify-between h-14 md:h-20 gap-3 md:gap-4">
+    <header className="sticky top-0 z-50">
+      {/* ═══ Main Red Header Bar ═══
+      <div className="fpt-header-gradient">
+       */}
+      <div className="bg-[#cb1c22]">
+        <div className="container flex items-center gap-3 md:gap-5 h-[72px] md:h-[88px]">
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 text-foreground tap-ripple active:scale-90 transition-transform duration-150"
+            className="md:hidden p-2 text-white active:scale-90 transition-transform"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Menu"
           >
@@ -88,271 +130,379 @@ const Header = () => {
           </button>
 
           {/* Logo */}
-          <a href="/" className="flex flex-col items-center shrink-0 group">
-            <span className="text-2xl md:text-3xl font-extrabold tracking-tight transition-all duration-500 group-hover:scale-110 group-hover:tracking-wider" style={{ fontFamily: 'Georgia, serif' }}>
-              <span className="text-secondary transition-colors duration-300 group-hover:text-mercy-charcoal">m</span>
-              <span className="text-primary transition-all duration-300 group-hover:text-mercy-orange-glow">e</span>
-              <span className="text-secondary transition-colors duration-300 group-hover:text-mercy-charcoal">rcy</span>
+          <a href="/" className="relative flex items-center justify-center shrink-0 group mr-2 md:mr-4 h-full min-w-[100px] md:min-w-[120px]">
+            <span className="flex items-center justify-center h-16 md:h-20">
+              <img src="/src/assets/logo/logowhite.png" alt="MERCY" className="h-full w-auto object-contain dark:hidden" />
+              <img src="/src/assets/logo/logoBlack.png" alt="MERCY" className="h-full w-auto object-contain hidden dark:block" />
             </span>
-            <span className="text-[7px] md:text-[9px] text-muted-foreground tracking-[0.12em] -mt-1 transition-opacity duration-300 group-hover:opacity-70">
-              Smart Vision • Smart Life
+            <span className="absolute bottom-1.5 md:bottom-2 text-[6px] md:text-[8px] text-white/90 tracking-[0.15em] font-semibold whitespace-nowrap">
+              SMART VISION • SMART LIFE
             </span>
           </a>
 
-          {/* Hamburger icon (desktop - circular dark button) */}
-          <button className="hidden md:flex items-center justify-center w-10 h-10 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all duration-200 active:scale-90 shrink-0">
-            <Menu className="w-5 h-5" />
-          </button>
+          {/* Category Button (desktop) */}
+          <div className="relative hidden md:block">
+            <button
+              onClick={() => setCatOpen(!catOpen)}
+              className="flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 active:scale-95 backdrop-blur-sm"
+            >
+              <Menu className="w-4 h-4" />
+              <span>Danh mục</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${catOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {catOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setCatOpen(false)} />
+                <div className="absolute top-full left-0 mt-2 w-[580px] bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 p-5">
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                    {productDropdown.map((group, gi) => (
+                      <div key={gi}>
+                        <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 px-1 border-b border-gray-100 pb-2">
+                          {group.title}
+                        </h4>
+                        <div className="flex flex-col gap-1">
+                          {group.items.map((item, ii) => (
+                            <button
+                              key={ii}
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-lg transition-all duration-150 group/item text-left font-medium"
+                              onClick={() => { setCatOpen(false); navigate(item.href); }}
+                            >
+                              <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover/item:text-red-500 transition-colors" />
+                              <span className="group-hover/item:translate-x-1 transition-transform">{item.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-100 mt-5 pt-4">
+                    <button
+                      className="flex items-center justify-center gap-2 w-full text-sm font-bold text-red-600 hover:text-red-700 py-2.5 hover:bg-red-50 rounded-lg transition-all"
+                      onClick={() => { setCatOpen(false); navigate("/shop"); }}
+                    >
+                      Xem tất cả danh mục →
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
-          {/* Category dropdown + Search bar combined (desktop) */}
-          <div className="hidden md:flex items-center flex-1 max-w-2xl relative">
-            <form onSubmit={handleSearchSubmit} className={`flex items-center w-full rounded-lg overflow-visible border-2 transition-all duration-400 ${searchFocused ? 'border-primary shadow-lg shadow-primary/10' : 'border-border'}`}>
-              {/* Category selector inside search */}
-              <button type="button" className="flex items-center gap-2 px-4 py-2.5 bg-secondary text-secondary-foreground text-sm font-medium whitespace-nowrap hover:bg-secondary/90 transition-colors duration-200 border-r border-border/30">
-                Category
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm kiếm sản phẩm..."
-                  className="w-full px-4 py-2.5 text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                />
-                {searchQuery && (
-                  <button type="button" onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              <button type="submit" className="bg-primary hover:bg-mercy-orange-light text-primary-foreground px-5 py-2.5 transition-all duration-200 active:scale-95 hover:shadow-md hover:shadow-primary/20">
+          {/* Search Bar */}
+          <div className="flex-1 max-w-xl relative hidden md:block">
+            <form onSubmit={handleSearchSubmit} className="flex items-center bg-white rounded-lg overflow-hidden">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Nhập tên sản phẩm, kính thông minh... cần tìm"
+                className="flex-1 px-4 py-2.5 text-sm bg-white outline-none text-gray-800 placeholder:text-gray-400"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery("")} className="px-2 text-gray-400 hover:text-gray-600">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+              <button type="submit" className="bg-[#d70018] hover:bg-[#b5001a] text-white px-4 h-[42px] flex items-center justify-center transition-colors">
                 <Search className="w-5 h-5" />
               </button>
             </form>
-            {/* Search Results Dropdown */}
+            {/* Search Results */}
             {searchFocused && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-background rounded-lg shadow-xl border border-border z-50 overflow-hidden">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-2xl border border-gray-100 z-50 overflow-hidden">
                 {searchResults.map((p) => (
                   <button
                     key={p.id}
                     onMouseDown={() => handleSearchSelect(p.id)}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-primary/5 transition-colors duration-150"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 transition-colors"
                   >
                     <img src={p.image} alt={p.name} className="w-10 h-10 object-cover rounded" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                      <p className="text-xs text-primary font-semibold">{p.price.toLocaleString("vi-VN")}₫</p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
+                      <p className="text-xs text-red-600 font-bold">{p.price.toLocaleString("vi-VN")}₫</p>
                     </div>
                   </button>
                 ))}
               </div>
             )}
             {searchFocused && searchQuery.trim() && searchResults.length === 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-background rounded-lg shadow-xl border border-border z-50 p-4 text-center text-sm text-muted-foreground">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-2xl border z-50 p-4 text-center text-sm text-gray-500">
                 Không tìm thấy sản phẩm nào
               </div>
             )}
           </div>
 
-          {/* Hotline */}
-          <div className="hidden lg:flex items-center gap-3 group cursor-pointer shrink-0">
-            <div className="w-11 h-11 rounded-full border-2 border-primary flex items-center justify-center animate-pulse-glow group-hover:bg-primary/10 transition-colors duration-300">
-              <Phone className="w-4 h-4 text-primary group-hover:animate-wiggle" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Hotline</p>
-              <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-200">0898 273 899</p>
-            </div>
-          </div>
-
-          {/* Flash Sale - outlined orange border */}
-          <a
-            href="#"
-            className="hidden sm:flex items-center gap-2 border-2 border-primary text-primary px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:shadow-xl hover:shadow-primary/30 hover:scale-105 active:scale-95 group shrink-0"
-          >
-            <Zap className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
-            <span>Flash Sale</span>
-          </a>
-
-          <div className="md:hidden" />
-        </div>
-      </div>
-
-      {/* Desktop Second Navigation Bar */}
-      <div className="hidden md:block bg-background border-b border-border">
-        <div className="container flex items-center justify-between h-12">
-          <div className="flex items-center gap-8">
-            {/* DANH MỤC SẢN PHẨM - orange background */}
-            <div className="relative">
-              <button
-                onClick={() => setCatOpen(!catOpen)}
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2 rounded-lg font-semibold text-sm hover:bg-mercy-orange-light transition-all duration-200 active:scale-95"
-              >
-                <Menu className="w-4 h-4" />
-                DANH MỤC SẢN PHẨM
-                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${catOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {catOpen && (
-                <div className="absolute top-full left-0 mt-1 w-72 bg-background rounded-lg shadow-xl border border-border z-50 overflow-hidden">
-                  {categories.map((cat, i) => (
-                    <a
-                      key={i}
-                      href="#"
-                      className="flex items-center justify-between px-4 py-3 text-sm text-foreground hover:bg-primary/5 hover:text-primary transition-all duration-200 group animate-slide-in-stagger"
-                      style={{ animationDelay: `${i * 50}ms` }}
-                    >
-                      <span className="transition-transform duration-200 group-hover:translate-x-1">{cat.name}</span>
-                      {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-all duration-200 group-hover:translate-x-1" />}
-                    </a>
-                  ))}
-                </div>
+          {/* Right Actions */}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            {/* User icon / dropdown */}
+            <div className="relative hidden md:block">
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 text-white hover:bg-white/15 px-3 py-2 rounded-lg transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                    <span className="text-sm font-medium max-w-[100px] truncate">{user?.name}</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {userMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                      <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        </div>
+                        <div className="py-1">
+                          <button
+                            onClick={() => { setUserMenuOpen(false); navigate("/orders"); }}
+                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                          >
+                            📦 Đơn hàng của tôi
+                          </button>
+                          <button
+                            onClick={() => { setUserMenuOpen(false); navigate("/wishlist"); }}
+                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                          >
+                            ❤️ Yêu thích
+                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => { setUserMenuOpen(false); navigate("/admin"); }}
+                              className="w-full px-4 py-2.5 text-sm text-red-600 font-semibold hover:bg-red-50 transition-colors text-left"
+                            >
+                              ⚙️ Quản trị Admin
+                            </button>
+                          )}
+                        </div>
+                        <div className="border-t border-gray-100 py-1">
+                          <button
+                            onClick={() => { setUserMenuOpen(false); logout(); toast.success("Đã đăng xuất"); navigate("/"); }}
+                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                          >
+                            🚪 Đăng xuất
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate("/login")}
+                  className="flex items-center gap-1.5 text-white hover:bg-white/15 px-3 py-2 rounded-lg transition-colors"
+                >
+                  <User className="w-5 h-5" />
+                </button>
               )}
             </div>
 
-            {/* Nav links */}
-            <nav className="flex items-center gap-6">
-              {mainMenu.map((link, i) => (
-                <a key={i} href={link.href} className={`text-sm font-medium transition-all duration-200 underline-animate py-1 ${i === 0 ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                  {link.name}
-                  {link.hasSubmenu && <ChevronDown className="inline w-3.5 h-3.5 ml-0.5 transition-transform duration-200" />}
-                </a>
-              ))}
-            </nav>
+            {/* Cart Button */}
+            <button
+              onClick={() => navigate("/cart")}
+              className="relative flex items-center gap-2 bg-white text-[#d70018] px-3 py-2 rounded-lg font-bold text-sm transition-all hover:bg-gray-50 active:scale-95"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="hidden md:inline">Giỏ hàng</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-yellow-400 text-[#d70018] text-[10px] font-extrabold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+                  {cartCount}
+                </span>
+              )}
+            </button>
           </div>
+        </div>
 
-          {/* Right side icons with badges */}
-          <div className="flex items-center gap-1">
-            {[
-              { Icon: User, badge: null, label: "Tài khoản", href: "/login" },
-              { Icon: RefreshCw, badge: compare.length > 0 ? String(compare.length) : null, label: "So sánh", href: undefined },
-              { Icon: Heart, badge: wishlist.length > 0 ? String(wishlist.length) : null, label: "Yêu thích", href: "/wishlist" },
-              { Icon: ShoppingCart, badge: cartCount > 0 ? String(cartCount) : "0", label: "Giỏ hàng", href: "/cart" },
-            ].map(({ Icon, badge, label, href }, idx) => (
+        {/* Trending keywords inside red area (FPT style) */}
+        {/*
+        <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-0' : 'max-h-10'}`}>
+          <div className="container hidden md:flex items-center gap-4 h-8 overflow-x-auto">
+            {trendingKeywords.map((kw, i) => (
               <button
-                key={idx}
-                className="p-2.5 text-muted-foreground hover:text-primary transition-all duration-200 relative group icon-hover-bounce"
-                title={label}
-                onClick={() => href && navigate(href)}
+                key={i}
+                onClick={() => navigate(`/shop?search=${encodeURIComponent(kw)}`)}
+                className="text-xs text-white/70 hover:text-white whitespace-nowrap transition-colors font-medium"
               >
-                <Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
-                {badge !== null && (
-                  <span className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center transition-transform duration-200 group-hover:scale-125">
-                    {badge}
-                  </span>
-                )}
+                {kw}
               </button>
             ))}
           </div>
         </div>
+        */}
       </div>
 
-      {/* Mobile Sidebar Backdrop */}
+      {/* ═══ Promo Strip + Navigation (white bar, FPT style) ═══ */}
+      <div className={`hidden md:block bg-white border-b border-gray-100 transition-shadow ${scrolled ? 'shadow-md' : ''}`}>
+        <div className="container flex items-center justify-between h-11">
+          {/* Left: Sản phẩm đang giảm giá */}
+          <div className="flex-1 basis-0 flex justify-start">
+            <a href="/flash-sale" className="flex items-center gap-1.5 text-sm font-bold text-red-600 hover:text-red-700 transition-colors whitespace-nowrap">
+              <Zap className="w-5 h-5" />
+              Sản phẩm đang giảm giá
+            </a>
+          </div>
+
+          {/* Center: Bảo hành, Trả góp, Quà tặng */}
+          <div className="flex-none flex justify-center items-center gap-4 lg:gap-8">
+            {promoLinks.slice(1).map((link, i) => (
+              <a key={i} href={link.href} className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold text-gray-700 hover:text-red-600 transition-colors whitespace-nowrap">
+                <link.icon className={`w-4 h-4 lg:w-5 lg:h-5 ${link.color}`} />
+                {link.text}
+              </a>
+            ))}
+          </div>
+
+          {/* Right links */}
+          <div className="flex-1 basis-0 flex justify-end items-center gap-2 text-sm text-gray-600 shrink-0">
+            <a href="/about" className="hover:text-red-600 px-2 py-1 transition-colors font-medium text-xs">Giới thiệu</a>
+            <span className="text-gray-300">|</span>
+            <div className="relative" onMouseEnter={() => setContactMenuOpen(true)} onMouseLeave={() => setContactMenuOpen(false)}>
+              <button className="hover:text-red-600 px-2 py-1 transition-colors font-medium text-xs flex items-center gap-1">
+                Liên hệ <ChevronDown className={`w-3 h-3 transition-transform ${contactMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {contactMenuOpen && (
+                <div className="absolute top-full right-0 pt-2 z-50">
+                  <div className="bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden w-56 py-1">
+                    {["Đại Lý Nhập Hàng", "Hợp Tác Thương Hiệu", "Chăm Sóc Khách Hàng"].map(opt => (
+                      <button key={opt} onClick={() => {
+                        setContactMenuOpen(false);
+                        const body = `Tên khách hàng: \n\nSố điện thoại: `;
+                        window.location.href = `mailto:mercytechglobal@gmail.com?subject=${encodeURIComponent(opt)}&body=${encodeURIComponent(body)}`;
+                      }} className="w-full text-left px-4 py-2.5 hover:bg-red-50 hover:text-red-600 text-xs font-semibold transition-colors border-b border-gray-50 last:border-0">
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <span className="text-gray-300">|</span>
+            <button onClick={() => setStoreModalOpen(true)} className="hover:text-red-600 px-2 pl-3 py-1 transition-colors font-medium text-xs">Cửa hàng</button>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ Mobile Sidebar ═══ */}
       <div
-        className={`md:hidden fixed inset-0 z-[60] bg-foreground/50 backdrop-blur-sm transition-all duration-400 ${menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={() => setMenuOpen(false)}
       />
-
-      {/* Mobile Sidebar Panel */}
       <div
-        className={`md:hidden fixed top-0 left-0 z-[70] h-full w-[85%] max-w-[340px] bg-background shadow-2xl flex flex-col transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`md:hidden fixed top-0 left-0 z-[70] h-full w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        <div className="flex items-center justify-end p-4 border-b border-border">
+        {/* Mobile header */}
+        <div className="flex items-center justify-between p-4 fpt-header-gradient">
+          <img src="/src/assets/logo/logowhite.png" alt="MERCY" className="h-14 object-contain dark:hidden" />
+          <img src="/src/assets/logo/logoBlack.png" alt="MERCY" className="h-14 object-contain hidden dark:block" />
           <button
             onClick={() => setMenuOpen(false)}
-            className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border transition-all duration-200 active:scale-90"
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition active:scale-90"
           >
-            <Minus className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex-1 overflow-y-auto">
           {/* Mobile Search */}
-          <div className="px-4 pt-4 pb-2">
+          <div className="p-4">
             <form onSubmit={(e) => { handleSearchSubmit(e); setMenuOpen(false); }} className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Tìm kiếm sản phẩm..."
-                className="w-full pl-10 pr-9 py-2.5 text-sm bg-muted rounded-lg outline-none text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 rounded-lg outline-none text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-red-200 border border-gray-200"
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             </form>
-            {/* Mobile Search Results */}
             {searchFocused && searchResults.length > 0 && (
-              <div className="mt-1 bg-background rounded-lg border border-border overflow-hidden shadow-lg">
+              <div className="mt-1 bg-white rounded-lg border shadow-lg overflow-hidden">
                 {searchResults.map((p) => (
                   <button
                     key={p.id}
                     onMouseDown={() => { handleSearchSelect(p.id); setMenuOpen(false); }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-primary/5 transition-colors duration-150"
+                    className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-red-50"
                   >
                     <img src={p.image} alt={p.name} className="w-9 h-9 object-cover rounded" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                      <p className="text-xs text-primary font-semibold">{p.price.toLocaleString("vi-VN")}₫</p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
+                      <p className="text-xs text-red-600 font-bold">{p.price.toLocaleString("vi-VN")}₫</p>
                     </div>
                   </button>
                 ))}
               </div>
             )}
-            {searchFocused && searchQuery.trim() && searchResults.length === 0 && (
-              <div className="mt-1 bg-background rounded-lg border border-border p-3 text-center text-sm text-muted-foreground">
-                Không tìm thấy sản phẩm nào
-              </div>
-            )}
           </div>
-          <div className="px-5 pt-6 pb-3">
-            <h3 className={`text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4 transition-all duration-500 ${menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
-              style={{ transitionDelay: '150ms' }}
-            >
-              Main Menu
-            </h3>
+
+          {/* Menu + Categories */}
+          <div className="px-4 pb-6">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Menu</h3>
             {mainMenu.map((link, i) => (
-              <a
-                key={i}
-                href={link.href}
-                className={`flex items-center justify-between py-3.5 text-[15px] font-medium text-foreground hover:text-primary transition-all duration-300 border-b border-border/40 last:border-0 tap-ripple group ${menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
-                style={{ transitionDelay: `${200 + i * 80}ms` }}
-              >
-                <span className="transition-transform duration-200 group-hover:translate-x-1">{link.name}</span>
-                {link.hasSubmenu && <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />}
+              <a key={i} href={link.href} className="flex items-center justify-between py-3 text-[15px] font-medium text-gray-800 hover:text-red-600 border-b border-gray-100 last:border-0">
+                <span>{link.name}</span>
+                {link.hasSubmenu && <ChevronRight className="w-4 h-4 text-gray-300" />}
               </a>
             ))}
-          </div>
 
-          <div className="mx-5 border-t border-border" />
-
-          <div className="px-5 pt-5 pb-8">
-            <h3 className={`text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4 transition-all duration-500 ${menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
-              style={{ transitionDelay: '400ms' }}
-            >
-              Danh mục sản phẩm
-            </h3>
-            {categories.map((cat, i) => (
-              <a
-                key={i}
-                href="#"
-                className={`flex items-center justify-between py-3.5 text-[15px] text-foreground hover:text-primary transition-all duration-300 border-b border-border/40 last:border-0 tap-ripple group ${menuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
-                style={{ transitionDelay: `${450 + i * 60}ms` }}
-              >
-                <span className="transition-transform duration-200 group-hover:translate-x-1">{cat.name}</span>
-                {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />}
+            {/* Promo links in mobile */}
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Ưu đãi</h3>
+            {promoLinks.map((link, i) => (
+              <a key={i} href={link.href} className="flex items-center gap-3 py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 last:border-0">
+                <link.icon className={`w-5 h-5 ${link.color}`} />
+                <span>{link.text}</span>
               </a>
+            ))}
+
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Danh mục sản phẩm</h3>
+            {categories.map((cat, i) => (
+              <button key={i} onClick={() => { setMenuOpen(false); navigate(cat.href); }} className="flex items-center justify-between w-full py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 last:border-0 text-left">
+                <span>{cat.name}</span>
+                {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-gray-300" />}
+              </button>
             ))}
           </div>
         </div>
       </div>
+      {/* ═══ Store Modal ═══ */}
+      {storeModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4" onClick={() => setStoreModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl p-4 md:p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 border-l-4 border-red-600 pl-3">Hệ thống cửa hàng MERCY</h3>
+              <button onClick={() => setStoreModalOpen(false)} className="bg-gray-100 p-2 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-gray-50 rounded-xl p-4 md:p-5 border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-red-100 p-2 rounded-lg"><Store className="w-5 h-5 text-red-600" /></div>
+                  <h4 className="font-bold text-lg text-gray-900">Cơ sở Hồ Chí Minh</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 pl-[42px] font-medium">36 đường số 5 KĐT Vạn Phúc, Thủ Đức, HCM</p>
+                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden border border-gray-200">
+                  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.5778416037806!2d106.70807068133068!3d10.843583430406635!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317528700d814313%3A0x4ad6cbb135d5bf29!2zMTA5IE5ndXnhu4VuIFRo4buLIE5odW5nLCBLaHUgxJHDtCBUaOG7iyBW4bqhbiBQaMO6YywgSGnhu4dwIELDrG5oLCBI4buTIENow60gTWluaCA3MTAwMCwgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1776685308306!5m2!1svi!2s" className="w-full h-full border-0" allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 md:p-5 border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-blue-100 p-2 rounded-lg"><Store className="w-5 h-5 text-blue-600" /></div>
+                  <h4 className="font-bold text-lg text-gray-900">Cơ sở Hà Nội</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 pl-[42px] font-medium">S1.06 Vinsmart City, Tây Mỗ, Nam Từ Liêm, Hà Nội</p>
+                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden border border-gray-200">
+                  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.6410653108037!2d105.7358738254665!3d21.00702043852441!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313453f5af42dea1%3A0x5b6bfe928f51703d!2sS1.06%20Vinhomes%20Smart%20City!5e0!3m2!1svi!2s!4v1776685395548!5m2!1svi!2s" className="w-full h-full border-0" allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

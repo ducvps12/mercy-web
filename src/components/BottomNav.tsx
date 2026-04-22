@@ -1,30 +1,35 @@
-import { Home, Store, ShoppingCart, User, Heart } from "lucide-react";
+import { Home, Store, Phone, User, Heart, LogIn, X, Mail } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
-
-const items = [
-  { icon: Home, label: "Trang chủ", href: "/" },
-  { icon: Store, label: "Cửa hàng", href: "/shop" },
-  { icon: ShoppingCart, label: "Giỏ hàng", href: "/cart" },
-  { icon: User, label: "Tài khoản", href: "/login" },
-  { icon: Heart, label: "Yêu thích", href: "/wishlist" },
-];
+import { useAuth } from "@/context/AuthContext";
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [tapped, setTapped] = useState<number | null>(null);
+  const [storeModalOpen, setStoreModalOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  const items = [
+    { icon: Home, label: "Trang chủ", href: "/", action: () => navigate("/") },
+    { icon: Store, label: "Cửa hàng", href: "#", action: () => setStoreModalOpen(true) },
+    { icon: Phone, label: "Liên hệ", href: "#", action: () => setContactModalOpen(true) },
+    { icon: isAuthenticated ? User : LogIn, label: isAuthenticated ? "Tài khoản" : "Đăng nhập", href: isAuthenticated ? "/orders" : "/login", action: () => navigate(isAuthenticated ? "/orders" : "/login") },
+    { icon: Heart, label: "Yêu thích", href: "/wishlist", action: () => navigate("/wishlist") },
+  ];
 
   const activeIndex = items.findIndex((item) => item.href === location.pathname);
 
   const handleTap = (i: number) => {
     setTapped(i);
     setTimeout(() => setTapped(null), 300);
-    navigate(items[i].href);
+    items[i].action();
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border md:hidden">
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border md:hidden">
       <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item, i) => (
           <button
@@ -49,6 +54,64 @@ const BottomNav = () => {
         ))}
       </div>
     </nav>
+      {/* ═══ Store Modal ═══ */}
+      {storeModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4" onClick={() => setStoreModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl p-4 w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900 border-l-4 border-red-600 pl-3">Hệ thống cửa hàng</h3>
+              <button onClick={() => setStoreModalOpen(false)} className="bg-gray-100 p-2 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-red-100 p-2 rounded-lg"><Store className="w-5 h-5 text-red-600"/></div>
+                  <h4 className="font-bold text-lg text-gray-900">Cơ sở Hồ Chí Minh</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 pl-[42px] font-medium">36 đường số 5 KĐT Vạn Phúc, Thủ Đức, HCM</p>
+                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden border border-gray-200">
+                  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.5778416037806!2d106.70807068133068!3d10.843583430406635!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317528700d814313%3A0x4ad6cbb135d5bf29!2zMTA5IE5ndXnhu4VuIFRo4buLIE5odW5nLCBLaHUgxJHDtCBUaOG7iyBW4bqhbiBQaMO6YywgSGnhu4dwIELDrG5oLCBI4buTIENow60gTWluaCA3MTAwMCwgVmnhu4d0IE5hbQ!5e0!3m2!1svi!2s!4v1776685308306!5m2!1svi!2s" className="w-full h-full border-0" allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-blue-100 p-2 rounded-lg"><Store className="w-5 h-5 text-blue-600"/></div>
+                  <h4 className="font-bold text-lg text-gray-900">Cơ sở Hà Nội</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 pl-[42px] font-medium">S1.06 Vinsmart City, Tây Mỗ, Nam Từ Liêm, Hà Nội</p>
+                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden border border-gray-200">
+                  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.6410653108037!2d105.7358738254665!3d21.00702043852441!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313453f5af42dea1%3A0x5b6bfe928f51703d!2sS1.06%20Vinhomes%20Smart%20City!5e0!3m2!1svi!2s!4v1776685395548!5m2!1svi!2s" className="w-full h-full border-0" allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* ═══ Contact Modal (Mobile) ═══ */}
+      {contactModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm" onClick={() => setContactModalOpen(false)}>
+          <div className="bg-white rounded-t-2xl shadow-2xl p-4 w-full max-w-md animate-in slide-in-from-bottom-full" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900 ml-2">Liên Hệ</h3>
+              <button onClick={() => setContactModalOpen(false)} className="bg-gray-100 p-2 rounded-full text-gray-500 hover:text-red-600"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="space-y-3 pb-6">
+              {["Đại Lý Nhập Hàng", "Hợp Tác Thương Hiệu", "Chăm Sóc Khách Hàng"].map(opt => (
+                <button key={opt} onClick={() => {
+                  setContactModalOpen(false);
+                  const body = `Tên khách hàng: \n\nSố điện thoại: `;
+                  window.location.href = `mailto:mercytechglobal@gmail.com?subject=${encodeURIComponent(opt)}&body=${encodeURIComponent(body)}`;
+                }} className="w-full flex items-center justify-between px-5 py-4 bg-gray-50 hover:bg-red-50 rounded-xl transition-colors group">
+                  <span className="font-semibold text-gray-800 group-hover:text-red-600">{opt}</span>
+                  <Mail className="w-5 h-5 text-gray-400 group-hover:text-red-600" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

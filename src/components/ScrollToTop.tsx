@@ -20,19 +20,19 @@ const ScrollToTop = () => {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className={`fixed bottom-20 md:bottom-8 right-4 z-40 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 group ${
+      className={`fixed bottom-20 md:bottom-8 right-4 md:right-6 z-30 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 group ${
         show ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-50 pointer-events-none'
       }`}
     >
       {/* Circular progress ring */}
       <svg className="absolute inset-0 -rotate-90" viewBox="0 0 44 44">
-        <circle cx="22" cy="22" r="18" fill="hsl(var(--mercy-dark))" stroke="hsl(var(--border))" strokeWidth="2" />
+        <circle cx="22" cy="22" r="18" fill="hsl(0 78% 45%)" stroke="hsl(0 78% 55%)" strokeWidth="2" />
         <circle
           cx="22"
           cy="22"
           r="18"
           fill="none"
-          stroke="hsl(var(--mercy-orange))"
+          stroke="white"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeDasharray={circumference}

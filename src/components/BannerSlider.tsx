@@ -1,9 +1,54 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getBanners } from "@/pages/admin/AdminBanners";
+import { useNavigate } from "react-router-dom";
+
+export interface BannerItem {
+  id: number;
+  image: string;
+  alt: string;
+  link: string;
+}
+
+const defaultBanners: BannerItem[] = [
+  { id: 1, image: "/src/assets/banners/banner/1.png", alt: "Banner 1", link: "/shop" },
+  { id: 2, image: "/src/assets/banners/banner/2.png", alt: "Banner 2", link: "/shop" },
+  { id: 3, image: "/src/assets/banners/banner/3.png", alt: "Banner 3", link: "/shop" },
+  { id: 4, image: "/src/assets/banners/banner/4.png", alt: "Banner 4", link: "/shop" },
+];
+
+export function getBanners(): BannerItem[] {
+  // Temporary workaround to force the new images: ignore localStorage
+  /*
+  try {
+    const saved = localStorage.getItem("mercy_banners");
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  */
+  return defaultBanners;
+}
 
 const BannerSlider = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  /*
+  // Clear stale localStorage banners that contain old placeholder images
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("mercy_banners");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const hasOldPlaceholders = parsed.some((b: any) =>
+          typeof b.image === "string" && (b.image.includes("banner-1.") || b.image.includes("banner-2.") || b.image.includes("banner-3.") || b.image.includes("banner-4.") || b.image.includes("data:"))
+        );
+        if (hasOldPlaceholders) {
+          localStorage.removeItem("mercy_banners");
+        }
+      }
+    } catch {}
+  }, []);
+  */
+
   const [banners, setBanners] = useState(getBanners());
 
   useEffect(() => {
@@ -22,45 +67,48 @@ const BannerSlider = () => {
   };
 
   return (
-    <section className="py-6 md:py-10 bg-muted/30">
+    <section className="py-4 md:py-6">
       <div className="container mx-auto px-4">
-        <div className="relative group">
-          <button
-            onClick={() => scroll("left")}
-            className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-background border border-border rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
-          >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
+        {/* FPT-style white card wrapper */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 md:p-5">
+          <div className="relative group">
+            <button
+              onClick={() => scroll("left")}
+              className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-700" />
+            </button>
 
-          <div
-            ref={scrollRef}
-            className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {banners.map((b) => (
-              <a
-                key={b.id}
-                href="#"
-                className="snap-start flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[32vw] lg:w-[24vw] rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                <img
-                  src={b.image}
-                  alt={b.alt}
-                  loading="lazy"
-                  width={1200}
-                  height={512}
-                  className="w-full h-auto object-cover"
-                />
-              </a>
-            ))}
+            <div
+              ref={scrollRef}
+              className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {banners.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => navigate(b.link)}
+                  className="snap-start flex-shrink-0 w-[55vw] sm:w-[38vw] md:w-[28vw] lg:w-[22vw] rounded-xl overflow-hidden hover:shadow-md transition-shadow active:scale-[0.98] bg-white"
+                >
+                  <img
+                    src={b.image}
+                    alt={b.alt}
+                    loading="lazy"
+                    width={1080}
+                    height={1080}
+                    className="w-full h-auto object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => scroll("right")}
+              className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-700" />
+            </button>
           </div>
-
-          <button
-            onClick={() => scroll("right")}
-            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-background border border-border rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
-          >
-            <ChevronRight className="w-5 h-5 text-foreground" />
-          </button>
         </div>
       </div>
     </section>

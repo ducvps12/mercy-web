@@ -1,16 +1,61 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
+import { ACB_HISTORY_API_URL } from '../config';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Public endpoint to check payment status directly without needing an order in DB
+router.get('/check-payment', async (req, res) => {
+  try {
+    const { amount, content } = req.query;
+    if (!amount || !content) return res.json({ paid: false });
+
+    if (!ACB_HISTORY_API_URL) {
+      console.error('Missing ACB_HISTORY_API_URL');
+      return res.json({ paid: false });
+    }
+
+    const response = await axios.get(ACB_HISTORY_API_URL);
+    
+    if (response.data && response.data.codeStatus === 200) {
+      const transactions = response.data.data || [];
+      const matched = transactions.find((tx: any) => 
+        tx.type === 'IN' && 
+        tx.amount === Number(amount) && 
+        String(tx.description).toUpperCase().includes(String(content).toUpperCase())
+      );
+      
+      if (matched) {
+        return res.json({ paid: true });
+      }
+    }
+    
+    return res.json({ paid: false });
+  } catch (error) {
+    console.error('Check payment error:', error);
+    res.json({ paid: false });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
-    const { total, items, affiliateCode, userId, shippingInfo } = req.body;
+    console.log('Incoming order POST payload:', req.body);
+    const { total, items, affiliateCode, userId, shippingInfo, orderCode: providedOrderCode, status: providedStatus } = req.body;
     
-    // Auto-generate ordercode e.g. MERCY-48190
+    // Auto-generate ordercode if not provided
     const randomNum = Math.floor(10000 + Math.random() * 90000);
-    const orderCode = `MERCY-${randomNum}`;
+    const orderCode = providedOrderCode || `MERCY-${randomNum}`;
+
+    // Preserve 'deposit' or 'full' intention in notes since DB only accepts 'bank_transfer'
+    const actualPaymentType = shippingInfo?.paymentMethod;
+    let finalNotes = shippingInfo?.notes || '';
+    if (actualPaymentType === 'deposit') {
+      finalNotes = `[DEPOSIT] ${finalNotes}`;
+    } else if (actualPaymentType === 'full') {
+      finalNotes = `[FULL] ${finalNotes}`;
+    }
     
     const order = await prisma.orders.create({
       data: {
@@ -24,8 +69,9 @@ router.post('/', async (req, res) => {
         customer_email: shippingInfo?.email || null,
         shipping_address: shippingInfo?.address || '',
         user_id: userId || null,
-        payment_method: shippingInfo?.paymentMethod || 'cod',
-        notes: shippingInfo?.notes || null,
+        payment_method: (['cod', 'ewallet', 'bank_transfer'].includes(shippingInfo?.paymentMethod) ? shippingInfo.paymentMethod : 'bank_transfer'),
+        notes: finalNotes || null,
+        status: providedStatus || 'pending',
       }
     });
 
@@ -34,14 +80,14 @@ router.post('/', async (req, res) => {
       await prisma.order_items.createMany({
         data: items.map((item: any) => ({
           order_id: order.id,
-          product_id: item.productId || item.product_id || '',
-          product_name: item.productName || item.product_name || item.name || '',
+          product_id: String(item.productId || item.product_id || ''),
+          product_name: String(item.productName || item.product_name || item.name || ''),
           variant_name: item.variantName || item.variant_name || null,
           warranty_name: item.warrantyName || item.warranty_name || null,
           warranty_fee: BigInt(item.warrantyFee || item.warranty_fee || 0),
           price: BigInt(item.price || 0),
-          original_price: BigInt(item.originalPrice || item.original_price || 0),
-          quantity: item.quantity || 1,
+          original_price: BigInt(item.originalPrice || item.original_price || item.price || 0),
+          quantity: Number(item.quantity || 1),
           image_url: item.imageUrl || item.image_url || null,
         })),
       });
@@ -60,7 +106,103 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(500).json({ success: false, error: 'Cannot create order' });
+    res.status(500).json({ success: false, error: 'Cannot create order', details: String(error) });
+  }
+});
+
+router.get('/history', async (req, res) => {
+  try {
+    const { codes, userId } = req.query;
+    let whereClause: any = {};
+    
+    if (userId) {
+       whereClause.user_id = Number(userId);
+    } else if (codes) {
+       whereClause.order_code = { in: String(codes).split(',') };
+    } else {
+       return res.json({ data: [] });
+    }
+
+    const orders = await prisma.orders.findMany({
+      where: whereClause,
+      include: {
+        order_items: true
+      },
+      orderBy: { created_at: 'desc' }
+    });
+
+    const mapped = orders.map((o: any) => {
+      let isDeposit = false;
+      let cleanTransferContent = o.notes || '';
+      
+      if (cleanTransferContent.includes('[DEPOSIT]')) {
+        isDeposit = true;
+        cleanTransferContent = cleanTransferContent.replace('[DEPOSIT] ', '').replace('[DEPOSIT]', '');
+      } else if (cleanTransferContent.includes('[FULL]')) {
+        cleanTransferContent = cleanTransferContent.replace('[FULL] ', '').replace('[FULL]', '');
+      }
+
+      const total = Number(o.total);
+      
+      // Calculate deposit logic
+      let finalPaymentMethod = isDeposit ? 'deposit' : 'full';
+      if (o.payment_method === 'cod') finalPaymentMethod = 'cod'; // Fallback if regular COD without popup
+      
+      let transferAmount = isDeposit ? Math.ceil(total * 0.1) : total;
+      let remainingCOD = isDeposit ? total - transferAmount : 0;
+
+      return {
+        orderCode: o.order_code,
+        total: total,
+        status: o.status,
+        paymentMethod: finalPaymentMethod,
+        customerName: o.customer_name,
+        customerPhone: o.customer_phone,
+        customerAddress: o.shipping_address,
+        createdAt: o.created_at,
+        transferAmount: transferAmount,
+        remainingCOD: remainingCOD,
+        transferContent: cleanTransferContent,
+        items: o.order_items.map((i: any) => ({
+          id: i.id,
+          name: i.product_name,
+          price: Number(i.price),
+          image: i.image_url,
+          quantity: i.quantity
+        }))
+      };
+    });
+    
+    res.json({ data: mapped });
+  } catch (error) {
+    console.error('Fetch history error:', error);
+    res.status(500).json({ data: [] });
+  }
+});
+
+router.put('/:orderCode', async (req, res) => {
+  try {
+    const { orderCode } = req.params;
+    const { shippingInfo, status } = req.body;
+    
+    // Find order
+    const existing = await prisma.orders.findUnique({ where: { order_code: orderCode } });
+    if (!existing) return res.status(404).json({ success: false, message: 'Not found' });
+    
+    await prisma.orders.update({
+      where: { order_code: orderCode },
+      data: {
+        customer_name: shippingInfo?.name || existing.customer_name,
+        customer_phone: shippingInfo?.phone || existing.customer_phone,
+        shipping_address: shippingInfo?.address || existing.shipping_address,
+        status: status || existing.status,
+      }
+    });
+
+    res.json({ success: true, message: 'Order updated' });
+  } catch (error) {
+    console.error('Update order error:', error);
+    res.status(500).json({ success: false, error: 'Cannot update order', details: String(error) });
   }
 });
 

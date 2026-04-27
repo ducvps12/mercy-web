@@ -11,7 +11,10 @@ import SEOHead from "@/components/SEOHead";
 import { useShop } from "@/context/ShopContext";
 import { Heart, RefreshCw, ShoppingCart, ChevronDown, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { products, formatPrice } from "@/data/products";
+import { formatPrice } from "@/data/products";
+import { apiGet } from "@/lib/api";
+import { productDropdown } from "@/data/navigation";
+import { makeSiteUrl } from "@/lib/config";
 
 const sortOptions = [
   { value: "default", label: "Sắp xếp mặc định" },
@@ -27,14 +30,18 @@ const priceRanges = [
   { label: "Trên 5 triệu", min: 5000000, max: Infinity },
 ];
 
+
 const Shop = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState("default");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>("");
   const [selectedPrice, setSelectedPrice] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expandedCats, setExpandedCats] = useState<string[]>([]);
   const ITEMS_PER_PAGE = 9;
   const { addToCart, toggleWishlist, toggleCompare, isInWishlist, isInCompare } = useShop();
 
@@ -55,25 +62,61 @@ const Shop = () => {
     setCurrentPage(1);
   }, [searchParams]);
 
-  const categories = useMemo(() => {
-    const cats = [...new Set(products.map((p) => p.category))];
-    return cats.map((c) => ({ name: c, count: products.filter((p) => p.category === c).length }));
+  useEffect(() => {
+    setIsLoading(true);
+    apiGet('/products').then(data => {
+      if (Array.isArray(data)) {
+        const mappedProducts = data.map((p: any) => ({
+          ...p,
+          images: typeof p.images === 'string' ? p.images.split(',') : (p.images || []),
+        }));
+        setProducts(mappedProducts);
+      }
+    }).catch(err => {
+      console.error("Failed to fetch products for shop:", err);
+    }).finally(() => {
+      setIsLoading(false);
+    });
   }, []);
+
+
+
+  const checkMatchesCategory = (p: any, categoryTitle: string) => {
+    if (p.category === categoryTitle) return true;
+    const group = productDropdown.find(g => g.title === categoryTitle);
+    if (group) {
+        if (group.items.some(item => p.category === item.name)) return true;
+        if (group.items.some(item => {
+           const lowerItem = item.name.toLowerCase();
+           return p.name?.toLowerCase().includes(lowerItem) || 
+                  p.sku?.toLowerCase().includes(lowerItem) || 
+                  p.shortName?.toLowerCase().includes(lowerItem);
+        })) return true;
+    }
+    return false;
+  };
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
-    if (selectedCategory) result = result.filter((p) => p.category === selectedCategory);
+    if (selectedCategory) {
+      result = result.filter((p) => checkMatchesCategory(p, selectedCategory));
+    }
     if (searchFilter) {
       const q = searchFilter.toLowerCase();
-      result = result.filter((p) => p.name.toLowerCase().includes(q));
+      result = result.filter((p) => 
+        p.name?.toLowerCase().includes(q) || 
+        p.shortName?.toLowerCase().includes(q) || 
+        p.sku?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q)
+      );
     }
     const range = priceRanges[selectedPrice];
     result = result.filter((p) => p.price >= range.min && p.price < range.max);
     if (sortBy === "price-asc") result.sort((a, b) => a.price - b.price);
     else if (sortBy === "price-desc") result.sort((a, b) => b.price - a.price);
-    else if (sortBy === "name") result.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === "name") result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     return result;
-  }, [selectedCategory, searchFilter, selectedPrice, sortBy]);
+  }, [selectedCategory, searchFilter, selectedPrice, sortBy, products]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = useMemo(() => {
@@ -82,7 +125,16 @@ const Shop = () => {
   }, [filteredProducts, currentPage]);
 
   // Reset page when filters change
-  const handleCategoryChange = (cat: string | null) => { setSelectedCategory(cat); setCurrentPage(1); };
+  const handleCategoryChange = (cat: string | null) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (cat) {
+      newParams.set("category", cat);
+    } else {
+      newParams.delete("category");
+    }
+    newParams.delete("search");
+    setSearchParams(newParams);
+  };
   const handlePriceChange = (i: number) => { setSelectedPrice(i); setCurrentPage(1); };
   const handleSortChange = (val: string) => { setSortBy(val); setCurrentPage(1); };
 
@@ -119,23 +171,56 @@ const Shop = () => {
         <div className="space-y-1">
           <button
             onClick={() => handleCategoryChange(null)}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-              !selectedCategory ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${!selectedCategory && !searchFilter ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
           >
             Tất cả ({products.length})
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.name}
-              onClick={() => handleCategoryChange(cat.name)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                selectedCategory === cat.name ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
-            >
-              {cat.name} ({cat.count})
-            </button>
-          ))}
+          
+          {productDropdown.map((cat, idx) => {
+            const isActiveCat = selectedCategory === cat.title;
+            const catCount = products.filter((p) => checkMatchesCategory(p, cat.title)).length;
+            const isExpanded = expandedCats.includes(cat.title);
+
+            return (
+              <div key={idx} className="flex flex-col mb-1">
+                <div className="flex items-center gap-1 w-full">
+                  <button
+                    onClick={() => handleCategoryChange(cat.title)}
+                    className={`flex-1 text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActiveCat ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+                  >
+                    {cat.title} ({catCount})
+                  </button>
+                  <button 
+                    onClick={() => setExpandedCats(prev => prev.includes(cat.title) ? prev.filter(c => c !== cat.title) : [...prev, cat.title])} 
+                    className="p-2 transition-all hover:bg-muted/50 rounded-lg text-muted-foreground flex-shrink-0 flex items-center justify-center w-9 h-9"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+                
+                {/* Accordion content */}
+                <div 
+                  className={`pl-4 space-y-1 border-l-2 border-muted ml-3 transition-all duration-300 overflow-hidden ${
+                    isExpanded ? "max-h-[500px] mt-1 opacity-100" : "max-h-0 opacity-0 border-transparent m-0"
+                  }`}
+                >
+                  {cat.items.map((item, itemIdx) => {
+                    const searchParamValue = new URLSearchParams(item.href.split('?')[1]).get("search");
+                    const isActiveSearch = searchFilter === searchParamValue;
+                    return (
+                      <Link
+                        key={itemIdx}
+                        to={item.href}
+                        className={`block w-full text-left px-3 py-1.5 rounded-lg text-xs transition-all duration-200 ${isActiveSearch ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`}
+                      >
+                        {item.name}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -147,9 +232,8 @@ const Shop = () => {
             <button
               key={i}
               onClick={() => handlePriceChange(i)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                selectedPrice === i ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 ${selectedPrice === i ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
             >
               {range.label}
             </button>
@@ -175,11 +259,11 @@ const Shop = () => {
       <SEOHead
         title="Cửa hàng"
         description="Khám phá bộ sưu tập kính mắt thông minh, balo thông minh, tai nghe bluetooth và phụ kiện công nghệ Mercy."
-        canonical="https://mercy.vn/shop"
+        canonical={makeSiteUrl("/shop")}
       />
       <Header />
 
-      {/* Page Header */}
+      {/* Page Header
       <section className="bg-mercy-warm-bg border-b border-border">
         <div className="container py-10 md:py-14 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground italic" style={{ fontFamily: "Georgia, serif" }}>
@@ -191,7 +275,7 @@ const Shop = () => {
             <span className="text-foreground">Sản phẩm</span>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Sort Bar */}
       <div className="container py-6">
@@ -239,7 +323,11 @@ const Shop = () => {
 
           {/* Product Grid */}
           <div className="flex-1">
-            {filteredProducts.length === 0 ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="w-8 h-8 md:w-12 md:h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-muted-foreground text-lg">Không tìm thấy sản phẩm phù hợp</p>
                 <button onClick={clearFilters} className="mt-3 text-primary hover:underline text-sm font-medium">
@@ -278,9 +366,8 @@ const Shop = () => {
                       <div className="flex items-center border-t border-border">
                         <button
                           onClick={() => handleToggleCompare(product)}
-                          className={`flex-none p-3 transition-all duration-200 ${
-                            isInCompare(product.id) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
-                          }`}
+                          className={`flex-none p-3 transition-all duration-200 ${isInCompare(product.id) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary hover:bg-primary/5"
+                            }`}
                           title="So sánh"
                         >
                           <RefreshCw className="w-4 h-4" />
@@ -294,9 +381,8 @@ const Shop = () => {
                         </Link>
                         <button
                           onClick={() => handleToggleWishlist(product)}
-                          className={`flex-none p-3 transition-all duration-200 ${
-                            isInWishlist(product.id) ? "text-red-500 bg-red-50" : "text-muted-foreground hover:text-red-500 hover:bg-red-50"
-                          }`}
+                          className={`flex-none p-3 transition-all duration-200 ${isInWishlist(product.id) ? "text-red-500 bg-red-50" : "text-muted-foreground hover:text-red-500 hover:bg-red-50"
+                            }`}
                           title="Yêu thích"
                         >
                           <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
@@ -320,11 +406,10 @@ const Shop = () => {
                       <button
                         key={page}
                         onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-all duration-200 ${
-                          currentPage === page
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                        }`}
+                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-all duration-200 ${currentPage === page
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                          }`}
                       >
                         {page}
                       </button>

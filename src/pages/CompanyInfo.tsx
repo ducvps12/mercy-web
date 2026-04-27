@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
 import { Briefcase, Handshake, HelpCircle, MapPin, Phone, Mail, Clock, Users, Star, ChevronRight, CheckCircle, Heart, Target, Award, Zap } from "lucide-react";
+import { makeSiteUrl } from "@/lib/config";
 
 interface InfoSection {
   title: string;
@@ -70,9 +71,9 @@ const companyInfoData: Record<string, CompanyInfoData> = {
       {
         title: "5. Cách ứng tuyển",
         content: [
-          "Gửi CV (hồ sơ cá nhân) qua email: Kinhthongminh.mercy@gmail.com",
+          "Gửi CV (hồ sơ cá nhân) qua email: mercytechglobal@gmail.com",
           "Tiêu đề email: [Ứng tuyển] – Họ tên – Vị trí ứng tuyển",
-          "Hoặc liên hệ trực tiếp qua Hotline: 0763 068 614 (Mr. Hùng)",
+          "Hoặc liên hệ trực tiếp qua Hotline: 0898 273 899 (Mr. Hùng)",
           "Nhắn tin qua Fanpage Facebook: Mercy – Kính Thông Minh",
           "Thời gian phản hồi: Mercy sẽ liên hệ lại trong vòng 3–5 ngày làm việc sau khi nhận CV.",
           "Lưu ý: Chúng tôi không thu bất kỳ khoản phí nào từ ứng viên trong quá trình tuyển dụng.",
@@ -140,7 +141,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
       {
         title: "5. Quy trình đăng ký hợp tác",
         content: [
-          "Bước 1: Liên hệ qua email Kinhthongminh.mercy@gmail.com hoặc Hotline 0763 068 614.",
+          "Bước 1: Liên hệ qua email mercytechglobal@gmail.com hoặc Hotline 0898 273 899.",
           "Bước 2: Gửi thông tin cá nhân/doanh nghiệp và hình thức hợp tác mong muốn.",
           "Bước 3: Mercy đánh giá và phản hồi trong vòng 2–3 ngày làm việc.",
           "Bước 4: Ký kết thỏa thuận hợp tác (nếu cần) và bắt đầu triển khai.",
@@ -150,9 +151,9 @@ const companyInfoData: Record<string, CompanyInfoData> = {
       {
         title: "6. Thông tin liên hệ hợp tác",
         content: [
-          "📧 Email hợp tác: Kinhthongminh.mercy@gmail.com",
-          "📞 Hotline: 0763 068 614 (Mr. Hùng) – Tư vấn hợp tác đại lý/affiliate",
-          "📞 Hotline: 0398 684 921 (Mr. Mạnh) – Hợp tác KOL/doanh nghiệp",
+          "📧 Email hợp tác: mercytechglobal@gmail.com",
+          "📞 Hotline: 0898 273 899 (Mr. Hùng) – Tư vấn hợp tác đại lý/affiliate",
+          "📞 Hotline: 0898 273 899 (Mr. Mạnh) – Hợp tác KOL/doanh nghiệp",
           "💬 Zalo/Fanpage: Mercy – Kính Thông Minh",
           "🏢 VP HCM: Số 109 đường Nguyễn Thị Nhung, KĐT Vạn Phúc, Hiệp Bình Phước, TP. HCM",
           "🏢 VP Hà Nội: Số 10, Đường Thanh Niên, Xã Ba Vì, Hà Nội",
@@ -193,7 +194,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
         title: "3. Về bảo hành và đổi trả",
         content: [
           "❓ Kính thông minh Mercy được bảo hành bao lâu?\n→ Bảo hành mặc định 15 ngày. Có thể mua thêm gói bảo hành mở rộng: 3 tháng (+550k), 6 tháng (+650k), 12 tháng (+900k).",
-          "❓ Nếu kính bị lỗi, tôi phải làm gì?\n→ Liên hệ Hotline 0763 068 614 hoặc nhắn Zalo/Fanpage. Mô tả lỗi, gửi ảnh/video minh chứng. Mercy sẽ hướng dẫn gửi hàng về trung tâm bảo hành.",
+          "❓ Nếu kính bị lỗi, tôi phải làm gì?\n→ Liên hệ Hotline 0898 273 899 hoặc nhắn Zalo/Fanpage. Mô tả lỗi, gửi ảnh/video minh chứng. Mercy sẽ hướng dẫn gửi hàng về trung tâm bảo hành.",
           "❓ Tôi có thể đổi trả sản phẩm trong bao lâu?\n→ Đổi sản phẩm mới trong 7 ngày. Hoàn tiền trong 3 ngày (nếu lỗi nhà sản xuất). Sau thời gian trên áp dụng chính sách bảo hành.",
           "❓ Phí gửi hàng bảo hành do ai chịu?\n→ Mercy hỗ trợ phí ship 1 chiều (gửi trả sản phẩm đã sửa về cho khách hàng).",
           "❓ Tôi làm rơi kính bị hỏng thì có được bảo hành không?\n→ Không. Hư hỏng do tác động vật lý (rơi, va đập, ngấm nước) không thuộc diện bảo hành. Mercy có thể hỗ trợ sửa chữa với phí linh kiện.",
@@ -222,9 +223,9 @@ const companyInfoData: Record<string, CompanyInfoData> = {
         title: "6. Liên hệ hỗ trợ",
         content: [
           "Nếu bạn không tìm thấy câu trả lời cho thắc mắc của mình, vui lòng liên hệ:",
-          "📞 Hotline tư vấn: 0763 068 614 (Mr. Hùng)",
-          "📞 Hotline kỹ thuật: 0398 684 921 (Mr. Mạnh)",
-          "📧 Email: Kinhthongminh.mercy@gmail.com",
+          "📞 Hotline tư vấn: 0898 273 899 (Mr. Hùng)",
+          "📞 Hotline kỹ thuật: 0898 273 899 (Mr. Mạnh)",
+          "📧 Email: mercytechglobal@gmail.com",
           "💬 Fanpage Facebook: Mercy – Kính Thông Minh",
           "⏰ Thời gian hỗ trợ: 9:00 – 21:30 (Thứ 2 – Chủ nhật)",
         ],
@@ -261,7 +262,7 @@ const CompanyInfo = () => {
       <SEOHead
         title={info.title}
         description={info.desc}
-        canonical={`https://mercy.vn/ve-chung-toi/${slug}`}
+        canonical={makeSiteUrl(`/ve-chung-toi/${slug}`)}
       />
       <Header />
 
@@ -320,13 +321,13 @@ const CompanyInfo = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <a
-                    href="tel:0763068614"
+                    href="tel:0898273899"
                     className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors active:scale-95"
                   >
-                    📞 Gọi: 0763 068 614
+                    📞 Gọi: 0898 273 899
                   </a>
                   <a
-                    href="mailto:Kinhthongminh.mercy@gmail.com"
+                    href="mailto:mercytechglobal@gmail.com"
                     className="inline-flex items-center justify-center px-6 py-3 border border-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
                   >
                     ✉️ Email liên hệ

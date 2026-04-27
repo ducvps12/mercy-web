@@ -1,10 +1,12 @@
+import { useState, useEffect } from "react";
 import { Eye, MessageCircle, ArrowRight, Share2 } from "lucide-react";
 import { useScrollReveal, useCountUp } from "@/hooks/useScrollReveal";
-import { articles } from "@/data/articles";
 import { Link } from "react-router-dom";
+import { apiGet } from "@/lib/api";
+import type { Article } from "@/data/articles";
 
-const NewsCard = ({ article, index, isVisible }: { article: typeof articles[0]; index: number; isVisible: boolean }) => {
-  const viewCount = useCountUp(article.views, 1200, isVisible);
+const NewsCard = ({ article, index, isVisible }: { article: Article; index: number; isVisible: boolean }) => {
+  const viewCount = useCountUp(article.views || 0, 1200, isVisible);
 
   return (
     <article
@@ -79,6 +81,26 @@ const NewsCard = ({ article, index, isVisible }: { article: typeof articles[0]; 
 
 const NewsSection = () => {
   const { ref, isVisible } = useScrollReveal(0.05);
+  const [articlesList, setArticlesList] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const data = await apiGet('/articles?limit=4');
+        if (data && Array.isArray(data)) {
+          setArticlesList(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch articles:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchArticles();
+  }, []);
+
+  if (isLoading || articlesList.length === 0) return null;
 
   return (
     <section ref={ref} className="py-4 md:py-6 overflow-hidden">
@@ -97,8 +119,8 @@ const NewsSection = () => {
 
           {/* Articles grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {articles.map((article, i) => (
-              <NewsCard key={i} article={article} index={i} isVisible={isVisible} />
+            {articlesList.map((article, i) => (
+              <NewsCard key={article.slug || i} article={article} index={i} isVisible={isVisible} />
             ))}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Users, Package, ThumbsUp, Headphones } from "lucide-react";
+import { Users, Package, ThumbsUp, Headphones, Award } from "lucide-react";
 import { useScrollReveal, useCountUp } from "@/hooks/useScrollReveal";
 
 const stats = [
@@ -11,16 +11,16 @@ const stats = [
     iconBg: "bg-blue-50 text-blue-600",
   },
   {
-    icon: Package,
-    value: 860,
+    icon: Award,
+    value: 10,
     suffix: "+",
-    label: "Sản phẩm đã bán",
+    label: "Đối tác tin cậy của các thương hiệu hơn",
     textColor: "text-emerald-600",
     iconBg: "bg-emerald-50 text-emerald-600",
   },
   {
     icon: ThumbsUp,
-    value: 98,
+    value: 96,
     suffix: "%",
     label: "Khách hàng hài lòng",
     textColor: "text-amber-600",
@@ -93,10 +93,10 @@ const StatsCounter = () => {
             }`}
           >
             <h2 className="text-lg md:text-xl font-bold text-gray-900">
-              Mercy tự hào đồng hành cùng hàng nghìn khách hàng
+              Thương hiệu tích hợp trí tuệ nhân tạo vào thiết bị đầu tiên tại Việt Nam
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Thương hiệu kính thông minh được tin tưởng hàng đầu Việt Nam
+              Phân phối độc quyền của Mercy tại Việt Nam
             </p>
           </div>
 

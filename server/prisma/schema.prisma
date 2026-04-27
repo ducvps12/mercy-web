@@ -135,6 +135,15 @@ model products {
   is_flash_sale      Boolean?    @default(false)
   flash_sale_percent Int?        @default(0)
   is_active          Boolean?    @default(true)
+  features_vn        String?     @db.LongText
+  features_en        String?     @db.LongText
+  footer_info        String?     @db.Text
+  production_year    Int?
+  clearance_price    BigInt?     @default(0)
+  daily_sale_price   BigInt?     @default(0)
+  campaign_price     BigInt?     @default(0)
+  off_platform_price BigInt?     @default(0)
+  warranty_data      String?     @db.Text
   created_at         DateTime    @default(now()) @db.Timestamp(0)
   updated_at         DateTime    @default(now()) @db.Timestamp(0)
   categories         categories? @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "products_ibfk_1")
@@ -191,6 +200,22 @@ model product_reviews {
   created_at    DateTime? @default(now()) @db.DateTime(0)
 
   @@index([product_id], map: "idx_product_id")
+}
+
+model articles {
+  id         Int       @id @default(autoincrement())
+  slug       String    @unique(map: "slug") @db.VarChar(200)
+  title      String    @db.VarChar(500)
+  excerpt    String?   @db.Text
+  content    String?   @db.LongText
+  image      String?   @db.VarChar(500)
+  date       String    @db.VarChar(50)
+  category   String?   @db.VarChar(100)
+  author     String?   @db.VarChar(100)
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  updated_at DateTime? @default(now()) @db.DateTime(0)
+
+  @@index([slug], map: "idx_slug")
 }
 
 enum users_role {

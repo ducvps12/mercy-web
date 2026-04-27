@@ -14,6 +14,7 @@ interface Order {
   userId: number | null;
   total: number;
   status: string;
+  paymentMethod: string;
   refCode: string | null;
   affiliateCode: string | null;
   bankVerified: boolean;
@@ -21,11 +22,12 @@ interface Order {
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
-  pending: { label: "Chờ xử lý", variant: "outline" },
-  paid: { label: "Đã thanh toán", variant: "default" },
-  processing: { label: "Đang giao", variant: "secondary" },
-  completed: { label: "Hoàn thành", variant: "default" },
-  cancelled: { label: "Đã hủy", variant: "destructive" },
+  pending: { label: "Chờ xác nhận", variant: "outline" },
+  confirmed: { label: "Đã xác nhận", variant: "default" },
+  shipping: { label: "Đang giao", variant: "secondary" },
+  delivered: { label: "Hoàn thành", variant: "default" },
+  cancelled: { label: "Đã hủy (Chưa hoàn tiền)", variant: "destructive" },
+  refunded: { label: "Đã hủy & Hoàn tiền", variant: "destructive" },
 };
 
 export default function AdminOrders() {
@@ -98,6 +100,7 @@ export default function AdminOrders() {
                     <tr className="border-b border-border bg-muted/30">
                       <th className="text-left p-4 font-medium text-muted-foreground">Mã đơn</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Tổng tiền</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Thanh toán</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Trạng thái</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Bank</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Ref</th>
@@ -112,6 +115,17 @@ export default function AdminOrders() {
                         <tr key={order.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                           <td className="p-4 font-mono font-medium text-foreground">{order.orderCode}</td>
                           <td className="p-4 font-medium text-foreground">{formatPrice(order.total)}</td>
+                          <td className="p-4">
+                            {order.paymentMethod === 'deposit' ? (
+                              <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200">Cọc 10%</Badge>
+                            ) : order.paymentMethod === 'full' ? (
+                              <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200">Toàn bộ</Badge>
+                            ) : order.paymentMethod === 'cod' ? (
+                              <Badge variant="outline" className="text-orange-600 bg-orange-50 border-orange-200">COD</Badge>
+                            ) : (
+                              <Badge variant="outline">{order.paymentMethod}</Badge>
+                            )}
+                          </td>
                           <td className="p-4">
                             <Badge variant={sc.variant}>{sc.label}</Badge>
                           </td>
@@ -134,11 +148,12 @@ export default function AdminOrders() {
                               onChange={(e) => updateStatus(order.id, e.target.value)}
                               className="text-xs border border-border rounded px-2 py-1 bg-background"
                             >
-                              <option value="pending">Chờ xử lý</option>
-                              <option value="paid">Đã thanh toán</option>
-                              <option value="processing">Đang giao</option>
-                              <option value="completed">Hoàn thành</option>
-                              <option value="cancelled">Đã hủy</option>
+                              <option value="pending">Chờ xác nhận</option>
+                              <option value="confirmed">Đã xác nhận (Đã thu tiền)</option>
+                              <option value="shipping">Đang giao hàng</option>
+                              <option value="delivered">Đã giao hoàn thành</option>
+                              <option value="cancelled">Đã hủy (Chưa hoàn tiền)</option>
+                              <option value="refunded">Đã hủy & Đã hoàn tiền</option>
                             </select>
                           </td>
                         </tr>

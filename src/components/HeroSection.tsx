@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Glasses, Camera, Languages, Bot, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getHeroBanner, getPromoBanners } from "@/pages/admin/AdminBanners";
+import { getHeroBanner } from "@/pages/admin/AdminBanners";
+import { getBanners } from "@/components/BannerSlider";
+import Autoplay from "embla-carousel-autoplay";
 import {
   Carousel,
   CarouselContent,
@@ -13,7 +15,7 @@ import {
 const HeroSection = () => {
   const navigate = useNavigate();
   const hero = getHeroBanner();
-  const promoBanners = getPromoBanners();
+  const promoBanners = getBanners();
 
   return (
     <section id="hero-section" className="relative z-0">
@@ -21,7 +23,10 @@ const HeroSection = () => {
       <div
         className="absolute inset-x-0 top-0 h-screen -z-10"
         style={{
-          background: 'linear-gradient(180deg, #be0117 0%, #e8445a 25%, #f7a8b8 50%, #fde8e8 70%, #f8f9fa 100%)',
+          backgroundImage: "url('/banner2/bgimg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "top center",
+          backgroundRepeat: "no-repeat",
         }}
       />
 
@@ -30,9 +35,9 @@ const HeroSection = () => {
         <div className="container pt-2">
           <a href={hero.link} className="block cursor-pointer">
             <img
-              src={hero.image}
-              alt={hero.alt}
-              className="w-full h-auto object-contain"
+              src="/banner2/img.png"
+              alt={hero.alt || "Mercy 30/4 Promotion"}
+              className="w-full h-auto object-contain drop-shadow-sm"
               loading="eager"
             />
           </a>
@@ -47,22 +52,28 @@ const HeroSection = () => {
               align: "start",
               loop: true,
             }}
+            plugins={[
+              Autoplay({
+                delay: 3500,
+                stopOnInteraction: true,
+              }),
+            ]}
             className="w-full relative group"
           >
             <CarouselContent className="-ml-3 md:-ml-4">
               {(promoBanners.length === 2 ? [...promoBanners, ...promoBanners] : promoBanners).map((banner, i) => (
-                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-3 md:pl-4 md:basis-1/2">
+                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-3 md:pl-4 basis-[85%] md:basis-1/2">
                   <button
                     onClick={(e) => {
                       navigate(banner.link);
                     }}
                     className="w-full relative rounded-xl overflow-hidden group/banner hover:shadow-md transition-all duration-200 active:scale-[0.98] bg-white border border-gray-100 block"
                   >
-                    <div className="w-full">
+                    <div className="w-full aspect-[21/9] sm:aspect-[5/2] lg:aspect-[3/1] rounded-xl overflow-hidden">
                       <img
                         src={banner.image}
                         alt={banner.alt}
-                        className="w-full h-auto object-contain group-hover/banner:scale-[1.02] transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover/banner:scale-[1.02] transition-transform duration-500"
                         loading="lazy"
                       />
                     </div>
@@ -87,7 +98,7 @@ const HeroSection = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-lg md:text-xl font-bold text-gray-900">Danh mục nổi bật</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Khám phá các sản phẩm công nghệ đeo thông minh</p>
+              {/* <p className="text-xs text-gray-400 mt-0.5">Khám phá các sản phẩm công nghệ đeo thông minh</p> */}
             </div>
             <button
               onClick={() => navigate("/shop")}

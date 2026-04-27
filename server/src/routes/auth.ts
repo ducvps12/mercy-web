@@ -2,10 +2,10 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { JWT_SECRET } from '../config';
 
 const router = express.Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 // ── JWT Auth Middleware ──────────────────────────────────────────────
 function authMiddleware(req: any, res: any, next: any) {

@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
+import { makeSiteUrl } from "@/lib/config";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 const Contact = () => {
@@ -11,7 +12,7 @@ const Contact = () => {
       <SEOHead
         title="Liên hệ hợp tác"
         description="Liên hệ và hợp tác cùng Mercy để phát triển kinh doanh."
-        canonical="https://mercy.vn/lien-he"
+        canonical={makeSiteUrl("/lien-he")}
       />
       <Header />
 
@@ -29,13 +30,13 @@ const Contact = () => {
 
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 max-w-4xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div className="flex flex-col items-center p-6 bg-card border border-border rounded-xl text-center hover:shadow-lg transition-all">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
                     <Phone className="w-6 h-6" />
                   </div>
                   <h3 className="font-bold mb-2">Gọi ngay cho chúng tôi</h3>
-                  <a href="tel:0763068614" className="text-primary hover:underline font-semibold">0763 068 614</a>
+                  <a href="tel:0898273899" className="text-primary hover:underline font-semibold">0898 273 899</a>
                </div>
 
                <div className="flex flex-col items-center p-6 bg-card border border-border rounded-xl text-center hover:shadow-lg transition-all">
@@ -43,15 +44,7 @@ const Contact = () => {
                     <Mail className="w-6 h-6" />
                   </div>
                   <h3 className="font-bold mb-2">Gửi email</h3>
-                  <a href="mailto:Kinhthongminh.mercy@gmail.com" className="text-primary hover:underline font-semibold">Kinhthongminh.mercy@gmail.com</a>
-               </div>
-
-               <div className="flex flex-col items-center p-6 bg-card border border-border rounded-xl text-center hover:shadow-lg transition-all">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary">
-                    <MapPin className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold mb-2">Trụ sở chính</h3>
-                  <p className="text-sm text-muted-foreground">Số 109 đường Nguyễn Thị Nhung, KĐT Vạn Phúc, Hiệp Bình Phước, TP. HCM</p>
+                  <a href="mailto:mercytechglobal@gmail.com" className="text-primary hover:underline font-semibold">mercytechglobal@gmail.com</a>
                </div>
             </div>
 

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiDelete } from "@/lib/api";
-import { products as localCatalog, formatPrice } from "@/data/products";
+import { formatPrice } from "@/data/products";
 
 interface Product {
   id: number;
@@ -37,19 +37,9 @@ export default function AdminProducts() {
       const data = await apiGet<Product[]>("/admin/products");
       setProducts(data);
       setUseApi(true);
-    } catch {
-      // Fallback to local catalog if API not available
-      setProducts(localCatalog.map((p) => ({
-        id: p.id,
-        sku: p.sku,
-        name: p.name,
-        price: p.price,
-        originalPrice: p.originalPrice || null,
-        description: p.description || "",
-        category: p.category,
-        image: p.image,
-        images: (p.images || []).join(","),
-      })));
+    } catch (err: any) {
+      toast.error(err.message || "Không thể tải danh sách sản phẩm");
+      setProducts([]);
       setUseApi(false);
     } finally {
       setLoading(false);
@@ -99,7 +89,7 @@ export default function AdminProducts() {
             <Button variant="outline" onClick={loadProducts} disabled={loading} className="gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
-            <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/admin/products/new")}>
               <Plus className="h-4 w-4" /> Thêm sản phẩm
             </Button>
           </div>

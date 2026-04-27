@@ -2,8 +2,11 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Check, QrCode, Phone, User, Loader2, MapPin, ShieldCheck, Truck, RotateCcw, Shield, Gift, Info, ChevronDown, ChevronUp, Copy, CheckCheck } from "lucide-react";
 import { formatPrice } from "@/data/products";
+import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { useShop } from "@/context/ShopContext";
 import { getNextOrderNumber, generateTransferContent, generateOrderCode, saveOrder, updateOrderInfo, type Order } from "@/data/orders";
+import { useAuth } from "@/context/AuthContext";
+import { BANK_ACCOUNT, BANK_ACCOUNT_NAME, BANK_CODE, ZALO_URL, makeVietQrUrl } from "@/lib/config";
 
 interface CheckoutPopupProps {
   total: number;
@@ -15,19 +18,18 @@ type PaymentOption = "deposit" | "full";
 const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
   const navigate = useNavigate();
   const { cart, cartTotal, clearCart } = useShop();
+  const { user } = useAuth();
 
   // Steps: 1=Payment select, 2=QR transfer, 3=Success+Info
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedPayment, setSelectedPayment] = useState<PaymentOption>("deposit");
   const [submitting, setSubmitting] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(true);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [expandDepositInfo, setExpandDepositInfo] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Countdown state for payment confirmation
+  // Checkout state
   const [countdownActive, setCountdownActive] = useState(false);
-  const [countdownSeconds, setCountdownSeconds] = useState(5);
-  const countdownTotal = 5; // total seconds for countdown
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Customer info - filled AFTER payment in step 3
@@ -36,6 +38,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
   const [address, setAddress] = useState("");
   const [infoSubmitted, setInfoSubmitted] = useState(false);
   const [infoSubmitting, setInfoSubmitting] = useState(false);
+  const [showTermsPopup, setShowTermsPopup] = useState(false);
 
   const displayTotal = cartTotal || total;
   const depositAmount = Math.ceil(displayTotal * 0.1);
@@ -52,12 +55,36 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
     };
   }, []);
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      setStep(2);
-    }, 600);
+    try {
+      // CREATE ORDER IMMEDIATELY SO IT'S SAVED EVEN IF POPUP IS CLOSED
+      await apiPost('/orders', {
+        orderCode,
+        total: displayTotal,
+        userId: user?.id || null,
+        items: cart.map(c => ({
+          productId: c.id,
+          productName: c.name,
+          price: c.price,
+          quantity: c.quantity || 1,
+          imageUrl: c.image,
+          originalPrice: c.price // Fallback if no originalPrice
+        })),
+        shippingInfo: {
+          name: 'Khách hàng', // Placeholder until step 3
+          phone: '',
+          address: '',
+          notes: transferContentStr,
+          paymentMethod: selectedPayment,
+        },
+        status: "pending"
+      });
+    } catch(err) {
+      console.error("Gửi đơn nháp thất bại:", err);
+    }
+    setSubmitting(false);
+    setStep(2);
   };
 
   const finishPayment = useCallback(() => {
@@ -88,37 +115,55 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
   }, [orderCode, orderNumber, cart, displayTotal, transferAmount, selectedPayment, depositAmount, remainingCOD, transferContentStr]);
 
   const handleConfirmPayment = () => {
-    setSubmitting(true);
-    setCountdownSeconds(countdownTotal);
-    setCountdownActive(true);
+    // Legacy function, now auto-polling takes over
   };
 
-  // Countdown timer effect
+  // Auto-polling for payment verification
   useEffect(() => {
-    if (!countdownActive) return;
+    if (step !== 2) return;
 
-    countdownIntervalRef.current = setInterval(() => {
-      setCountdownSeconds(prev => {
-        if (prev <= 1) {
-          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    let isPaid = false;
+    const interval = setInterval(async () => {
+      if (isPaid) return;
+      try {
+        const response = await apiGet(`/orders/check-payment?amount=${transferAmount}&content=${encodeURIComponent(transferContentStr)}`);
+        if (response.paid) {
+          isPaid = true;
+          clearInterval(interval);
           finishPayment();
-          return 0;
         }
-        return prev - 1;
-      });
-    }, 1000);
+      } catch (error) {
+        console.error("Payment check error:", error);
+      }
+    }, 5000); // Check every 5 seconds
 
-    return () => {
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    };
-  }, [countdownActive, finishPayment]);
+    return () => clearInterval(interval);
+  }, [step, transferAmount, transferContentStr, finishPayment]);
 
-  const handleSubmitInfo = (e: React.FormEvent) => {
+  const handleSubmitInfo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) return;
+    if (!name.trim() || !phone.trim() || !address.trim()) return;
     setInfoSubmitting(true);
-    // Update order with customer info
+
+    // Update local order info
     updateOrderInfo(orderCode, { name: name.trim(), phone: phone.trim(), address: address.trim() });
+
+    try {
+      // PUT TO BACKEND API TO UPDATE MISSING INFO
+      await apiPut(`/orders/${orderCode}`, {
+        shippingInfo: {
+          name: name.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
+          notes: transferContentStr,
+          paymentMethod: selectedPayment,
+        },
+        status: "confirmed"
+      });
+    } catch (err) {
+      console.error("Lưu thông tin đơn hàng thất bại:", err);
+    }
+
     setTimeout(() => {
       setInfoSubmitting(false);
       setInfoSubmitted(true);
@@ -126,17 +171,17 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
   };
 
   const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text).catch(() => {});
+    navigator.clipboard.writeText(text).catch(() => { });
     setCopied(field);
     setTimeout(() => setCopied(null), 2000);
   };
 
   // Bank info
-  const bankAccount = "0763068614";
-  const bankName = "MB Bank";
-  const accountName = "MERCY SMART VISION";
+  const bankAccount = BANK_ACCOUNT;
+  const bankName = BANK_CODE;
+  const accountName = BANK_ACCOUNT_NAME;
   const transferContent = transferContentStr;
-  const qrUrl = `https://img.vietqr.io/image/MB-${bankAccount}-compact2.png?amount=${transferAmount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
+  const qrUrl = makeVietQrUrl(transferAmount, transferContent);
 
   const stepLabels = [
     { num: 1, label: "Thanh toán" },
@@ -168,9 +213,8 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
           {stepLabels.map((s, idx) => (
             <div key={s.num} className="flex items-center flex-1">
               <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  step >= s.num ? "bg-red-600 text-white" : "bg-gray-200 text-gray-400"
-                }`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step >= s.num ? "bg-red-600 text-white" : "bg-gray-200 text-gray-400"
+                  }`}>
                   {step > s.num ? <Check className="w-3.5 h-3.5" /> : s.num}
                 </div>
                 <span className={`text-xs font-medium hidden sm:inline ${step >= s.num ? "text-red-600" : "text-gray-400"}`}>
@@ -202,17 +246,15 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   {/* ── Option 1: Cọc đảm bảo 10% ── */}
                   <button
                     onClick={() => setSelectedPayment("deposit")}
-                    className={`w-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden ${
-                      selectedPayment === "deposit"
+                    className={`w-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden ${selectedPayment === "deposit"
                         ? "border-red-500 shadow-lg shadow-red-500/10"
                         : "border-gray-200 hover:border-red-300"
-                    }`}
+                      }`}
                   >
                     <div className={`p-4 ${selectedPayment === "deposit" ? "bg-red-50" : "bg-white"}`}>
                       <div className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                          selectedPayment === "deposit" ? "border-red-500 bg-red-500" : "border-gray-300"
-                        }`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${selectedPayment === "deposit" ? "border-red-500 bg-red-500" : "border-gray-300"
+                          }`}>
                           {selectedPayment === "deposit" && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -274,17 +316,15 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   {/* ── Option 2: Thanh toán full ── */}
                   <button
                     onClick={() => setSelectedPayment("full")}
-                    className={`w-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden ${
-                      selectedPayment === "full"
+                    className={`w-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden ${selectedPayment === "full"
                         ? "border-red-500 shadow-lg shadow-red-500/10"
                         : "border-gray-200 hover:border-red-300"
-                    }`}
+                      }`}
                   >
                     <div className={`p-4 ${selectedPayment === "full" ? "bg-red-50" : "bg-white"}`}>
                       <div className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                          selectedPayment === "full" ? "border-red-500 bg-red-500" : "border-gray-300"
-                        }`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${selectedPayment === "full" ? "border-red-500 bg-red-500" : "border-gray-300"
+                          }`}>
                           {selectedPayment === "full" && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -295,7 +335,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                             </span>
                           </div>
                           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                            Chuyển khoản <span className="font-bold text-red-600">100%</span> giá trị đơn hàng · <span className="font-semibold text-green-600">Miễn phí ship toàn quốc</span>
+                            Chuyển khoản <span className="font-bold text-red-600">100%</span> giá trị đơn hàng · <span className="font-semibold text-green-600"> Hỗ trợ 100K phí vận chuyển toàn cầu</span>
                           </p>
                           <div className="mt-3 bg-white rounded-xl p-3 border border-green-100">
                             <div className="flex items-center justify-between">
@@ -399,8 +439,8 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   />
                   <span className="text-[11px] text-gray-500 leading-relaxed">
                     Bằng việc đặt hàng, bạn đồng ý với{" "}
-                    <a href="#" className="text-blue-600 hover:underline">Điều khoản dịch vụ</a> và{" "}
-                    <a href="#" className="text-blue-600 hover:underline">Chính sách bảo mật</a> của Mercy.
+                    <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsPopup(true); }} className="text-blue-600 hover:underline">Điều khoản dịch vụ</button> và{" "}
+                    <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsPopup(true); }} className="text-blue-600 hover:underline">Chính sách bảo mật</button> của Mercy.
                   </span>
                 </label>
 
@@ -428,9 +468,8 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
             <div className="p-5">
               <div className="max-w-lg mx-auto">
                 {/* Payment type indicator */}
-                <div className={`rounded-xl p-3 mb-4 text-center ${
-                  selectedPayment === "deposit" ? "bg-amber-50 border border-amber-200" : "bg-green-50 border border-green-200"
-                }`}>
+                <div className={`rounded-xl p-3 mb-4 text-center ${selectedPayment === "deposit" ? "bg-amber-50 border border-amber-200" : "bg-green-50 border border-green-200"
+                  }`}>
                   {selectedPayment === "deposit" ? (
                     <p className="text-sm font-semibold text-amber-800">
                       🔒 Chuyển khoản cọc đảm bảo — <span className="text-red-600">{formatPrice(depositAmount)}</span>
@@ -480,11 +519,10 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                         <div key={row.key} className="flex justify-between items-center px-3.5 py-2.5 group">
                           <span className="text-xs text-gray-500">{row.label}</span>
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-sm text-right ${
-                              row.highlight ? "font-extrabold text-red-600 text-base" :
-                              row.mono ? "font-semibold text-gray-800 font-mono tracking-wider" :
-                              "font-semibold text-gray-800"
-                            }`}>
+                            <span className={`text-sm text-right ${row.highlight ? "font-extrabold text-red-600 text-base" :
+                                row.mono ? "font-semibold text-gray-800 font-mono tracking-wider" :
+                                  "font-semibold text-gray-800"
+                              }`}>
                               {row.value}
                             </span>
                             {(row.key === "account" || row.key === "content") && (
@@ -518,46 +556,18 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   </div>
                 </div>
 
-                {/* Confirm button / Countdown */}
-                {countdownActive ? (
-                  <div className="mt-5 flex flex-col items-center gap-3 py-4">
-                    {/* Circular countdown */}
-                    <div className="relative w-20 h-20">
-                      <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 80 80">
-                        <circle cx="40" cy="40" r="35" stroke="#e5e7eb" strokeWidth="5" fill="none" />
-                        <circle
-                          cx="40" cy="40" r="35"
-                          stroke="#16a34a"
-                          strokeWidth="5"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeDasharray={2 * Math.PI * 35}
-                          strokeDashoffset={2 * Math.PI * 35 * (1 - countdownSeconds / countdownTotal)}
-                          className="transition-all duration-1000 ease-linear"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-2xl font-extrabold text-green-600">{countdownSeconds}</span>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-bold text-gray-800 flex items-center gap-2 justify-center">
-                        <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-                        Đang xác nhận giao dịch...
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">Vui lòng chờ trong giây lát</p>
-                    </div>
+                {/* Polling waiting indicator */}
+                <div className="mt-5 flex flex-col items-center gap-3 py-4">
+                  <div className="relative w-16 h-16 flex items-center justify-center bg-green-50 rounded-full animate-pulse border border-green-100">
+                    <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
                   </div>
-                ) : (
-                  <button
-                    onClick={handleConfirmPayment}
-                    disabled={submitting}
-                    className="w-full mt-5 bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl text-sm active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
-                  >
-                    <Check className="w-4 h-4" />
-                    Tôi đã chuyển khoản xong
-                  </button>
-                )}
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-gray-800 flex items-center justify-center">
+                      Hệ thống đang chờ nhận tiền...
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Màn hình này sẽ tự động chuyển khi mã quét thành công</p>
+                  </div>
+                </div>
                 <p className="text-center text-[11px] text-gray-400 mt-2">
                   Bước tiếp theo: Điền thông tin nhận hàng
                 </p>
@@ -688,7 +698,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                             💬 Liên hệ trực tiếp qua Zalo:
                           </p>
                           <a
-                            href="https://zalo.me/0763068614"
+                            href={ZALO_URL}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-blue-600 text-white font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-blue-700 transition-all active:scale-95"
@@ -792,6 +802,110 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
           )}
         </div>
       </div>
+
+      {/* Terms of Service Popup */}
+      {showTermsPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowTermsPopup(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <h3 className="font-bold text-lg text-gray-900">ĐIỀU KHOẢN DỊCH VỤ & CHÍNH SÁCH BÁN HÀNG</h3>
+              <button 
+                onClick={() => setShowTermsPopup(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-colors shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-5 overflow-y-auto min-h-0 text-sm text-gray-600 space-y-4 custom-scrollbar">
+              <p className="font-medium text-gray-900">Chào mừng Quý khách đến với CÔNG TY TNHH CÔNG NGHỆ MERCY. Việc Quý khách thực hiện đặt hàng trên website đồng nghĩa với việc Quý khách đã đọc, hiểu và đồng ý với các điều khoản và chính sách dưới đây.</p>
+              
+              <h4 className="font-bold text-gray-900 mt-4 text-base">1. THÔNG TIN ĐƠN VỊ CHỦ QUẢN</h4>
+              <ul className="list-none space-y-1 pl-0">
+                <li><span className="font-semibold text-gray-800">Tên đơn vị:</span> CÔNG TY TNHH CÔNG NGHỆ MERCY</li>
+                <li><span className="font-semibold text-gray-800">Địa chỉ:</span> 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam</li>
+                <li><span className="font-semibold text-gray-800">Hotline:</span> 0898273899</li>
+                <li><span className="font-semibold text-gray-800">Email:</span> mercytechglobal@gmail.com</li>
+              </ul>
+
+              <h4 className="font-bold text-gray-900 mt-4 text-base">2. PHƯƠNG THỨC THANH TOÁN & ĐẶT CỌC</h4>
+              <p>Chúng tôi cung cấp các lựa chọn thanh toán linh hoạt để thuận tiện nhất cho Quý khách:</p>
+              <div className="border border-gray-200 rounded-lg overflow-hidden my-2">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="py-2.5 px-3 font-semibold text-gray-900 w-[140px] md:w-1/3">Phương thức</th>
+                      <th className="py-2.5 px-3 font-semibold text-gray-900">Chi tiết thanh toán</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-200">
+                      <td className="py-2.5 px-3 font-medium text-gray-800">Thanh toán 100%</td>
+                      <td className="py-2.5 px-3">Quý khách chuyển khoản toàn bộ giá trị đơn hàng trước khi giao hàng.</td>
+                    </tr>
+                    <tr className="border-b border-gray-200">
+                      <td className="py-2.5 px-3 font-medium text-gray-800">Ship COD</td>
+                      <td className="py-2.5 px-3">Quý khách thanh toán toàn bộ giá trị đơn hàng khi nhận hàng từ nhân viên bưu điện.</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 px-3 font-medium text-gray-800">Đặt cọc 10% + COD</td>
+                      <td className="py-2.5 px-3">Quý khách đặt cọc trước 10% giá trị sản phẩm để xác nhận đơn hàng. Số tiền còn lại (đã trừ tiền cọc) sẽ được thanh toán theo hình thức COD khi nhận hàng.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <h4 className="font-bold text-gray-900 mt-4 text-base">3. CHÍNH SÁCH VẬN CHUYỂN</h4>
+              <ul className="list-disc space-y-1 pl-5">
+                <li><span className="font-semibold text-gray-800">Khu vực Nội thành (TP.HCM):</span> Thời gian giao hàng dự kiến từ 2 - 3 ngày làm việc.</li>
+                <li><span className="font-semibold text-gray-800">Khu vực Ngoại tỉnh:</span> Thời gian giao hàng dự kiến từ 5 - 7 ngày làm việc.</li>
+              </ul>
+
+              <h4 className="font-bold text-gray-900 mt-4 text-base">4. CHÍNH SÁCH ĐỔI TRẢ & HOÀN TIỀN</h4>
+              <p>Để đảm bảo quyền lợi, Quý khách vui lòng kiểm tra kỹ hàng hóa ngay khi nhận:</p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li><span className="font-semibold text-gray-800">Thời hạn đổi trả:</span> Trong vòng 07 ngày đầu kể từ ngày nhận hàng thành công.</li>
+                <li><span className="font-semibold text-gray-800">Điều kiện đổi trả:</span> Sản phẩm phải còn nguyên seal (tem niêm phong), không có dấu hiệu trầy xước, hỏng hóc vật lý và đầy đủ phụ kiện đi kèm.</li>
+                <li><span className="font-semibold text-gray-800">Phí vận chuyển:</span> Khách hàng là người chi trả toàn bộ phí vận chuyển phát sinh khi thực hiện đổi trả hàng.</li>
+              </ul>
+
+              <h4 className="font-bold text-gray-900 mt-4 text-base">5. CHÍNH SÁCH BẢO HÀNH</h4>
+              <p>Chúng tôi cung cấp các gói bảo hành linh hoạt dựa trên sự lựa chọn của Quý khách tại thời điểm mua hàng:</p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li><span className="font-semibold text-gray-800">Mặc định:</span> Bảo hành 15 ngày.</li>
+                <li><span className="font-semibold text-gray-800">Gói nâng cao:</span> Tùy chọn 3 tháng, 6 tháng hoặc 12 tháng theo nhu cầu.</li>
+              </ul>
+              <p className="font-semibold text-gray-800 mt-3">Trường hợp từ chối bảo hành:</p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>Sản phẩm bị rơi vỡ, móp méo, có dấu hiệu va đập mạnh.</li>
+                <li>Sản phẩm bị vào nước hoặc các chất lỏng khác.</li>
+                <li>Khách hàng tự ý tháo máy, can thiệp vào phần cứng hoặc sửa chữa tại các cơ sở không thuộc hệ thống.</li>
+                <li>Hư hỏng do sử dụng sai nguồn điện quy định hoặc do lỗi chủ quan phía người dùng.</li>
+              </ul>
+
+              <h4 className="font-bold text-gray-900 mt-4 text-base">6. CAM KẾT BẢO MẬT THÔNG TIN</h4>
+              <p>CÔNG TY TNHH CÔNG NGHỆ MERCY cam kết bảo vệ thông tin cá nhân của Quý khách:</p>
+              <ul className="list-disc space-y-1 pl-5 mb-4">
+                <li>Thông tin (SĐT, địa chỉ, tên) chỉ được sử dụng cho mục đích giao hàng, thực hiện các chương trình hậu mãi và hỗ trợ kỹ thuật sau bán hàng.</li>
+                <li>Chúng tôi tuyệt đối không cung cấp, chia sẻ thông tin khách hàng cho bất kỳ bên thứ ba nào vì mục đích thương mại mà không có sự đồng ý của Quý khách.</li>
+              </ul>
+              <p className="font-medium text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+                Mọi thắc mắc hoặc yêu cầu hỗ trợ, Quý khách vui lòng liên hệ Hotline 0898.273.899 để được giải quyết nhanh nhất.
+              </p>
+            </div>
+            
+            <div className="p-4 border-t border-gray-100 flex justify-end">
+              <button 
+                onClick={() => setShowTermsPopup(false)}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors active:scale-95 shadow-md"
+              >
+                Tôi đã hiểu & Đồng ý
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -11,8 +11,9 @@ import {
   ImageIcon, FileText, Tag, Settings, BarChart3, Link2, Zap, Star, MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
-import { apiGet, apiPut } from "@/lib/api";
+import { apiGet, apiPut, apiPost } from "@/lib/api";
 import { formatPrice } from "@/data/products";
+import { productDropdown } from "@/data/navigation";
 
 interface ImageItem { id?: number; url: string; sortOrder?: number }
 interface SpecItem { id?: number; name: string; value: string; sortOrder?: number }
@@ -42,6 +43,15 @@ interface ProductDetail {
   isFlashSale: boolean;
   flashSalePercent: number;
   isActive: boolean;
+  featuresVn?: string;
+  featuresEn?: string;
+  footerInfo?: string;
+  productionYear?: number;
+  clearancePrice?: number;
+  dailySalePrice?: number;
+  campaignPrice?: number;
+  offPlatformPrice?: number;
+  warrantyData?: string;
   images: ImageItem[];
   specs: SpecItem[];
   variants: VariantItem[];
@@ -63,8 +73,48 @@ export default function AdminProductEdit() {
   const loadProduct = async () => {
     setLoading(true);
     try {
-      const data = await apiGet<ProductDetail>(`/admin/products/${id}`);
-      setProduct(data);
+      if (id === "new") {
+        setProduct({
+          id: 0,
+          productId: "",
+          sku: "",
+          name: "",
+          shortName: "",
+          categoryId: null,
+          categoryName: "",
+          price: 0,
+          originalPrice: 0,
+          discount: 0,
+          badge: "",
+          rating: 5,
+          sold: 0,
+          stock: 100,
+          brand: "Mercy Tech Global",
+          description: "",
+          seoTags: "",
+          shopeeUrl: "",
+          tiktokUrl: "",
+          isFlashSale: false,
+          flashSalePercent: 0,
+          isActive: true,
+          featuresVn: "",
+          featuresEn: "",
+          footerInfo: "",
+          productionYear: new Date().getFullYear(),
+          clearancePrice: 0,
+          dailySalePrice: 0,
+          campaignPrice: 0,
+          offPlatformPrice: 0,
+          warrantyData: "",
+          images: [],
+          specs: [],
+          variants: [],
+          reviews: []
+        });
+      } else {
+        const data = await apiGet<ProductDetail>(`/admin/products/${id}`);
+        setProduct(data);
+      }
     } catch (err: any) {
       toast.error(err.message || "Không thể tải sản phẩm");
       navigate("/admin/products");
@@ -75,9 +125,15 @@ export default function AdminProductEdit() {
 
   const handleSave = async () => {
     if (!product) return;
+
+    if (!product.name.trim()) {
+      toast.error("Vui lòng nhập tên sản phẩm");
+      return;
+    }
+
     setSaving(true);
     try {
-      await apiPut(`/admin/products/${id}`, {
+      const payload = {
         name: product.name,
         shortName: product.shortName,
         sku: product.sku,
@@ -98,12 +154,30 @@ export default function AdminProductEdit() {
         isFlashSale: product.isFlashSale,
         flashSalePercent: product.flashSalePercent,
         isActive: product.isActive,
+        featuresVn: product.featuresVn,
+        featuresEn: product.featuresEn,
+        footerInfo: product.footerInfo,
+        productionYear: product.productionYear,
+        clearancePrice: product.clearancePrice,
+        dailySalePrice: product.dailySalePrice,
+        campaignPrice: product.campaignPrice,
+        offPlatformPrice: product.offPlatformPrice,
+        warrantyData: product.warrantyData,
         images: product.images,
         specs: product.specs,
         variants: product.variants,
         reviews: product.reviews,
-      });
-      toast.success("Đã lưu thay đổi!");
+      };
+
+      if (id === "new") {
+        const res = await apiPost("/admin/products", payload);
+        toast.success("Đã tạo sản phẩm thành công!");
+        navigate(`/admin/products/${res.id}`, { replace: true });
+        // update url without keeping "new" in history
+      } else {
+        await apiPut(`/admin/products/${id}`, payload);
+        toast.success("Đã lưu thay đổi!");
+      }
     } catch (err: any) {
       toast.error(err.message || "Lỗi lưu sản phẩm");
     } finally {
@@ -312,7 +386,21 @@ export default function AdminProductEdit() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Danh mục</Label>
-                    <Input value={product.categoryName} onChange={(e) => update("categoryName", e.target.value)} />
+                    <select
+                      value={product.categoryName}
+                      onChange={(e) => update("categoryName", e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Chọn danh mục...</option>
+                      {productDropdown.map((cat) => (
+                        <optgroup key={cat.title} label={cat.title}>
+                          <option value={cat.title}>{cat.title}</option>
+                          {cat.items.map((item) => (
+                            <option key={item.name} value={item.name}>--- {item.name}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Thương hiệu</Label>
@@ -371,6 +459,29 @@ export default function AdminProductEdit() {
                     )}
                   </div>
                 </div>
+                
+                {/* Advanced Pricing */}
+                <div className="pt-5 border-t border-border mt-5">
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Mở rộng (Hệ thống giá phụ)</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Xả hàng (₫)</Label>
+                      <Input type="number" value={product.clearancePrice || 0} onChange={(e) => update("clearancePrice", Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Sale Daily (₫)</Label>
+                      <Input type="number" value={product.dailySalePrice || 0} onChange={(e) => update("dailySalePrice", Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Campaign (₫)</Label>
+                      <Input type="number" value={product.campaignPrice || 0} onChange={(e) => update("campaignPrice", Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Ngoại Sàn (₫)</Label>
+                      <Input type="number" value={product.offPlatformPrice || 0} onChange={(e) => update("offPlatformPrice", Number(e.target.value))} />
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -387,6 +498,66 @@ export default function AdminProductEdit() {
                   className="w-full rounded-lg border border-border bg-background p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   placeholder="Nhập mô tả chi tiết sản phẩm..."
                 />
+              </CardContent>
+            </Card>
+
+            {/* Features (VN & EN) */}
+            <Card className="border-border lg:col-span-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">Tính năng (VN & EN)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-xs font-medium mb-1.5 block">Tính năng Tiếng Việt</Label>
+                  <textarea
+                    value={product.featuresVn || ""}
+                    onChange={(e) => update("featuresVn", e.target.value)}
+                    rows={4}
+                    className="w-full rounded-lg border border-border bg-background p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    placeholder="Mỗi tính năng 1 dòng..."
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium mb-1.5 block">Tính năng Tiếng Anh (Tùy chọn)</Label>
+                  <textarea
+                    value={product.featuresEn || ""}
+                    onChange={(e) => update("featuresEn", e.target.value)}
+                    rows={4}
+                    className="w-full rounded-lg border border-border bg-background p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    placeholder="Each feature on a new line..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Footer Rules & Warranty Details */}
+            <Card className="border-border lg:col-span-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">Chính sách & Chân trang</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium mb-1.5 block">Chính sách chân trang</Label>
+                    <textarea
+                      value={product.footerInfo || ""}
+                      onChange={(e) => update("footerInfo", e.target.value)}
+                      rows={5}
+                      className="w-full rounded-lg border border-border bg-background p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      placeholder="Thông tin chung ở chân trạng, ví dụ: 'Bản quyền...', 'Hotline...'"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1.5 block">Dữ liệu bảo hành (Warranty Packages)</Label>
+                    <textarea
+                      value={product.warrantyData || ""}
+                      onChange={(e) => update("warrantyData", e.target.value)}
+                      rows={5}
+                      className="w-full rounded-lg border border-border bg-background p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      placeholder="Nhập ghi chú gói bảo hành cụ thể cho sản phẩm, vd: BH 3 T: 550k"
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

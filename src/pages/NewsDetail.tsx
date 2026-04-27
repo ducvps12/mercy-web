@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Eye, MessageCircle, User, Share2, Facebook, Clock } from "lucide-react";
 import Header from "@/components/Header";
@@ -5,13 +6,50 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
-import { getArticleBySlug, getRelatedArticles } from "@/data/articles";
+import { apiGet } from "@/lib/api";
+import type { Article } from "@/data/articles";
+import { makeSiteUrl } from "@/lib/config";
 
 const NewsDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const article = getArticleBySlug(slug || "");
-  const relatedArticles = getRelatedArticles(slug || "");
+  const [article, setArticle] = useState<Article | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!slug) return;
+      setIsLoading(true);
+      try {
+        const [articleData, relatedData] = await Promise.all([
+          apiGet(`/articles/${slug}`),
+          apiGet(`/articles/${slug}/related`)
+        ]);
+        setArticle(articleData);
+        if (relatedData && Array.isArray(relatedData)) {
+          setRelatedArticles(relatedData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch article:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!article) {
     return (
@@ -161,7 +199,7 @@ const NewsDetail = () => {
       <SEOHead
         title={article.title}
         description={article.excerpt}
-        canonical={`https://mercy.vn/news/${article.slug}`}
+        canonical={makeSiteUrl(`/news/${article.slug}`)}
         jsonLd={jsonLd}
       />
       <Header />

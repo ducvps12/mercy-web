@@ -18,6 +18,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,19 +29,26 @@ const AuthContext = createContext<AuthContextType>({
   updateUser: () => {},
   isAuthenticated: false,
   isAdmin: false,
+  isLoading: true,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
-      setToken(storedToken);
+      try {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+      } catch (err) {
+        console.error("Lỗi phân tích JSON user từ localStorage", err);
+      }
     }
+    setIsLoading(false);
   }, []);
 
   const login = (userData: User, authToken: string) => {
@@ -70,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAuthenticated, isAdmin, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -8,10 +8,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 8080,
-    allowedHosts: "all",
+    allowedHosts: [
+      "localhost",
+      "127.0.0.1",
+      "kinhthongminhmercy.vn",
+      "www.kinhthongminhmercy.vn",
+    ],
     proxy: {
       "/api": {
-        target: "http://localhost:3001",
+        target: "http://localhost:8081",
         changeOrigin: true,
       },
     },

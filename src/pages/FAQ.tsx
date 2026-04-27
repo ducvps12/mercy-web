@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
+import { makeSiteUrl } from "@/lib/config";
 
 const faqs = [
   {
@@ -33,7 +34,7 @@ const FAQ = () => {
       <SEOHead
         title="Câu hỏi thường gặp"
         description="Giải đáp các thắc mắc về kính thông minh và sản phẩm công nghệ tại Mercy."
-        canonical="https://mercy.vn/faq"
+        canonical={makeSiteUrl("/faq")}
       />
       <Header />
 

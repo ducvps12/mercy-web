@@ -3,8 +3,8 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useEffect } from "react";
+import { GOOGLE_CLIENT_ID } from "@/lib/config";
 
-const GOOGLE_CLIENT_ID = "1016109515017-bgce8jul7abuuv0i4f9ti6jm48j5118p.apps.googleusercontent.com";
 
 const RouteScrollToTop = () => {
   const { pathname, search } = useLocation();
@@ -59,6 +59,7 @@ import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import AdminBanners from "./pages/admin/AdminBanners.tsx";
 import AdminMembers from "./pages/admin/AdminMembers.tsx";
 import AdminPayments from "./pages/admin/AdminPayments.tsx";
+import AdminBankHistory from "./pages/admin/AdminBankHistory.tsx";
 import AdminProductEdit from "./pages/admin/AdminProductEdit.tsx";
 import AdminGuard from "./components/AdminGuard.tsx";
 
@@ -107,6 +108,7 @@ const App = () => (
                 <Route path="/admin/banners" element={<AdminGuard><AdminBanners /></AdminGuard>} />
                 <Route path="/admin/members" element={<AdminGuard><AdminMembers /></AdminGuard>} />
                 <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
+                <Route path="/admin/bank-history" element={<AdminGuard><AdminBankHistory /></AdminGuard>} />
                 <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

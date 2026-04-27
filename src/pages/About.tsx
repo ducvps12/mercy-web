@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
+import { SITE_URL, makeSiteUrl } from "@/lib/config";
 import { Glasses, Mic, Camera, Globe, Headphones, Sparkles } from "lucide-react";
 
 const features = [
@@ -19,7 +20,7 @@ const About = () => {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Mercy",
-    url: "https://mercy.vn",
+    url: SITE_URL,
     description: "Thương hiệu kính thông minh tiên phong tại Việt Nam",
   };
 
@@ -28,7 +29,7 @@ const About = () => {
       <SEOHead
         title="Giới thiệu"
         description="Mercy - Thương hiệu tiên phong trong lĩnh vực kính thông minh tại Việt Nam, mang công nghệ hiện đại đến gần hơn với đời sống hằng ngày."
-        canonical="https://mercy.vn/about"
+        canonical={makeSiteUrl("/about")}
         jsonLd={jsonLd}
       />
       <Header />
@@ -133,16 +134,16 @@ const About = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:Kinhthongminh.mercy@gmail.com"
+                href="mailto:mercytechglobal@gmail.com"
                 className="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
               >
                 Email liên hệ
               </a>
               <a
-                href="tel:0763068614"
+                href="tel:0898273899"
                 className="inline-flex items-center justify-center px-8 py-3 rounded-lg border border-border text-foreground font-semibold hover:bg-muted transition-colors"
               >
-                Gọi: 0763 068 614
+                Gọi: 0898 273 899
               </a>
             </div>
           </div>

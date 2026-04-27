@@ -13,17 +13,18 @@ import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import FloatingContact from "@/components/FloatingContact";
 import SEOHead from "@/components/SEOHead";
+import { SITE_URL, makeSiteUrl } from "@/lib/config";
 
 const Index = () => {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Mercy",
-    url: "https://mercy.vn",
+    url: SITE_URL,
     description: "Thương hiệu kính mắt thông minh, phụ kiện công nghệ độc quyền tại Việt Nam",
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://mercy.vn/shop?q={search_term_string}",
+      target: makeSiteUrl("/shop?q={search_term_string}"),
       "query-input": "required name=search_term_string",
     },
   };
@@ -33,7 +34,7 @@ const Index = () => {
       <SEOHead
         title="Trang chủ"
         description="Mercy - Thương hiệu kính mắt thông minh, balo thông minh, phụ kiện công nghệ độc quyền tại Việt Nam. Sale đến 18%."
-        canonical="https://mercy.vn/"
+        canonical={makeSiteUrl("/")}
         jsonLd={jsonLd}
       />
       <Header />

@@ -8,10 +8,12 @@ import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
 import CheckoutPopup from "@/components/CheckoutPopup";
 import { useShop } from "@/context/ShopContext";
-import { products, formatPrice } from "@/data/products";
+import { formatPrice } from "@/data/products";
 import { Heart, RefreshCw, ChevronRight, ChevronLeft, Truck, ShieldCheck, RotateCcw, Star, Phone, Headphones, Check, X, Loader2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { getProductReviews, getReviewSummary, getStoredReviews, saveReview, type Review } from "@/data/reviews";
+import { getReviewSummary, type Review } from "@/data/reviews";
+import { apiGet, apiPost } from "@/lib/api";
+import { makeSiteUrl } from "@/lib/config";
 
 // Warranty packages
 const warrantyPackages = [
@@ -23,9 +25,7 @@ const warrantyPackages = [
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  // Find by numeric id first, then by sku for admin compatibility
-  const product = products.find((p) => p.id === Number(id)) || products.find((p) => p.sku === id);
-  const { addToCartWithQuantity, toggleWishlist, toggleCompare, isInWishlist, isInCompare } = useShop();
+  const { addToCartWithQuantity, toggleWishlist, toggleCompare, isInWishlist, isInCompare, products } = useShop();
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedWarranty, setSelectedWarranty] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -41,7 +41,45 @@ const ProductDetail = () => {
   const [newReviewText, setNewReviewText] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
   const [submittingReview, setSubmittingReview] = useState(false);
-  const [userReviews, setUserReviews] = useState<Review[]>([]);
+  const [allReviews, setAllReviews] = useState<any[]>([]);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch product data
+  useEffect(() => {
+    const fetchProduct = async () => {
+      setLoading(true);
+      try {
+        const data = await apiGet(`/products/${id}`);
+        if (!data.images || data.images.length === 0) {
+          data.images = [data.image || ""];
+        }
+        setProduct(data);
+      } catch (err: any) {
+        console.error("API failed, fallback to local:", err);
+        const localProduct = products.find((p) => p.id === Number(id)) || products.find((p) => p.sku === id);
+        setProduct(localProduct || null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
+
+  // Fetch reviews data
+  const fetchReviews = async () => {
+    if (!product?.id) return;
+    try {
+      const data = await apiGet(`/reviews/${product.id}?limit=50`);
+      if (Array.isArray(data)) setAllReviews(data);
+    } catch (error) {
+      console.error("Failed to fetch reviews", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, [product?.id]);
 
   // Sticky buy bar on scroll
   useEffect(() => {
@@ -50,13 +88,17 @@ const ProductDetail = () => {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // Load user reviews from localStorage
-  useEffect(() => {
-    if (product) {
-      setUserReviews(getStoredReviews(product.id));
-      setReviewsToShow(3); // reset when product changes
-    }
-  }, [product?.id]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -81,43 +123,47 @@ const ProductDetail = () => {
 
   const totalPrice = product.price * quantity + (selectedWarranty !== null ? warrantyPackages[selectedWarranty].price : 0);
 
-  // Get reviews for this specific product
-  const baseReviews = getProductReviews(product.id, product.category);
-  // Add product images to first few reviews
-  const productReviews = baseReviews.map((r, idx) => ({
-    ...r,
-    images: idx === 0 && product.images.length > 1 ? [product.images[1]] :
-            idx === 2 && product.images.length > 2 ? [product.images[2]] : r.images,
+  // Review summaries
+  const parsedReviews: Review[] = allReviews.map(r => ({
+    name: r.name,
+    avatar: r.avatarLetter,
+    color: r.avatarColor,
+    rating: r.rating,
+    date: r.date,
+    verified: r.verified,
+    text: r.text,
+    helpful: r.helpful,
+    images: r.imageUrl ? [r.imageUrl] : []
   }));
-  const allReviews = [...userReviews, ...productReviews];
-  const reviewSummary = getReviewSummary(allReviews);
-  const visibleReviews = allReviews.slice(0, reviewsToShow);
-  const remainingReviews = allReviews.length - reviewsToShow;
 
-  const handleSubmitReview = () => {
+  const reviewSummary = getReviewSummary(parsedReviews);
+  const visibleReviews = parsedReviews.slice(0, reviewsToShow);
+  const remainingReviews = parsedReviews.length - reviewsToShow;
+
+  const handleSubmitReview = async () => {
     if (!newReviewName.trim() || !newReviewText.trim()) {
       toast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
     setSubmittingReview(true);
-    setTimeout(() => {
-      const today = new Date();
-      const dateStr = `${String(today.getDate()).padStart(2, "0")}/${String(today.getMonth() + 1).padStart(2, "0")}/${today.getFullYear()}`;
-      saveReview({
-        productId: product.id,
+    try {
+      await apiPost('/reviews', {
+        productId: String(product.id),
         name: newReviewName.trim(),
         rating: newReviewRating,
         text: newReviewText.trim(),
-        date: dateStr,
       });
-      setUserReviews(getStoredReviews(product.id));
-      setSubmittingReview(false);
+      await fetchReviews();
       setShowWriteReview(false);
       setNewReviewName("");
       setNewReviewRating(5);
       setNewReviewText("");
       toast.success("Đã gửi đánh giá thành công! 🎉");
-    }, 800);
+    } catch (error) {
+      toast.error("Gửi đánh giá thất bại.");
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const handleBuyNow = () => {
@@ -158,7 +204,7 @@ const ProductDetail = () => {
       <SEOHead
         title={product.name}
         description={product.description}
-        canonical={`https://mercy.vn/product/${product.id}`}
+        canonical={makeSiteUrl(`/product/${product.id}`)}
         ogType="product"
         jsonLd={productJsonLd}
       />
@@ -325,6 +371,11 @@ const ProductDetail = () => {
             {/* Trust Badges - FPT style */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="text-sm font-bold text-gray-800 mb-3">Chính sách sản phẩm</h3>
+              {product.footerInfo ? (
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {product.footerInfo}
+                </div>
+              ) : (
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { icon: ShieldCheck, text: "Hàng chính hãng - BH 15 ngày", color: "text-green-600" },
@@ -338,6 +389,7 @@ const ProductDetail = () => {
                   </div>
                 ))}
               </div>
+              )}
             </div>
 
             {/* Quantity Selector + Price Summary */}
@@ -393,11 +445,11 @@ const ProductDetail = () => {
                 Mua ngay
               </button>
               <a
-                href="tel:0763068614"
+                href="tel:0898273899"
                 className="w-full flex items-center justify-center gap-2 border-2 border-red-600 text-red-600 font-bold py-3.5 rounded-xl text-sm hover:bg-red-50 transition-all active:scale-[0.98]"
               >
                 <Phone className="w-4 h-4" />
-                Gọi tư vấn: 0763 068 614
+                Gọi tư vấn: 0898 273 899
               </a>
 
               {/* Wishlist + Compare */}
@@ -469,26 +521,40 @@ const ProductDetail = () => {
                     </div>
                   ))}
                 </div>
-                {/* Features */}
-                {product.features && (
+                {/* Features (VN & EN) */}
+                {(product.featuresVn || product.featuresEn) && (
                   <div>
                     <h4 className="text-sm font-bold text-gray-800 mb-2">Tính năng nổi bật</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {product.features.map((f, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-600">{f}</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {product.featuresVn && (
+                        <div className="space-y-2 relative p-4 rounded-xl border border-gray-100 bg-white">
+                          <span className="absolute -top-2.5 left-4 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">Vietnamese</span>
+                          {product.featuresVn.split('\n').filter(Boolean).map((f: string, i: number) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm text-gray-600">{f}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
+                      {product.featuresEn && (
+                        <div className="space-y-2 relative p-4 rounded-xl border border-gray-100 bg-gray-50">
+                          <span className="absolute -top-2.5 left-4 bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded">English</span>
+                          {product.featuresEn.split('\n').filter(Boolean).map((f: string, i: number) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm text-gray-600">{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             )}
             {activeTab === "desc" && (
-              <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed">
-                <p>{product.description}</p>
-              </div>
+              <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: product.description }} />
             )}
             {activeTab === "specs" && (
               <div className="max-w-lg">

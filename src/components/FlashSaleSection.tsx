@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
 import { Zap, Clock } from "lucide-react";
-import { products, formatPrice } from "@/data/products";
+import { formatPrice, type ProductData } from "@/data/products";
 import { useNavigate } from "react-router-dom";
+import { apiGet } from "@/lib/api";
 
 const FlashSaleSection = () => {
   const navigate = useNavigate();
 
   // Countdown to end of day
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [products, setProducts] = useState<ProductData[]>([]);
 
   useEffect(() => {
     const calc = () => {
@@ -27,12 +29,18 @@ const FlashSaleSection = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Flash sale products (products with flashSalePrice)
+  useEffect(() => {
+    apiGet('/products').then((data) => {
+      if (Array.isArray(data)) setProducts(data);
+    }).catch(() => {});
+  }, []);
+
+  // Flash sale products
   const saleProducts = useMemo(() => {
     return products
-      .filter((p) => p.flashSalePrice && p.originalPrice)
+      .filter((p: any) => p.isFlashSale)
       .slice(0, 8);
-  }, []);
+  }, [products]);
 
   const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -100,10 +108,10 @@ const FlashSaleSection = () => {
               {/* Products Area */}
               <div className="p-3 md:p-4">
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {saleProducts.map((product) => {
+              {saleProducts.map((product: any) => {
                 const discount = product.originalPrice
-                  ? getDiscount(product.originalPrice, product.flashSalePrice || product.price)
-                  : 0;
+                  ? getDiscount(product.originalPrice, product.price)
+                  : product.flashSalePercent || 0;
                 const soldPercent = ((product.id % 7) + 4) * 10; // 40-100% stable per product
 
                 return (
@@ -149,10 +157,9 @@ const FlashSaleSection = () => {
                         </span>
                       </div>
 
-                      {/* Prices */}
                       <div className="flex items-end gap-2 flex-wrap">
                         <span className="text-red-600 font-extrabold text-base">
-                          {formatPrice(product.flashSalePrice || product.price)}
+                          {formatPrice(product.price)}
                         </span>
                       </div>
                       {product.originalPrice && (

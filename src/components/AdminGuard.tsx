@@ -2,17 +2,18 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
+import { Loader2 } from "lucide-react";
 
 interface AdminGuardProps {
   children: React.ReactNode;
 }
 
 const AdminGuard = ({ children }: AdminGuardProps) => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const hasShownToast = useRef(false);
 
   useEffect(() => {
-    if (!hasShownToast.current) {
+    if (!hasShownToast.current && !isLoading) {
       if (!isAuthenticated) {
         toast.error("Vui lòng đăng nhập để tiếp tục");
         hasShownToast.current = true;
@@ -21,7 +22,15 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
         hasShownToast.current = true;
       }
     }
-  }, [isAuthenticated, isAdmin]);
+  }, [isAuthenticated, isAdmin, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex bg-gray-50 h-screen w-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-red-600" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

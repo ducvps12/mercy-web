@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { products, formatPrice } from "@/data/products";
+import { useShop } from "@/context/ShopContext";
+import { formatPrice } from "@/data/products";
 import { Link } from "react-router-dom";
 
 // TikTok review videos from @mr.manhdora.macginhi
@@ -43,20 +44,24 @@ const tiktokReviews = [
   }
 ];
 
-const reviewItems = tiktokReviews.map((r) => {
-  const p = products[r.productIndex] || products[0];
-  return {
-    ...r,
-    name: p.name,
-    price: p.price,
-    originalPrice: p.originalPrice,
-    image: p.image,
-    productId: p.id,
-  };
-});
-
 const ReviewSection = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { products } = useShop();
+
+  const reviewItems = useMemo(() => {
+    if (!products.length) return [];
+    return tiktokReviews.map((r) => {
+      const p = products[r.productIndex] || products[0];
+      return {
+        ...r,
+        name: p?.name || "Sản phẩm",
+        price: p?.price || 0,
+        originalPrice: p?.originalPrice,
+        image: p?.image || "",
+        productId: p?.id || "",
+      };
+    });
+  }, [products]);
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;

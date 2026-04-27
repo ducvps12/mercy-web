@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useShop } from "@/context/ShopContext";
-import { products as allProducts, formatPrice } from "@/data/products";
+import { formatPrice } from "@/data/products";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const Compare = () => {
-  const { compare, toggleCompare, addToCart } = useShop();
+  const { compare, toggleCompare, addToCart, products: allProducts } = useShop();
 
   const getFullProduct = (id: number) => allProducts.find((p) => p.id === id);
 

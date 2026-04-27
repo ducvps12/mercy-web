@@ -1,19 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { Menu, Search, ShoppingCart, User, X, ChevronDown, ChevronRight, Zap, Shield, Smartphone, Gift, Store } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X, ChevronDown, ChevronRight, Zap, Shield, Smartphone, Gift, Store, Package, Heart, Settings, LogOut } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
-import { products } from "@/data/products";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import LanguageSwitcher from "./LanguageSwitcher";
-
-const categories = [
-  { name: "Kính Mắt Thông Minh", hasSubmenu: true, href: "/shop?category=Kính Mắt Thông Minh" },
-  { name: "Kính Dịch Thuật", hasSubmenu: true, href: "/shop?category=Kính Dịch Thuật" },
-  { name: "Kính Camera POV", hasSubmenu: true, href: "/shop?category=Kính Camera POV" },
-  { name: "Robot AI", hasSubmenu: false, href: "/shop?category=Robot AI" },
-  { name: "Phụ Kiện", hasSubmenu: false, href: "/shop?category=Phụ Kiện" },
-  { name: "Flash Sale", hasSubmenu: false, href: "/flash-sale" },
-];
+import { apiGet } from "@/lib/api";
+import type { ProductData } from "@/data/products";
+import { categories, productDropdown } from "@/data/navigation";
 
 const mainMenu = [
   { name: "Trang chủ", hasSubmenu: false, href: "/" },
@@ -21,50 +14,20 @@ const mainMenu = [
   { name: "Giới thiệu", hasSubmenu: false, href: "/about" },
 ];
 
-// Product dropdown sub-items for "Sản phẩm"
-const productDropdown = [
-  {
-    title: "Kính Thông Minh",
-    items: [
-      { name: "Mercy MCK 5.0", href: "/shop?search=MCK 5.0" },
-      { name: "Mercy MCK 5.1", href: "/shop?search=MCK 5.1" },
-    ],
-  },
-  {
-    title: "Kính Dịch Thuật",
-    items: [
-      { name: "Mercy KDT 5.0", href: "/shop?search=KDT 5.0" },
-      { name: "Mercy KDT 5.1", href: "/shop?search=KDT 5.1" },
-    ],
-  },
-  {
-    title: "Kính Camera POV",
-    items: [
-      { name: "Mercy POV 5.0", href: "/shop?search=POV 5.0" },
-      { name: "Mercy POV 5.1", href: "/shop?search=POV 5.1" },
-    ],
-  },
-  {
-    title: "Robot AI & Phụ kiện",
-    items: [
-      { name: "Robot AI", href: "/shop?category=Robot AI" },
-      { name: "Phụ kiện", href: "/shop?category=Phụ Kiện" },
-    ],
-  },
-];
 
 // const trendingKeywords = ["Kính AI", "MCK 5.1", "Dịch thuật", "Camera POV 2K", "Robot AI"];
 
 const promoLinks = [
-  { icon: Zap, text: "Sản phẩm đang giảm giá", color: "text-red-600", href: "/flash-sale" },
-  { icon: Shield, text: "Bảo hành lên đến 12 tháng", color: "text-blue-600", href: "/chinh-sach/bao-hanh" },
-  { icon: Smartphone, text: "Trả góp 0%", color: "text-green-600", href: "/chinh-sach/tra-gop" },
+  { icon: Zap, text: "Sản phẩm đang giảm giá", color: "text-amber-500 fill-amber-500 animate-zap", href: "/flash-sale" },
+  { icon: Shield, text: "Bảo hành lên đến 12 tháng", color: "text-blue-600", href: "/#" },
+  { icon: Smartphone, text: "Trả góp 0%", color: "text-green-600", href: "/#" },
   { icon: Gift, text: "Quà tặng hấp dẫn", color: "text-orange-500", href: "/chinh-sach/khach-hang-than-thiet" },
 ];
 
 import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
+  const [allProducts, setAllProducts] = useState<ProductData[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [productMenuOpen, setProductMenuOpen] = useState(false);
@@ -79,11 +42,26 @@ const Header = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Prefetch products for search functionality
+    const fetchProducts = async () => {
+      try {
+        const data = await apiGet('/products');
+        if (data && Array.isArray(data)) setAllProducts(data);
+      } catch (err) { }
+    };
+    fetchProducts();
+  }, []);
+
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
-    return products.filter(p => p.name.toLowerCase().includes(q)).slice(0, 6);
-  }, [searchQuery]);
+    return allProducts.filter(p => 
+      p.name?.toLowerCase().includes(q) || 
+      p.shortName?.toLowerCase().includes(q) || 
+      p.sku?.toLowerCase().includes(q)
+    ).slice(0, 6);
+  }, [searchQuery, allProducts]);
 
   const handleSearchSelect = (id: number) => {
     setSearchQuery("");
@@ -262,37 +240,37 @@ const Header = () => {
                         <div className="py-1">
                           <button
                             onClick={() => { setUserMenuOpen(false); navigate("/account"); }}
-                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                            className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
                           >
-                            👤 Tài khoản của tôi
+                            <User className="w-4 h-4" /> Tài khoản của tôi
                           </button>
                           <button
                             onClick={() => { setUserMenuOpen(false); navigate("/orders"); }}
-                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                            className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
                           >
-                            📦 Đơn hàng của tôi
+                            <Package className="w-4 h-4" /> Đơn hàng của tôi
                           </button>
                           <button
                             onClick={() => { setUserMenuOpen(false); navigate("/wishlist"); }}
-                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                            className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
                           >
-                            ❤️ Yêu thích
+                            <Heart className="w-4 h-4" /> Yêu thích
                           </button>
                           {isAdmin && (
                             <button
                               onClick={() => { setUserMenuOpen(false); navigate("/admin"); }}
-                              className="w-full px-4 py-2.5 text-sm text-red-600 font-semibold hover:bg-red-50 transition-colors text-left"
+                              className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-600 font-semibold hover:bg-red-50 transition-colors text-left"
                             >
-                              ⚙️ Quản trị Admin
+                              <Settings className="w-4 h-4" /> Quản trị Admin
                             </button>
                           )}
                         </div>
                         <div className="border-t border-gray-100 py-1">
                           <button
                             onClick={() => { setUserMenuOpen(false); logout(); toast.success("Đã đăng xuất"); navigate("/"); }}
-                            className="w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                            className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
                           >
-                            🚪 Đăng xuất
+                            <LogOut className="w-4 h-4" /> Đăng xuất
                           </button>
                         </div>
                       </div>
@@ -348,9 +326,9 @@ const Header = () => {
         <div className="container flex items-center justify-between h-11">
           {/* Left: Sản phẩm đang giảm giá */}
           <div className="flex-1 basis-0 flex justify-start">
-            <a href="/flash-sale" className="flex items-center gap-1.5 text-sm font-bold text-red-600 hover:text-red-700 transition-colors whitespace-nowrap">
-              <Zap className="w-5 h-5" />
-              Sản phẩm đang giảm giá
+            <a href="/flash-sale" className="group flex items-center gap-1.5 text-sm font-bold transition-all rounded-full bg-red-50/80 px-3 py-1 shadow-sm border border-red-100 hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap -ml-3">
+              <Zap className="w-5 h-5 text-amber-500 fill-amber-500 animate-zap drop-shadow-sm" />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-orange-500 group-hover:from-red-700 group-hover:to-red-600">Sản phẩm đang giảm giá</span>
             </a>
           </div>
 

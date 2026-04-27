@@ -1,20 +1,20 @@
 import { useState, useMemo } from "react";
-import { products, formatPrice } from "@/data/products";
+import { formatPrice } from "@/data/products";
 import { useNavigate } from "react-router-dom";
 import { useShop } from "@/context/ShopContext";
 import { ShoppingCart, Eye } from "lucide-react";
 
 const categoryTabs = [
   { label: "Tất cả", value: "all" },
-  { label: "Kính Thông Minh", value: "Kính Mắt Thông Minh" },
+  { label: "Kính Thông Minh", value: "Kính Thông Minh AI" },
   { label: "Kính Dịch Thuật", value: "Kính Dịch Thuật" },
-  { label: "Camera POV", value: "Kính Camera POV" },
+  { label: "Kính Có Camera", value: "Kính Có Camera" },
   { label: "Robot AI", value: "Robot AI" },
 ];
 
 const CategorySuggestions = () => {
   const navigate = useNavigate();
-  const { addToCart } = useShop();
+  const { addToCart, products } = useShop();
   const [activeTab, setActiveTab] = useState("all");
 
   // Filter products based on active tab
@@ -23,7 +23,7 @@ const CategorySuggestions = () => {
       ? products.filter(p => p.category !== "Phụ Kiện")
       : products.filter(p => p.category === activeTab);
     return filtered.slice(0, 12);
-  }, [activeTab]);
+  }, [activeTab, products]);
 
   return (
     <section className="py-4 md:py-6">

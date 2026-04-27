@@ -1,13 +1,36 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { apiGet } from "@/lib/api";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
-import { getOrders, type Order } from "@/data/orders";
 import { formatPrice } from "@/data/products";
 import { Package, Clock, Truck, CheckCircle2, XCircle, ChevronRight, ShoppingBag, Phone, MessageCircle } from "lucide-react";
+
+export interface OrderItem {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+export interface Order {
+  orderCode: string;
+  items: OrderItem[];
+  total: number;
+  transferAmount: number;
+  paymentMethod: "deposit" | "full";
+  remainingCOD?: number;
+  status: "pending" | "confirmed" | "shipping" | "delivered" | "cancelled";
+  customerName?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  createdAt: string;
+  transferContent: string;
+}
 
 const statusConfig: Record<Order["status"], { label: string; color: string; bgColor: string; icon: typeof Clock }> = {
   pending: { label: "Chờ xác nhận", color: "text-amber-600", bgColor: "bg-amber-50 border-amber-200", icon: Clock },
@@ -18,12 +41,50 @@ const statusConfig: Record<Order["status"], { label: string; color: string; bgCo
 };
 
 const OrderWarehouse = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    setOrders(getOrders());
-  }, []);
+    const fetchOrders = async () => {
+      setLoading(true);
+      try {
+        let query = "";
+        
+        // Fetch using authenticated user, or fallback to local order codes if guest.
+        if (user?.id) {
+          query = `?userId=${user.id}`;
+        } else {
+          try {
+            const stored = localStorage.getItem("mercy_orders");
+            const localOrders = stored ? JSON.parse(stored) : [];
+            const codes = localOrders.map((o: any) => o.orderCode).join(',');
+            if (codes) {
+              query = `?codes=${codes}`;
+            } else {
+              setOrders([]);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            setOrders([]);
+            setLoading(false);
+            return;
+          }
+        }
+
+        const res = await apiGet<{data: Order[]}>(`/orders/history${query}`);
+        setOrders(res.data || []);
+      } catch (err) {
+        console.error("Lỗi lấy đơn hàng từ MySQL:", err);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
@@ -211,7 +272,7 @@ const OrderWarehouse = () => {
                     {/* Contact */}
                     <div className="flex gap-3">
                       <a
-                        href="https://zalo.me/0763068614"
+                        href="https://zalo.me/0898273899"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-95"
@@ -220,7 +281,7 @@ const OrderWarehouse = () => {
                         Nhắn Zalo
                       </a>
                       <a
-                        href="tel:0763068614"
+                        href="tel:0898273899"
                         className="flex-1 flex items-center justify-center gap-2 border-2 border-red-600 text-red-600 font-bold py-3 rounded-xl text-sm hover:bg-red-50 transition-all active:scale-95"
                       >
                         <Phone className="w-4 h-4" />

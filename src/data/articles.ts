@@ -17,6 +17,8 @@ export interface Article {
   category: string;
 }
 
+// Bypassed: Local Mock Data is disabled. Fetch from /api/articles instead.
+/*
 export const articles: Article[] = [
   {
     slug: "mercy-dong-hanh-ngay-hoi-viec-lam-thu-duc-2025",
@@ -183,13 +185,17 @@ Nếu bạn đang tìm kiếm một chiếc kính thông minh với **giá cả 
     comments: 0,
     author: "Mercy Team",
     category: "So sánh",
-  },
+  }
 ];
 
-export const getArticleBySlug = (slug: string): Article | undefined => {
-  return articles.find((a) => a.slug === slug);
-};
-
-export const getRelatedArticles = (currentSlug: string, limit = 3): Article[] => {
-  return articles.filter((a) => a.slug !== currentSlug).slice(0, limit);
-};
+// export const getArticleBySlug = (slug: string): Article | undefined => {
+//   return articles.find((a) => a.slug === slug);
+// };
+// 
+// export const getRelatedArticles = (slug: string, limit: number = 3): Article[] => {
+//   return articles
+//     .filter((a) => a.slug !== slug)
+//     .sort(() => 0.5 - Math.random())
+//     .slice(0, limit);
+// };
+*/

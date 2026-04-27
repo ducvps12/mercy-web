@@ -2,10 +2,10 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
+import { JWT_SECRET } from '../config';
 
 const router = express.Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 // Middleware to check admin role
 const isAdmin = (req: any, res: any, next: any) => {
@@ -86,6 +86,82 @@ router.delete('/members/:id', async (req, res) => {
 });
 
 // ═══════════════════════════════════
+// CUSTOMERS (Users & Guests with Orders)
+// ═══════════════════════════════════
+
+router.get('/customers', async (req, res) => {
+  try {
+    const usersWithOrders = await prisma.users.findMany({
+      where: {
+        role: { not: 'admin' },
+        orders: { some: {} }
+      },
+      include: {
+        orders: { select: { id: true, order_code: true, total: true, status: true, created_at: true } }
+      }
+    });
+
+    const guestOrders = await prisma.orders.findMany({
+      where: { user_id: null },
+      select: { customer_name: true, customer_email: true, customer_phone: true, order_code: true, total: true, status: true, created_at: true }
+    });
+
+    const customers = usersWithOrders.map(u => {
+      const validOrders = u.orders.filter(o => o.status !== 'cancelled');
+      return {
+        id: `U${u.id}`,
+        name: u.full_name || u.username,
+        email: u.email || '—',
+        phone: u.phone || '—',
+        orders: u.orders.length,
+        spent: validOrders.reduce((sum, o) => sum + Number(o.total), 0),
+        joined: u.created_at,
+        orderList: u.orders.map(o => ({
+           id: o.order_code,
+           total: Number(o.total),
+           status: o.status,
+           date: o.created_at
+        }))
+      }
+    });
+
+    const guestMap = new Map();
+    guestOrders.forEach(o => {
+      const key = o.customer_phone || o.customer_email || o.customer_name;
+      if (!guestMap.has(key)) {
+         guestMap.set(key, {
+           id: `G_${key}`,
+           name: o.customer_name || 'Khách vãng lai',
+           email: o.customer_email || '—',
+           phone: o.customer_phone || '—',
+           orders: 0,
+           spent: 0,
+           joined: o.created_at,
+           orderList: []
+         });
+      }
+      const g = guestMap.get(key);
+      g.orders++;
+      if (o.status !== 'cancelled') {
+        g.spent += Number(o.total);
+      }
+      g.orderList.push({
+         id: o.order_code,
+         total: Number(o.total),
+         status: o.status,
+         date: o.created_at
+      });
+    });
+
+    const finalCustomers = [...customers, ...Array.from(guestMap.values())].sort((a, b) => b.spent - a.spent);
+    res.json(finalCustomers);
+  } catch (err) {
+    console.error('Get customers error:', err);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// ═══════════════════════════════════
 // ORDERS
 // ═══════════════════════════════════
 
@@ -97,7 +173,28 @@ router.get('/orders', async (req, res) => {
       orderBy: { created_at: 'desc' },
     });
     // Map to frontend expected format
-    const mapped = orders.map(o => ({
+    const mapped = orders.map(o => {
+      let isDeposit = false;
+      let isRefunded = false;
+      let cleanTransferContent = o.notes || '';
+      
+      if (cleanTransferContent.includes('[REFUNDED]')) {
+        isRefunded = true;
+        cleanTransferContent = cleanTransferContent.replace('[REFUNDED] ', '').replace('[REFUNDED]', '');
+      }
+
+      if (cleanTransferContent.includes('[DEPOSIT]')) {
+        isDeposit = true;
+        cleanTransferContent = cleanTransferContent.replace('[DEPOSIT] ', '').replace('[DEPOSIT]', '');
+      } else if (cleanTransferContent.includes('[FULL]')) {
+        cleanTransferContent = cleanTransferContent.replace('[FULL] ', '').replace('[FULL]', '');
+      }
+
+      let finalPaymentMethod = isDeposit ? 'deposit' : 'full';
+      if (o.payment_method === 'cod') finalPaymentMethod = 'cod';
+      if (o.payment_method === 'ewallet') finalPaymentMethod = 'ewallet';
+
+      return {
       id: o.id,
       orderCode: o.order_code,
       userId: o.user_id,
@@ -109,9 +206,9 @@ router.get('/orders', async (req, res) => {
       discountAmount: Number(o.discount_amount),
       shippingFee: Number(o.shipping_fee),
       total: Number(o.total),
-      paymentMethod: o.payment_method,
-      status: o.status,
-      notes: o.notes,
+      paymentMethod: finalPaymentMethod,
+      status: o.status === 'cancelled' && isRefunded ? 'refunded' : o.status,
+      notes: cleanTransferContent,
       createdAt: o.created_at,
       updatedAt: o.updated_at,
       items: o.order_items.map(i => ({
@@ -126,7 +223,8 @@ router.get('/orders', async (req, res) => {
         quantity: i.quantity,
         imageUrl: i.image_url,
       })),
-    }));
+    };
+    });
     res.json(mapped);
   } catch (error) {
     console.error('Get orders error:', error);
@@ -138,12 +236,31 @@ router.get('/orders', async (req, res) => {
 router.put('/orders/:id/status', async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { status } = req.body;
+    let { status } = req.body;
+    let isRefunded = false;
+
+    if (status === 'refunded') {
+      status = 'cancelled';
+      isRefunded = true;
+    }
+
+    const orderObj = await prisma.orders.findUnique({ where: { id } });
+    if (!orderObj) return res.status(404).json({ message: 'Order not found' });
+
+    let finalNotes = orderObj.notes || '';
+    if (isRefunded && !finalNotes.includes('[REFUNDED]')) {
+      finalNotes = `[REFUNDED] ${finalNotes}`;
+    } else if (!isRefunded && finalNotes.includes('[REFUNDED]')) {
+      finalNotes = finalNotes.replace('[REFUNDED] ', '').replace('[REFUNDED]', '');
+    }
+
     const order = await prisma.orders.update({
       where: { id },
-      data: { status },
+      data: { status, notes: finalNotes },
     });
-    res.json({ id: order.id, status: order.status });
+    
+    // Return artificial refunded status to match UI expectation immediately
+    res.json({ id: order.id, status: isRefunded ? 'refunded' : order.status });
   } catch (error) {
     console.error('Update order status error:', error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -234,6 +351,15 @@ router.get('/products/:id', async (req, res) => {
       isFlashSale: product.is_flash_sale || false,
       flashSalePercent: product.flash_sale_percent || 0,
       isActive: product.is_active !== false,
+      featuresVn: product.features_vn || '',
+      featuresEn: product.features_en || '',
+      footerInfo: product.footer_info || '',
+      productionYear: product.production_year,
+      clearancePrice: Number(product.clearance_price || 0),
+      dailySalePrice: Number(product.daily_sale_price || 0),
+      campaignPrice: Number(product.campaign_price || 0),
+      offPlatformPrice: Number(product.off_platform_price || 0),
+      warrantyData: product.warranty_data || '',
       images: images.map(img => ({ id: img.id, url: img.image_url, sortOrder: img.sort_order })),
       specs: specs.map(s => ({ id: s.id, name: s.spec_name, value: s.spec_value, sortOrder: s.sort_order })),
       variants: variants.map(v => ({ id: v.id, name: v.variant_name, isActive: v.is_active })),
@@ -247,8 +373,88 @@ router.get('/products/:id', async (req, res) => {
 
 router.post('/products', async (req, res) => {
   try {
-    const product = await prisma.products.create({ data: req.body });
-    res.json(product);
+    const { name, shortName, sku, categoryName, categoryId, price, originalPrice, discount, badge,
+      rating, sold, stock, brand, description, seoTags, shopeeUrl, tiktokUrl,
+      isFlashSale, flashSalePercent, isActive, featuresVn, featuresEn, footerInfo, productionYear,
+      clearancePrice, dailySalePrice, campaignPrice, offPlatformPrice, warrantyData,
+      images, specs, variants } = req.body;
+
+    if (!name) return res.status(400).json({ message: 'Tên sản phẩm là bắt buộc' });
+
+    // Auto-generate product_id from sku or timestamp
+    const productId = sku || `PROD_${Date.now()}`;
+    const username = productId; // used for unique constraint
+
+    const product = await prisma.products.create({
+      data: {
+        product_id: productId,
+        sku: sku || productId,
+        name,
+        short_name: shortName || null,
+        category_name: categoryName || null,
+        category_id: categoryId ? parseInt(categoryId) : null,
+        price: BigInt(price || 0),
+        original_price: BigInt(originalPrice || 0),
+        discount: discount || 0,
+        badge: badge || null,
+        rating: rating || 0,
+        sold: sold || 0,
+        stock: stock || 0,
+        brand: brand || 'Mercy Tech Global',
+        description: description || '',
+        seo_tags: seoTags || null,
+        shopee_url: shopeeUrl || null,
+        tiktok_url: tiktokUrl || null,
+        is_flash_sale: isFlashSale || false,
+        flash_sale_percent: flashSalePercent || 0,
+        is_active: isActive !== false,
+        features_vn: featuresVn || null,
+        features_en: featuresEn || null,
+        footer_info: footerInfo || null,
+        production_year: productionYear ? parseInt(productionYear) : null,
+        clearance_price: BigInt(clearancePrice || 0),
+        daily_sale_price: BigInt(dailySalePrice || 0),
+        campaign_price: BigInt(campaignPrice || 0),
+        off_platform_price: BigInt(offPlatformPrice || 0),
+        warranty_data: warrantyData || null,
+      },
+    });
+
+    // Create images if provided
+    if (images && images.length > 0) {
+      await prisma.product_images.createMany({
+        data: images.map((img: any, idx: number) => ({
+          product_id: productId,
+          image_url: typeof img === 'string' ? img : img.url,
+          sort_order: idx,
+        })),
+      });
+    }
+
+    // Create specs if provided
+    if (specs && specs.length > 0) {
+      await prisma.product_specs.createMany({
+        data: specs.map((s: any, idx: number) => ({
+          product_id: productId,
+          spec_name: s.name,
+          spec_value: s.value,
+          sort_order: idx,
+        })),
+      });
+    }
+
+    // Create variants if provided
+    if (variants && variants.length > 0) {
+      await prisma.product_variants.createMany({
+        data: variants.map((v: any) => ({
+          product_id: productId,
+          variant_name: typeof v === 'string' ? v : v.name,
+          is_active: true,
+        })),
+      });
+    }
+
+    res.json({ message: 'Tạo sản phẩm thành công', id: product.id, productId });
   } catch (error) {
     console.error('Create product error:', error);
     res.status(500).json({ message: 'Lỗi tạo sản phẩm' });
@@ -286,6 +492,15 @@ router.put('/products/:id', async (req, res) => {
     if (productData.isFlashSale !== undefined) updateData.is_flash_sale = productData.isFlashSale;
     if (productData.flashSalePercent !== undefined) updateData.flash_sale_percent = productData.flashSalePercent;
     if (productData.isActive !== undefined) updateData.is_active = productData.isActive;
+    if (productData.featuresVn !== undefined) updateData.features_vn = productData.featuresVn;
+    if (productData.featuresEn !== undefined) updateData.features_en = productData.featuresEn;
+    if (productData.footerInfo !== undefined) updateData.footer_info = productData.footerInfo;
+    if (productData.productionYear !== undefined) updateData.production_year = productData.productionYear ? parseInt(productData.productionYear) : null;
+    if (productData.clearancePrice !== undefined) updateData.clearance_price = BigInt(productData.clearancePrice);
+    if (productData.dailySalePrice !== undefined) updateData.daily_sale_price = BigInt(productData.dailySalePrice);
+    if (productData.campaignPrice !== undefined) updateData.campaign_price = BigInt(productData.campaignPrice);
+    if (productData.offPlatformPrice !== undefined) updateData.off_platform_price = BigInt(productData.offPlatformPrice);
+    if (productData.warrantyData !== undefined) updateData.warranty_data = productData.warrantyData;
 
     const product = await prisma.products.update({ where: { id }, data: updateData });
 
@@ -480,18 +695,204 @@ router.get('/categories', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const [totalUsers, totalOrders, totalRevenue] = await Promise.all([
+    const [totalUsers, totalOrders, totalRevenue, nonCancelledOrders, latestOrders, orderItems, products] = await Promise.all([
       prisma.users.count(),
       prisma.orders.count(),
-      prisma.orders.aggregate({ _sum: { total: true } }),
+      prisma.orders.aggregate({ _sum: { total: true }, where: { status: { not: 'cancelled' } } }),
+      prisma.orders.findMany({
+        where: { status: { not: 'cancelled' } },
+        select: { created_at: true, total: true }
+      }),
+      prisma.orders.findMany({
+        orderBy: { created_at: 'desc' },
+        take: 5
+      }),
+      prisma.order_items.findMany({
+        include: { orders: { select: { status: true } } }
+      }),
+      prisma.products.findMany({ select: { product_id: true, category_name: true } })
     ]);
+
+    // Format revenue over months chart
+    const monthlyRevenue = new Map<string, number>();
+    const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+    months.forEach(m => monthlyRevenue.set(m, 0));
+    nonCancelledOrders.forEach(order => {
+      if (order.created_at) {
+        const monthIdx = order.created_at.getMonth();
+        const monthName = months[monthIdx];
+        monthlyRevenue.set(monthName, (monthlyRevenue.get(monthName) || 0) + Number(order.total));
+      }
+    });
+    const revenueData = Array.from(monthlyRevenue, ([name, value]) => ({ name, value }));
+
+    // Format category and top product charts
+    const productCategoryMap = new Map();
+    products.forEach(p => productCategoryMap.set(p.product_id, p.category_name || 'Khác'));
+
+    const categoryMap = new Map<string, number>();
+    const productSalesMap = new Map<string, { sold: number, revenue: number, name: string }>();
+
+    orderItems.forEach(item => {
+      if (item.orders?.status === 'cancelled') return;
+      
+      const cat = productCategoryMap.get(item.product_id) || 'Khác';
+      categoryMap.set(cat, (categoryMap.get(cat) || 0) + item.quantity);
+
+      const current = productSalesMap.get(item.product_id) || { sold: 0, revenue: 0, name: item.product_name };
+      current.sold += item.quantity;
+      current.revenue += Number(item.price) * item.quantity;
+      productSalesMap.set(item.product_id, current);
+    });
+
+    const categoryData = Array.from(categoryMap, ([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
+    const topProducts = Array.from(productSalesMap.values())
+      .sort((a, b) => b.sold - a.sold)
+      .slice(0, 5)
+      .map(p => ({
+         name: p.name,
+         sold: p.sold,
+         revenue: p.revenue.toLocaleString('vi-VN') + '₫'
+      }));
+
+    // Format recent orders
+    const recentOrders = latestOrders.map(o => {
+      let statusStr = 'Chờ xử lý';
+      let statusColor = 'text-yellow-600 bg-yellow-100';
+      if (o.status === 'confirmed') { statusStr = 'Đã xác nhận'; statusColor = 'text-blue-600 bg-blue-100'; }
+      if (o.status === 'shipping') { statusStr = 'Đang giao'; statusColor = 'text-indigo-600 bg-indigo-100'; }
+      if (o.status === 'delivered') { statusStr = 'Đã giao'; statusColor = 'text-green-600 bg-green-100'; }
+      if (o.status === 'cancelled') { statusStr = 'Đã hủy'; statusColor = 'text-red-600 bg-red-100'; }
+
+      const notes = o.notes || '';
+      const isRefunded = notes.includes('[REFUNDED]');
+      if (o.status === 'cancelled' && isRefunded) {
+         statusStr = 'Đã hoàn tiền';
+         statusColor = 'text-purple-600 bg-purple-100';
+      }
+
+      return {
+        id: o.order_code,
+        customer: o.customer_name,
+        amount: Number(o.total).toLocaleString('vi-VN') + '₫',
+        status: statusStr,
+        statusColor
+      };
+    });
+
     res.json({
       totalUsers,
       totalOrders,
       totalRevenue: Number(totalRevenue._sum.total || 0),
+      revenueData,
+      categoryData,
+      topProducts,
+      recentOrders
     });
   } catch (error) {
     console.error('Dashboard error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// ═══════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════
+
+router.get('/analytics', async (req, res) => {
+  try {
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    fourteenDaysAgo.setHours(0,0,0,0);
+    
+    const recentOrders = await prisma.orders.findMany({
+       where: { created_at: { gte: fourteenDaysAgo } },
+       select: { created_at: true, total: true, status: true, payment_method: true }
+    });
+
+    const visitDataMap = new Map();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayStr = `${d.getDate()}/${d.getMonth()+1}`;
+      visitDataMap.set(dayStr, { name: dayStr, visits: 0, orders: 0 }); 
+    }
+
+    recentOrders.forEach(o => {
+      if (o.created_at) {
+        const d = new Date(o.created_at);
+        const dayStr = `${d.getDate()}/${d.getMonth()+1}`;
+        if (visitDataMap.has(dayStr)) {
+          const entry = visitDataMap.get(dayStr);
+          if (o.status !== 'cancelled') {
+             entry.visits += Number(o.total); 
+          }
+           entry.orders += 1;
+        }
+      }
+    });
+
+    const visitData = Array.from(visitDataMap.values());
+
+    const allOrders = await prisma.orders.findMany({
+      where: { status: { not: 'cancelled' } },
+      select: { payment_method: true }
+    });
+    
+    const paymentMap = new Map<string, number>();
+    allOrders.forEach(o => {
+       const p = o.payment_method === 'bank_transfer' ? 'Chuyển khoản' : (o.payment_method === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : 'Thanh toán khác');
+       paymentMap.set(p, (paymentMap.get(p) || 0) + 1);
+    });
+    
+    const sourceData = Array.from(paymentMap, ([name, value]) => ({ name, value }));
+
+    const totalOrdersCompleted = allOrders.length;
+    const totalOrders = await prisma.orders.count();
+    
+    const firstDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+    firstDayOfMonth.setHours(0,0,0,0);
+    const monthOrders = await prisma.orders.aggregate({
+       _sum: { total: true },
+       where: { status: { not: 'cancelled' }, created_at: { gte: firstDayOfMonth } }
+    });
+    const monthlyRev = '₫' + Number(monthOrders._sum.total || 0).toLocaleString('vi-VN');
+
+    const orderItemsGroup = await prisma.order_items.findMany({
+       include: { orders: { select: { status: true } } }
+    });
+    
+    const productCountMap = new Map();
+    orderItemsGroup.forEach(item => {
+       if (item.orders?.status === 'cancelled') return;
+       const c = productCountMap.get(item.product_name) || 0;
+       productCountMap.set(item.product_name, c + item.quantity);
+    });
+    let bestProduct = '—';
+    let maxQty = 0;
+    productCountMap.forEach((qty, name) => {
+       if (qty > maxQty) {
+          maxQty = qty;
+          bestProduct = name;
+       }
+    });
+
+    res.json({
+       visitData,
+       sourceData,
+       summary: {
+         totalVisits: totalOrdersCompleted.toString(),
+         totalOrders: totalOrders.toString(),
+         monthlyRev,
+         bestProduct
+       }
+    });
+  } catch (error) {
+    console.error('Analytics error:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });

@@ -11,6 +11,7 @@ import {
   Image,
   UserCheck,
   CreditCard,
+  History,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -37,6 +38,7 @@ const mainItems = [
 ];
 
 const otherItems = [
+  { title: "Lịch sử nạp tiền", url: "/admin/bank-history", icon: History },
   { title: "Thanh toán", url: "/admin/payments", icon: CreditCard },
   { title: "Banner", url: "/admin/banners", icon: Image },
   { title: "Bài viết", url: "/admin/posts", icon: FileText },

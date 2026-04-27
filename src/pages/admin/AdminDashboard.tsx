@@ -21,19 +21,41 @@ import {
   Bar,
 } from "recharts";
 
-const stats = [
-  { label: "Doanh thu", value: "₫0", change: "—", up: true, icon: DollarSign },
-  { label: "Đơn hàng", value: "0", change: "—", up: true, icon: ShoppingCart },
-  { label: "Khách hàng", value: "0", change: "—", up: true, icon: Users },
-  { label: "Tỷ lệ chuyển đổi", value: "0%", change: "—", up: true, icon: TrendingUp },
-];
-
-const revenueData: { name: string; value: number }[] = [];
-const categoryData: { name: string; value: number }[] = [];
-const recentOrders: { id: string; customer: string; amount: string; status: string; statusColor: string }[] = [];
-const topProducts: { name: string; sold: number; revenue: string }[] = [];
+import { useState, useEffect } from "react";
+import { apiGet } from "@/lib/api";
 
 export default function AdminDashboard() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await apiGet('/admin/dashboard');
+        setData(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  if (loading) return <AdminLayout title="Dashboard"><div className="p-8 text-center text-muted-foreground">Đang tải biểu đồ...</div></AdminLayout>;
+
+  const stats = [
+    { label: "Doanh thu", value: `₫${(data?.totalRevenue || 0).toLocaleString('vi-VN')}`, change: "Cập nhật", up: true, icon: DollarSign },
+    { label: "Đơn hàng", value: data?.totalOrders?.toString() || "0", change: "Toàn thời gian", up: true, icon: ShoppingCart },
+    { label: "Khách hàng", value: data?.totalUsers?.toString() || "0", change: "Toàn thời gian", up: true, icon: Users },
+    { label: "Tỷ lệ chuyển đổi", value: data?.totalOrders && data?.totalUsers ? `${Math.round((data.totalOrders / data.totalUsers) * 100)}%` : "0%", change: "Trung bình", up: true, icon: TrendingUp },
+  ];
+
+  const revenueData = data?.revenueData || [];
+  const categoryData = data?.categoryData || [];
+  const recentOrders = data?.recentOrders || [];
+  const topProducts = data?.topProducts || [];
+
   return (
     <AdminLayout title="Dashboard">
       <div className="space-y-4 md:space-y-6">

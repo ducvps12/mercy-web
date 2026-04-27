@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const SITE_URL = 'https://mercy.vn';
+const SITE_URL = (process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://kinhthongminhmercy.vn').replace(/\/+$/, '');
 const TODAY = new Date().toISOString().split('T')[0];
 
 const staticPages = [

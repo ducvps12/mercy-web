@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
 import { Shield, RotateCcw, Lock, CreditCard, Truck, Heart } from "lucide-react";
+import { makeSiteUrl } from "@/lib/config";
 
 interface PolicySection {
   title: string;
@@ -20,154 +21,133 @@ interface PolicyInfo {
 
 const policiesData: Record<string, PolicyInfo> = {
   "bao-hanh": {
-    title: "Chính sách bảo hành",
+    title: "Chính sách bảo hành sản phẩm",
     icon: Shield,
-    desc: "Cam kết bảo hành sản phẩm chất lượng, uy tín tại Mercy",
+    desc: "Căn cứ vào quy định chung của Bộ Công Thương về hoạt động thương mại điện tử và nhằm đảm bảo quyền lợi tốt nhất cho khách hàng, Công ty TNHH Công nghệ Mercy ban hành Chính sách Bảo hành chính thức áp dụng cho các sản phẩm kinh doanh.",
     sections: [
       {
-        title: "1. Thời gian bảo hành",
+        title: "Điều 1: Phạm vi và đối tượng áp dụng",
         content: [
-          "Bảo hành mặc định: 15 ngày kể từ ngày mua hàng.",
-          "Gói bảo hành mở rộng 3 tháng: +550.000đ",
-          "Gói bảo hành mở rộng 6 tháng: +650.000đ",
-          "Gói bảo hành mở rộng 12 tháng: +900.000đ",
-          "Thời hạn bảo hành được tính từ ngày khách hàng nhận sản phẩm (theo phiếu bảo hành hoặc hóa đơn mua hàng).",
+          "Chính sách này áp dụng cho tất cả khách hàng mua các sản phẩm công nghệ bao gồm Kính thông minh, Đồng hồ thông minh, Tai nghe thông minh và các phụ kiện đi kèm trực tiếp từ hệ thống bán hàng của Mercy.",
         ],
       },
       {
-        title: "2. Điều kiện bảo hành",
+        title: "Điều 2: Thời hạn bảo hành",
         content: [
-          "Sản phẩm được mua trực tiếp từ Mercy hoặc các đại lý ủy quyền.",
-          "Sản phẩm còn trong thời hạn bảo hành và còn nguyên tem bảo hành (nếu có).",
-          "Lỗi do nhà sản xuất: lỗi phần cứng, lỗi phần mềm hệ thống, lỗi linh kiện.",
-          "Sản phẩm phải được sử dụng đúng mục đích và theo hướng dẫn sử dụng đi kèm.",
+          "Thời hạn bảo hành được xác định dựa trên gói dịch vụ mà khách hàng lựa chọn tại thời điểm mua hàng, cụ thể như sau:",
+          "1. Gói bảo hành mặc định: 15 ngày kể từ ngày nhận hàng thành công.",
+          "2. Gói bảo hành mở rộng 03 tháng: 90 ngày kể từ ngày nhận hàng thành công.",
+          "3. Gói bảo hành mở rộng 06 tháng: 180 ngày kể từ ngày nhận hàng thành công.",
+          "4. Gói bảo hành mở rộng 12 tháng: 365 ngày kể từ ngày nhận hàng thành công.",
+          "Lưu ý: Đối với các trường hợp phát sinh lỗi từ nhà sản xuất trong vòng 15 ngày đầu (đối với Kính và Tai nghe) hoặc 30 ngày đầu (đối với Đồng hồ), khách hàng được hưởng chính sách đổi mới sản phẩm tương đương.",
         ],
       },
       {
-        title: "3. Trường hợp không được bảo hành",
+        title: "Điều 3: Điều kiện được bảo hành",
         content: [
-          "Sản phẩm bị hư hỏng do tác động vật lý: rơi, vỡ, va đập, cong vênh, nứt.",
-          "Sản phẩm bị hư hỏng do nước, hóa chất, nhiệt độ cao.",
-          "Sản phẩm đã bị sửa chữa, thay đổi linh kiện bởi bên thứ ba không được Mercy ủy quyền.",
-          "Sản phẩm hết thời hạn bảo hành.",
-          "Không có phiếu bảo hành hoặc hóa đơn mua hàng hợp lệ.",
-          "Các phụ kiện đi kèm ngoài cam kết (cáp, sạc, hộp...).",
+          "Sản phẩm được chấp nhận bảo hành khi thỏa mãn đồng thời các điều kiện sau:",
+          "1. Sản phẩm còn trong thời hạn bảo hành căn cứ theo hóa đơn mua hàng hoặc dữ liệu bảo hành điện tử của Mercy.",
+          "2. Lỗi sản phẩm được bộ phận kỹ thuật xác định là lỗi do nhà sản xuất (lỗi linh kiện, lỗi phần cứng tự thân).",
+          "3. Sản phẩm phải còn nguyên trạng về cấu trúc, không có dấu hiệu can thiệp trái phép từ bên ngoài.",
         ],
       },
       {
-        title: "4. Quy trình bảo hành",
+        title: "Điều 4: Các trường hợp từ chối bảo hành",
         content: [
-          "Bước 1: Liên hệ tổng đài Mercy qua Hotline 0763 068 614 hoặc Fanpage/Zalo chính thức.",
-          "Bước 2: Mô tả tình trạng lỗi và gửi hình ảnh/video (nếu có).",
-          "Bước 3: Gửi sản phẩm về trung tâm bảo hành (Mercy hỗ trợ phí ship 1 chiều).",
-          "Bước 4: Kiểm tra và xử lý trong vòng 3–7 ngày làm việc.",
-          "Bước 5: Gửi trả sản phẩm đã sửa chữa về cho khách hàng.",
+          "Mercy có quyền từ chối bảo hành đối với các trường hợp sau:",
+          "1. Sản phẩm bị hư hỏng do tác động vật lý như rơi vỡ, móp méo, trầy xước nặng hoặc biến dạng do nhiệt độ cao.",
+          "2. Sản phẩm bị thấm nước, chất lỏng hoặc có dấu hiệu rỉ sét, ẩm mốc do bảo quản không đúng cách.",
+          "3. Khách hàng tự ý tháo mở sản phẩm, thay đổi cấu trúc hoặc sửa chữa tại các cơ sở không được sự ủy quyền của Mercy.",
+          "4. Hư hỏng linh kiện hoặc cháy nổ do sử dụng sai nguồn điện, sạc không đúng tiêu chuẩn hoặc dùng sai phụ kiện đi kèm.",
+          "5. Các hao mòn tự nhiên trong quá trình sử dụng như giảm dung lượng pin, mờ lớp sơn phủ hoặc lão hóa vật liệu sau thời gian dài.",
+          "6. Sản phẩm không có hóa đơn hoặc mã đơn hàng hợp lệ trên hệ thống của Mercy.",
         ],
       },
       {
-        title: "5. Liên hệ bảo hành",
+        title: "Điều 5: Quy trình tiếp nhận bảo hành",
         content: [
-          "Hotline: 0763 068 614 (Mr. Hùng)",
-          "Email: Kinhthongminh.mercy@gmail.com",
-          "Thời gian hỗ trợ: 9:00 – 21:30 (T2 – CN)",
-        ],
-      },
-    ],
-  },
-  "doi-tra": {
-    title: "Chính sách đổi trả",
-    icon: RotateCcw,
-    desc: "Đổi trả linh hoạt, đảm bảo quyền lợi khách hàng",
-    sections: [
-      {
-        title: "1. Điều kiện đổi trả",
-        content: [
-          "Sản phẩm còn nguyên vẹn, chưa qua sử dụng hoặc sử dụng dưới 3 ngày kể từ ngày nhận hàng.",
-          "Sản phẩm bị lỗi từ nhà sản xuất (lỗi kỹ thuật, linh kiện).",
-          "Sản phẩm giao sai mẫu, sai màu, sai cấu hình so với đơn hàng.",
-          "Sản phẩm còn đầy đủ phụ kiện đi kèm, hộp, phiếu bảo hành và hóa đơn.",
+          "Bước 1: Khách hàng liên hệ với Bộ phận Chăm sóc khách hàng qua Hotline 0898273899 để thông báo tình trạng sự cố.",
+          "Bước 2: Trong vòng 24 giờ, bộ phận kỹ thuật sẽ hướng dẫn khách hàng khắc phục từ xa qua điện thoại hoặc hỗ trợ trực tuyến.",
+          "Bước 3: Nếu không thể khắc phục từ xa, khách hàng gửi sản phẩm về địa chỉ tiếp nhận của công ty. Chúng tôi sẽ tiến hành kiểm tra và xử lý trong thời gian sớm nhất.",
         ],
       },
       {
-        title: "2. Thời gian đổi trả",
+        title: "Điều 6: Thông tin liên hệ",
         content: [
-          "Đổi sản phẩm mới: Trong vòng 7 ngày kể từ ngày nhận hàng.",
-          "Hoàn tiền: Trong vòng 3 ngày kể từ ngày nhận hàng (áp dụng khi sản phẩm bị lỗi từ nhà sản xuất).",
-          "Sau thời gian trên, sản phẩm sẽ được áp dụng chính sách bảo hành.",
-        ],
-      },
-      {
-        title: "3. Trường hợp không áp dụng đổi trả",
-        content: [
-          "Sản phẩm bị hư hỏng do người dùng: rơi, vỡ, va đập, ngấm nước.",
-          "Sản phẩm đã bị thay đổi, sửa chữa bởi bên thứ ba.",
-          "Sản phẩm không còn đầy đủ phụ kiện, tem niêm phong bị mất.",
-          "Sản phẩm mua trong chương trình Flash Sale, khuyến mãi đặc biệt (có ghi rõ không áp dụng đổi trả).",
-        ],
-      },
-      {
-        title: "4. Quy trình đổi trả",
-        content: [
-          "Bước 1: Liên hệ Hotline 0763 068 614 hoặc nhắn tin qua Fanpage/Zalo.",
-          "Bước 2: Cung cấp thông tin đơn hàng, mô tả lý do đổi trả và gửi hình ảnh minh chứng.",
-          "Bước 3: Mercy xác nhận yêu cầu đổi trả trong vòng 24h.",
-          "Bước 4: Gửi sản phẩm về địa chỉ được hướng dẫn (Mercy hỗ trợ phí ship 1 chiều).",
-          "Bước 5: Nhận sản phẩm mới hoặc hoàn tiền trong vòng 3–5 ngày làm việc.",
-        ],
-      },
-      {
-        title: "5. Phương thức hoàn tiền",
-        content: [
-          "Hoàn tiền qua chuyển khoản ngân hàng.",
-          "Hoàn tiền qua ví điện tử (Momo, ZaloPay).",
-          "Thời gian hoàn tiền: 1–3 ngày làm việc sau khi Mercy nhận được sản phẩm trả lại.",
+          "Mọi thắc mắc và yêu cầu bảo hành, Quý khách vui lòng gửi về:",
+          "Hotline: 0898 273 899",
+          "Email: mercytechglobal@gmail.com",
+          "Website: kinhthongminhmercy.vn",
         ],
       },
     ],
   },
   "bao-mat": {
-    title: "Chính sách bảo mật",
+    title: "Chính sách bảo mật thông tin",
     icon: Lock,
-    desc: "Cam kết bảo vệ thông tin cá nhân của khách hàng",
+    desc: "Công ty TNHH Công nghệ Mercy cam kết bảo vệ tối đa quyền riêng tư và thông tin cá nhân của khách hàng.",
     sections: [
       {
-        title: "1. Thông tin thu thập",
+        title: "Điều 1: Mục đích thu thập thông tin cá nhân",
         content: [
-          "Họ tên, số điện thoại, email, địa chỉ khi bạn đặt hàng hoặc đăng ký tài khoản.",
-          "Thông tin thanh toán (không bao gồm mật khẩu ngân hàng, mã CVV).",
-          "Dữ liệu truy cập website: IP, trình duyệt, thời gian truy cập (phục vụ cải thiện trải nghiệm).",
+          "Mercy thu thập thông tin của khách hàng nhằm các mục đích sau:",
+          "1. Thực hiện quy trình giao hàng theo địa chỉ khách hàng đã cung cấp.",
+          "2. Hỗ trợ kỹ thuật, tư vấn sản phẩm và giải đáp các thắc mắc của khách hàng.",
+          "3. Thực hiện các chương trình hậu mãi, chăm sóc khách hàng và hỗ trợ sau mua hàng.",
+          "4. Thông báo các thông tin quan trọng liên quan đến đơn hàng và các thay đổi về chính sách của công ty.",
         ],
       },
       {
-        title: "2. Mục đích sử dụng thông tin",
+        title: "Điều 2: Phạm vi thu thập thông tin",
         content: [
-          "Xử lý đơn hàng, giao hàng đúng địa chỉ.",
-          "Liên hệ hỗ trợ sau bán hàng, bảo hành.",
-          "Gửi thông tin khuyến mãi, ưu đãi mới (nếu khách hàng đồng ý nhận).",
-          "Cải thiện dịch vụ và trải nghiệm khách hàng trên website.",
+          "Các thông tin cơ bản Mercy thu thập bao gồm:",
+          "1. Họ và tên khách hàng.",
+          "2. Số điện thoại liên lạc.",
+          "3. Địa chỉ nhận hàng (bao gồm số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố).",
+          "4. Địa chỉ thư điện tử (Email).",
         ],
       },
       {
-        title: "3. Cam kết bảo mật",
+        title: "Điều 3: Thời gian lưu trữ thông tin",
         content: [
-          "Mercy cam kết tuyệt đối không bán, chia sẻ, trao đổi thông tin cá nhân của khách hàng cho bất kỳ bên thứ ba nào không liên quan.",
-          "Mọi thông tin giao dịch được mã hóa và bảo vệ theo tiêu chuẩn bảo mật hiện đại (SSL/TLS).",
-          "Chỉ nhân viên được ủy quyền mới có quyền truy cập dữ liệu khách hàng, và phải tuân thủ quy định bảo mật nội bộ.",
+          "Thông tin cá nhân của khách hàng sẽ được lưu trữ và bảo mật trên hệ thống nội bộ của Mercy cho đến khi có yêu cầu hủy bỏ từ phía khách hàng hoặc khi thông tin không còn cần thiết cho các mục đích hậu mãi và bảo hành sản phẩm.",
         ],
       },
       {
-        title: "4. Quyền của khách hàng",
+        title: "Điều 4: Những người hoặc tổ chức có thể tiếp cận thông tin",
         content: [
-          "Yêu cầu truy cập, chỉnh sửa thông tin cá nhân bất cứ lúc nào.",
-          "Yêu cầu xóa tài khoản và dữ liệu cá nhân khỏi hệ thống.",
-          "Từ chối nhận email/tin nhắn quảng cáo.",
+          "1. Mercy cam kết tuyệt đối không bán, chia sẻ hay trao đổi thông tin cá nhân của khách hàng cho bất kỳ bên thứ ba nào vì mục đích thương mại.",
+          "2. Thông tin chỉ được cung cấp cho các đơn vị vận chuyển đối tác để phục vụ duy nhất mục đích giao hàng.",
+          "3. Trong trường hợp có yêu cầu từ cơ quan pháp luật có thẩm quyền theo quy định của pháp luật Việt Nam, Mercy có trách nhiệm hợp tác cung cấp thông tin theo đúng quy định.",
         ],
       },
       {
-        title: "5. Cookie và tracking",
+        title: "Điều 5: Đơn vị thu thập và quản lý thông tin",
         content: [
-          "Website sử dụng cookie để ghi nhớ tùy chọn người dùng và cải thiện trải nghiệm.",
-          "Bạn có thể tắt cookie trong cài đặt trình duyệt, tuy nhiên một số tính năng có thể bị ảnh hưởng.",
+          "Tên đơn vị: CÔNG TY TNHH CÔNG NGHỆ MERCY",
+          "Địa chỉ: 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.",
+          "Hotline: 0898273899",
+          "Email: mercytechglobal@gmail.com",
+        ],
+      },
+      {
+        title: "Điều 6: Quyền của khách hàng đối với thông tin cá nhân",
+        content: [
+          "Khách hàng có quyền yêu cầu Mercy kiểm tra, cập nhật, điều chỉnh hoặc hủy bỏ thông tin cá nhân của mình bằng cách liên hệ trực tiếp qua Hotline hoặc Email chính thức của công ty.",
+        ],
+      },
+      {
+        title: "Điều 7: Cam kết bảo mật và an toàn thanh toán",
+        content: [
+          "1. Bảo mật dữ liệu: Mercy sử dụng giao thức SSL (Secure Sockets Layer) để bảo vệ thông tin khách hàng trong suốt quá trình giao dịch trực tuyến.",
+          "2. Bảo mật thanh toán: Hệ thống tuân thủ các tiêu chuẩn bảo mật dữ liệu thông tin thanh toán (PCI DSS). Đối với các giao dịch thẻ nội địa hoặc quốc tế, chúng tôi sử dụng cơ chế Tokenization – chỉ lưu chuỗi đã được mã hóa bởi Đối tác Cổng thanh toán, đảm bảo không trực tiếp lưu trữ thông tin thẻ của khách hàng trên hệ thống website.",
+          "3. Xác thực giao dịch: Các giao dịch trực tuyến sẽ được bảo vệ thêm bởi mã xác thực một lần (OTP) gửi qua tin nhắn điện thoại để đảm bảo tính chính chủ của tài khoản.",
+        ],
+      },
+      {
+        title: "Điều 8: Điều khoản thi hành",
+        content: [
+          "Chính sách này có hiệu lực kể từ ngày đăng tải trên website kinhthongminhmercy.vn. Mercy có quyền thay đổi, cập nhật nội dung chính sách này bất cứ lúc nào để phù hợp với quy định pháp luật và hoạt động của công ty mà không cần thông báo trước.",
         ],
       },
     ],
@@ -175,143 +155,166 @@ const policiesData: Record<string, PolicyInfo> = {
   "tra-gop": {
     title: "Chính sách trả góp",
     icon: CreditCard,
-    desc: "Trả góp 0% lãi suất – Mua ngay, trả sau dễ dàng",
+    desc: "Nhằm mang lại sự tiện lợi và hỗ trợ tối đa cho khách hàng trong việc sở hữu các sản phẩm công nghệ tiên tiến, Công ty TNHH Công nghệ Mercy ban hành Chính sách Trả góp chi tiết.",
     sections: [
       {
-        title: "1. Điều kiện trả góp",
+        title: "Điều 1: Đối tượng và điều kiện áp dụng",
         content: [
-          "Khách hàng từ 18 tuổi trở lên, có CCCD/CMND hợp lệ.",
-          "Áp dụng cho tất cả sản phẩm kính thông minh Mercy từ 2.000.000đ trở lên.",
-          "Trả góp qua thẻ tín dụng: VISA, Mastercard, JCB (của các ngân hàng đối tác).",
-          "Trả góp qua ví điện tử: Momo, ZaloPay (theo chương trình từng thời điểm).",
+          "1. Đối tượng áp dụng: Tất cả công dân Việt Nam từ đủ 18 tuổi trở lên, có đầy đủ năng lực hành vi dân sự, có nhu cầu mua sắm các sản phẩm Kính thông minh, Đồng hồ thông minh, Tai nghe thông minh và các thiết bị khác tại Mercy.",
+          "2. Điều kiện áp dụng: Giá trị đơn hàng thanh toán trả góp phải đạt mức tối thiểu từ 3.000.000 VNĐ (Ba triệu đồng chẵn) trở lên sau khi đã trừ các khoản giảm giá hoặc khuyến mãi (nếu có).",
         ],
       },
       {
-        title: "2. Kỳ hạn trả góp",
+        title: "Điều 2: Hình thức trả góp qua thẻ tín dụng",
         content: [
-          "3 tháng – Lãi suất 0%",
-          "6 tháng – Lãi suất 0%",
-          "12 tháng – Lãi suất 0% (áp dụng một số sản phẩm/ngân hàng)",
-          "Kỳ hạn cụ thể tùy thuộc vào ngân hàng phát hành thẻ và chương trình khuyến mãi hiện hành.",
+          "1. Mercy hợp tác với các Cổng thanh toán uy tín để hỗ trợ trả góp qua thẻ tín dụng của hơn 20 ngân hàng trong nước và quốc tế.",
+          "2. Khách hàng sử dụng thẻ tín dụng (Credit Card) mang tên chính chủ, thẻ còn trong trạng thái hoạt động và hạn mức tín dụng còn lại phải lớn hơn hoặc bằng giá trị đơn hàng trả góp.",
+          "3. Kỳ hạn trả góp linh hoạt: 3 tháng, 6 tháng, 9 tháng hoặc 12 tháng tùy thuộc vào quy định của từng ngân hàng phát hành thẻ.",
+          "4. Khách hàng có thể được hưởng chương trình trả góp 0% lãi suất, tuy nhiên có thể phát sinh phí chuyển đổi trả góp tùy theo chính sách của từng ngân hàng tại thời điểm giao dịch.",
         ],
       },
       {
-        title: "3. Quy trình đăng ký trả góp",
+        title: "Điều 3: Quy trình thực hiện trả góp",
         content: [
-          "Bước 1: Chọn sản phẩm và phương thức thanh toán 'Trả góp 0%' khi đặt hàng.",
-          "Bước 2: Cung cấp thông tin thẻ tín dụng hoặc chọn đối tác trả góp.",
-          "Bước 3: Xác nhận kỳ hạn trả góp.",
-          "Bước 4: Hoàn tất đặt hàng – Mercy xử lý và giao hàng trong 1–3 ngày.",
+          "Bước 1: Khách hàng lựa chọn sản phẩm mong muốn trên website kinhthongminhmercy.vn và đảm bảo tổng giá trị đơn hàng đạt mức tối thiểu theo quy định.",
+          "Bước 2: Tại trang thanh toán, khách hàng chọn phương thức \"Thanh toán trả góp bằng thẻ tín dụng\".",
+          "Bước 3: Khách hàng điền đầy đủ thông tin thẻ tín dụng, chọn ngân hàng phát hành và kỳ hạn trả góp phù hợp.",
+          "Bước 4: Xác nhận thanh toán. Hệ thống sẽ tự động chuyển đổi giao dịch thành trả góp với ngân hàng. Khách hàng không cần thực hiện thêm thủ tục nào khác nếu không có yêu cầu đặc biệt từ ngân hàng phát hành thẻ.",
+          "Bước 5: Sau khi giao dịch thành công, Mercy sẽ tiến hành xác nhận đơn hàng và giao hàng theo thời gian quy định.",
         ],
       },
       {
-        title: "4. Ngân hàng đối tác",
+        title: "Điều 4: Chính sách đổi trả đối với đơn hàng trả góp",
         content: [
-          "Vietcombank, Techcombank, VPBank, TPBank, Sacombank, MB Bank, ACB, BIDV, Agribank, VIB, SHB, HDBank, và nhiều ngân hàng khác.",
-          "Danh sách ngân hàng hỗ trợ có thể thay đổi theo từng chương trình.",
+          "1. Đơn hàng trả góp được áp dụng chính sách bảo hành và đổi mới tương tự như đơn hàng thanh toán thông thường theo \"Chính sách Bảo hành\" của Mercy (áp dụng đổi mới nếu có lỗi từ nhà sản xuất).",
+          "2. Mercy không hỗ trợ hủy đơn hàng hoặc hoàn trả tiền mặt cho các giao dịch trả góp đã được ngân hàng chuyển đổi thành công. Việc đổi trả chỉ áp dụng hình thức đổi sản phẩm tương đương hoặc sản phẩm có giá trị cao hơn (khách hàng thanh toán phần chênh lệch bằng tiền mặt hoặc chuyển khoản).",
         ],
       },
       {
-        title: "5. Lưu ý",
+        title: "Điều 5: Trách nhiệm của khách hàng",
         content: [
-          "Lãi suất 0% chỉ áp dụng khi khách hàng thanh toán đúng hạn hàng tháng.",
-          "Phí chuyển đổi trả góp (nếu có) do ngân hàng quy định, không phải Mercy thu.",
-          "Liên hệ Hotline 0763 068 614 để được tư vấn chi tiết.",
+          "1. Khách hàng có trách nhiệm thanh toán đầy đủ và đúng hạn các khoản trả góp hàng tháng cho ngân hàng phát hành thẻ theo sao kê tín dụng.",
+          "2. Mercy không chịu trách nhiệm về bất kỳ khoản phí phạt trả chậm hoặc các rủi ro phát sinh giữa khách hàng và ngân hàng liên quan đến việc thanh toán thẻ tín dụng.",
+        ],
+      },
+      {
+        title: "Điều 6: Thông tin hỗ trợ",
+        content: [
+          "Mọi thắc mắc liên quan đến quy trình và thủ tục trả góp, Quý khách vui lòng liên hệ:",
+          "Địa chỉ: 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.",
+          "Hotline: 0898 273 899",
+          "Email: mercytechglobal@gmail.com",
         ],
       },
     ],
   },
   "giao-hang": {
-    title: "Chính sách giao hàng & lắp đặt",
+    title: "Chính sách giao hàng và hỗ trợ kỹ thuật",
     icon: Truck,
-    desc: "Giao hàng nhanh chóng, tận nơi trên toàn quốc",
+    desc: "Công ty TNHH Công nghệ Mercy cam kết mang đến dịch vụ vận chuyển an toàn và hỗ trợ kỹ thuật chuyên nghiệp cho mọi khách hàng.",
     sections: [
       {
-        title: "1. Phạm vi giao hàng",
+        title: "Điều 1: Phạm vi vận chuyển",
         content: [
-          "Mercy giao hàng trên toàn quốc qua các đơn vị vận chuyển uy tín: Giao Hàng Nhanh (GHN), Giao Hàng Tiết Kiệm (GHTK), J&T Express, Viettel Post.",
-          "Hỗ trợ giao hàng quốc tế theo yêu cầu (liên hệ trực tiếp).",
+          "Mercy thực hiện giao hàng trên phạm vi toàn quốc, bao gồm tất cả các tỉnh thành và khu vực huyện xã thuộc lãnh thổ Việt Nam thông qua các đối tác vận chuyển uy tín.",
         ],
       },
       {
-        title: "2. Thời gian giao hàng",
+        title: "Điều 2: Thời gian giao hàng dự kiến",
         content: [
-          "Nội thành TP. HCM, Hà Nội: 1–2 ngày làm việc.",
-          "Các tỉnh thành khác: 2–4 ngày làm việc.",
-          "Vùng sâu, vùng xa: 4–7 ngày làm việc.",
-          "Đơn hàng được xử lý và chuyển giao vận chuyển trong vòng 24h sau khi xác nhận.",
+          "Sau khi đơn hàng được xác nhận thành công (hoặc sau khi khách hàng thực hiện đặt cọc 10% theo quy định thanh toán), thời gian giao hàng dự kiến như sau:",
+          "1. Khu vực Nội thành Thành phố Hồ Chí Minh: Thời gian từ 2 đến 3 ngày làm việc.",
+          "2. Khu vực Ngoại tỉnh và các vùng lân cận: Thời gian từ 5 đến 7 ngày làm việc.",
+          "Lưu ý: Thời gian giao hàng không tính các ngày Chủ nhật, ngày lễ Tết theo quy định của Nhà nước hoặc các trường hợp bất khả kháng do thiên tai, dịch bệnh.",
         ],
       },
       {
-        title: "3. Phí giao hàng",
+        title: "Điều 3: Phí vận chuyển",
         content: [
-          "MIỄN PHÍ giao hàng cho đơn hàng từ 2.000.000đ trở lên.",
-          "Đơn hàng dưới 2.000.000đ: Phí giao hàng từ 20.000đ – 50.000đ tùy khu vực.",
-          "Giao hàng COD (thanh toán khi nhận hàng): Miễn phí phụ thu COD.",
+          "1. Phí vận chuyển sẽ được tính toán dựa trên khối lượng sản phẩm và khoảng cách địa lý theo biểu phí của đơn vị vận chuyển.",
+          "2. Mức phí cụ thể sẽ được thông báo trực tiếp cho khách hàng trong quá trình xác nhận đơn hàng qua điện thoại hoặc hiển thị rõ tại trang thanh toán của website.",
         ],
       },
       {
-        title: "4. Hỗ trợ lắp đặt & hướng dẫn sử dụng",
+        title: "Điều 4: Quy định đồng kiểm khi nhận hàng",
         content: [
-          "Kính thông minh Mercy được hướng dẫn sử dụng chi tiết qua video và tài liệu kèm theo.",
-          "Hỗ trợ cài đặt app, kết nối Bluetooth, hướng dẫn sử dụng trợ lý AI qua điện thoại/Zalo.",
-          "Đội ngũ kỹ thuật viên sẵn sàng hỗ trợ từ xa 24/7 qua Hotline 0763 068 614.",
+          "Để đảm bảo quyền lợi tuyệt đối, Mercy khuyến khích khách hàng thực hiện quy trình đồng kiểm như sau:",
+          "1. Khách hàng có quyền mở kiện hàng kiểm tra ngoại quan sản phẩm (số lượng, màu sắc, tình trạng nguyên vẹn của hộp đựng và seal sản phẩm) trước khi thanh toán số tiền còn lại cho nhân viên giao hàng.",
+          "2. Khách hàng không được phép tự ý bóc seal (tem niêm phong) của sản phẩm hoặc sử dụng thử sản phẩm trước khi hoàn tất thanh toán.",
+          "3. Trường hợp sản phẩm có dấu hiệu bị móp méo, vỡ hỏng do vận chuyển hoặc không đúng mẫu mã đã đặt, khách hàng có quyền từ chối nhận hàng và liên hệ ngay với Hotline 0898273899 để được hỗ trợ xử lý.",
         ],
       },
       {
-        title: "5. Kiểm tra đơn hàng",
+        title: "Điều 5: Hỗ trợ lắp đặt và cài đặt kỹ thuật",
         content: [
-          "Sau khi đặt hàng, khách hàng nhận mã vận đơn qua SMS/Zalo để theo dõi tình trạng giao hàng.",
-          "Kiểm tra hàng trước khi thanh toán COD. Nếu sản phẩm có dấu hiệu bị hư hỏng trong quá trình vận chuyển, vui lòng từ chối nhận và liên hệ Mercy ngay.",
+          "Đối với các dòng sản phẩm công nghệ như Kính thông minh, Đồng hồ và Tai nghe, việc \"lắp đặt\" chủ yếu là các thao tác cài đặt phần mềm và kết nối thiết bị. Mercy hỗ trợ khách hàng như sau:",
+          "1. Hướng dẫn trực tiếp: Tại địa chỉ văn phòng công ty khi khách hàng mua hàng trực tiếp.",
+          "2. Hỗ trợ từ xa: Đối với khách hàng mua online, bộ phận kỹ thuật sẽ hỗ trợ cài đặt, kết nối ứng dụng và hướng dẫn sử dụng thông qua các kênh: Điện thoại, Video Call (Zalo) hoặc điều khiển từ xa qua phần mềm Teamviewer/UltraViewer.",
+          "3. Tài liệu hướng dẫn: Mỗi sản phẩm gửi đi đều kèm theo tài liệu hướng dẫn sử dụng chi tiết bằng tiếng Việt hoặc hướng dẫn truy cập kho dữ liệu hỗ trợ trực tuyến của Mercy.",
+        ],
+      },
+      {
+        title: "Điều 6: Trách nhiệm với hàng hóa vận chuyển",
+        content: [
+          "1. Mercy chịu trách nhiệm về các rủi ro như mất mát hoặc hư hỏng sản phẩm trong suốt quá trình vận chuyển từ kho hàng đến tay khách hàng.",
+          "2. Khách hàng có trách nhiệm kiểm tra hàng hóa khi nhận. Sau khi khách hàng đã ký nhận hàng mà không ghi chú về tình trạng hư hỏng ngoại quan, Mercy không có trách nhiệm giải quyết các khiếu nại về vỡ hỏng hay thiếu hụt phụ kiện do tác động vật lý sau đó.",
+        ],
+      },
+      {
+        title: "Điều 7: Thông tin liên hệ hỗ trợ giao hàng",
+        content: [
+          "Địa chỉ tiếp nhận: 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.",
+          "Hotline hỗ trợ vận chuyển: 0898 273 899",
+          "Email: mercytechglobal@gmail.com",
         ],
       },
     ],
   },
   "khach-hang-than-thiet": {
-    title: "Chính sách khách hàng thân thiết",
+    title: "Chính sách khách hàng thân thiết (Mercy Member)",
     icon: Heart,
-    desc: "Tri ân khách hàng – Ưu đãi đặc quyền dành riêng cho bạn",
+    desc: "Nhằm tri ân sự tin tưởng và đồng hành của Quý khách, Công ty TNHH Công nghệ Mercy chính thức áp dụng chương trình Khách hàng thân thiết (Mercy Member).",
     sections: [
       {
-        title: "1. Cấp bậc thành viên",
+        title: "Điều 1: Đối tượng và nguyên tắc tham gia",
         content: [
-          "🥉 Thành viên Bạc (Silver): Đăng ký tài khoản và mua hàng lần đầu.",
-          "🥇 Thành viên Vàng (Gold): Tổng chi tiêu từ 5.000.000đ trở lên.",
-          "💎 Thành viên Kim Cương (Diamond): Tổng chi tiêu từ 15.000.000đ trở lên hoặc mua từ 3 sản phẩm trở lên.",
+          "1. Đối tượng áp dụng: Tất cả khách hàng cá nhân có phát sinh giao dịch mua hàng thành công tại hệ thống của Mercy.",
+          "2. Nguyên tắc quản lý: Hệ thống quản lý tài khoản thành viên tự động dựa trên Số điện thoại mua hàng của khách hàng. Quý khách vui lòng sử dụng một số điện thoại duy nhất cho mọi giao dịch để đảm bảo quyền lợi tích lũy không bị phân mảnh.",
         ],
       },
       {
-        title: "2. Quyền lợi theo cấp bậc",
+        title: "Điều 2: Hệ thống hạng thành viên và điều kiện xét duyệt",
         content: [
-          "Silver: Giảm 3% cho đơn hàng tiếp theo, nhận thông báo Flash Sale sớm.",
-          "Gold: Giảm 5% cho mọi đơn hàng, miễn phí giao hàng toàn quốc, quà sinh nhật.",
-          "Diamond: Giảm 8% cho mọi đơn hàng, ưu tiên bảo hành VIP (xử lý trong 24h), quà tặng độc quyền, mời tham gia sự kiện ra mắt sản phẩm mới.",
+          "Hạng thành viên được xét duyệt tự động dựa trên \"Tổng chi tiêu tích lũy\" (số tiền khách hàng thực trả sau khi đã trừ các khuyến mãi) kể từ đơn hàng đầu tiên hoàn tất giao hàng và thanh toán.",
+          "1. Hạng M-New (Thành viên Tiêu chuẩn): Dành cho khách hàng có tổng chi tiêu tích lũy dưới 5.000.000 VNĐ.",
+          "2. Hạng M-Gold (Thành viên Vàng): Dành cho khách hàng có tổng chi tiêu tích lũy từ 5.000.000 VNĐ đến dưới 15.000.000 VNĐ.",
+          "3. Hạng M-Diamond (Thành viên Kim Cương): Dành cho khách hàng có tổng chi tiêu tích lũy từ 15.000.000 VNĐ trở lên.",
         ],
       },
       {
-        title: "3. Tích điểm đổi quà",
+        title: "Điều 3: Quyền lợi đặc quyền theo hạng thành viên",
         content: [
-          "Mỗi 10.000đ chi tiêu = 1 điểm Mercy.",
-          "100 điểm = Voucher giảm 50.000đ.",
-          "300 điểm = Voucher giảm 200.000đ.",
-          "500 điểm = Voucher giảm 500.000đ hoặc phụ kiện miễn phí.",
-          "Điểm có hiệu lực trong vòng 12 tháng kể từ ngày tích lũy.",
+          "Dựa trên hạng thành viên đạt được, Quý khách sẽ tận hưởng các đặc quyền tương ứng trong các lần mua sắm tiếp theo:",
+          "1. Đặc quyền hạng M-New: Tích lũy 0.5% giá trị đơn hàng vào điểm thưởng Mercy Point; nhận thông báo sớm nhất về các chương trình Flash Sale và ra mắt sản phẩm mới.",
+          "2. Đặc quyền hạng M-Gold: Giảm ngay trực tiếp 1% trên hóa đơn mua thiết bị mới; tích lũy 1% giá trị đơn hàng vào điểm thưởng Mercy Point; tặng mã giảm giá trị giá 200.000 VNĐ nhân dịp sinh nhật khách hàng.",
+          "3. Đặc quyền hạng M-Diamond: Giảm ngay trực tiếp 2% trên hóa đơn mua thiết bị mới; tích lũy 2% giá trị đơn hàng vào điểm thưởng Mercy Point; tặng mã giảm giá trị giá 500.000 VNĐ nhân dịp sinh nhật khách hàng; ưu tiên mượn thiết bị dùng tạm trong thời gian chờ bảo hành sản phẩm (nếu có sẵn).",
         ],
       },
       {
-        title: "4. Ưu đãi giới thiệu bạn bè (Referral)",
+        title: "Điều 4: Quy định về tích lũy và sử dụng điểm thưởng (Mercy Point)",
         content: [
-          "Giới thiệu thành công 1 khách hàng mới → Nhận ngay Voucher 100.000đ.",
-          "Khách hàng được giới thiệu → Nhận Voucher 50.000đ cho đơn hàng đầu tiên.",
-          "Không giới hạn số lần giới thiệu.",
+          "1. Quy đổi điểm thưởng: Mỗi 1 điểm Mercy Point tích lũy tương đương với 1 VNĐ khi sử dụng để thanh toán cho các đơn hàng tiếp theo.",
+          "2. Hạn mức sử dụng: Khách hàng có thể sử dụng Mercy Point để thanh toán tối đa 50% giá trị của một đơn hàng mới.",
+          "3. Không quy đổi tiền mặt: Điểm thưởng Mercy Point chỉ có giá trị thanh toán tại hệ thống Mercy, tuyệt đối không có giá trị quy đổi thành tiền mặt dưới mọi hình thức.",
+          "4. Thời hạn sử dụng: Điểm thưởng tích lũy có thời hạn sử dụng là 12 tháng kể từ ngày phát sinh giao dịch tích điểm cuối cùng. Quá thời hạn này, hệ thống sẽ tự động hủy số điểm chưa sử dụng.",
         ],
       },
       {
-        title: "5. Điều khoản",
+        title: "Điều 5: Điều khoản thi hành và xử lý vi phạm",
         content: [
-          "Chương trình có thể thay đổi theo từng thời kỳ, Mercy sẽ thông báo trước qua email/ứng dụng.",
-          "Không áp dụng đồng thời với các chương trình khuyến mãi khác (trừ khi có ghi rõ).",
-          "Liên hệ Hotline 0763 068 614 để biết thêm chi tiết.",
+          "1. Trong trường hợp khách hàng thực hiện đổi trả sản phẩm và được hoàn tiền (nếu có), số điểm tích lũy và chi tiêu ghi nhận từ đơn hàng đó sẽ bị khấu trừ tương ứng khỏi tài khoản thành viên.",
+          "2. Mercy có quyền từ chối áp dụng ưu đãi, thu hồi hạng thành viên và toàn bộ điểm thưởng nếu phát hiện khách hàng có hành vi gian lận, cố tình tạo nhiều tài khoản để trục lợi từ chính sách.",
+          "3. Mercy bảo lưu quyền thay đổi các điều kiện xét duyệt, tỷ lệ quy đổi điểm và quyền lợi của chương trình khách hàng thân thiết bất cứ lúc nào. Mọi thay đổi sẽ được thông báo công khai trên website kinhthongminhmercy.vn và có hiệu lực ngay sau khi đăng tải.",
         ],
       },
     ],
@@ -346,7 +349,7 @@ const Policy = () => {
       <SEOHead
         title={policy.title}
         description={policy.desc}
-        canonical={`https://mercy.vn/chinh-sach/${slug}`}
+        canonical={makeSiteUrl(`/chinh-sach/${slug}`)}
       />
       <Header />
 
@@ -405,13 +408,13 @@ const Policy = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <a
-                    href="tel:0763068614"
+                    href="tel:0898273899"
                     className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors active:scale-95"
                   >
-                    📞 Gọi: 0763 068 614
+                    📞 Gọi: 0898 273 899
                   </a>
                   <a
-                    href="mailto:Kinhthongminh.mercy@gmail.com"
+                    href="mailto:mercytechglobal@gmail.com"
                     className="inline-flex items-center justify-center px-6 py-3 border border-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
                   >
                     ✉️ Email liên hệ

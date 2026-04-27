@@ -1,15 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { Zap, Clock, Filter } from "lucide-react";
-import { products, formatPrice } from "@/data/products";
+import { formatPrice } from "@/data/products";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
+import { makeSiteUrl } from "@/lib/config";
+import { useShop } from "@/context/ShopContext";
 
 const FlashSale = () => {
   const navigate = useNavigate();
+  const { products } = useShop();
   const [filter, setFilter] = useState("all");
 
   // Countdown to end of day
@@ -34,17 +37,17 @@ const FlashSale = () => {
   }, []);
 
   const saleProducts = useMemo(() => {
-    const items = products.filter((p) => p.flashSalePrice && p.originalPrice);
+    const items = products.filter((p: any) => p.isFlashSale);
     if (filter === "all") return items;
     return items.filter((p) => p.category === filter);
-  }, [filter]);
+  }, [filter, products]);
 
   const categories = useMemo(() => {
     const cats = new Set(
-      products.filter((p) => p.flashSalePrice).map((p) => p.category)
+      products.filter((p: any) => p.isFlashSale).map((p) => p.category)
     );
     return ["all", ...Array.from(cats)];
-  }, []);
+  }, [products]);
 
   const getDiscount = (original: number, sale: number) =>
     Math.round(((original - sale) / original) * 100);
@@ -56,7 +59,7 @@ const FlashSale = () => {
       <SEOHead
         title="Flash Sale"
         description="Flash Sale giảm giá sốc tại Mercy - Kính thông minh và phụ kiện công nghệ giá tốt nhất"
-        canonical="https://mercy.vn/flash-sale"
+        canonical={makeSiteUrl("/flash-sale")}
       />
       <Header />
 
@@ -124,10 +127,10 @@ const FlashSale = () => {
 
             {/* Products */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-              {saleProducts.map((product) => {
+              {saleProducts.map((product: any) => {
                 const discount = product.originalPrice
-                  ? getDiscount(product.originalPrice, product.flashSalePrice || product.price)
-                  : 0;
+                  ? getDiscount(product.originalPrice, product.price)
+                  : product.flashSalePercent || 0;
                 const soldPercent = ((product.id % 7) + 4) * 10;
 
                 return (
@@ -170,7 +173,7 @@ const FlashSale = () => {
 
                       <div className="flex items-end gap-2 flex-wrap">
                         <span className="text-red-600 font-extrabold text-lg">
-                          {formatPrice(product.flashSalePrice || product.price)}
+                          {formatPrice(product.price)}
                         </span>
                       </div>
                       {product.originalPrice && (

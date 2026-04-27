@@ -1,14 +1,20 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { apiGet } from "@/lib/api";
+import type { ProductData } from "@/data/products";
 
 export interface Product {
   id: number;
   name: string;
   price: number;
   image: string;
+  images?: string[];
   quantity?: number;
+  [key: string]: any;
 }
 
 interface ShopContextType {
+  products: ProductData[];
+  isLoadingProducts: boolean;
   cart: Product[];
   wishlist: Product[];
   compare: Product[];
@@ -34,9 +40,24 @@ export const useShop = () => {
 };
 
 export const ShopProvider = ({ children }: { children: ReactNode }) => {
+  const [products, setProducts] = useState<ProductData[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [cart, setCart] = useState<Product[]>([]);
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [compare, setCompare] = useState<Product[]>([]);
+
+  useEffect(() => {
+    setIsLoadingProducts(true);
+    apiGet('/products').then(data => {
+      if (Array.isArray(data)) {
+        setProducts(data);
+      }
+    }).catch(err => {
+      console.error('Failed to fetch products', err);
+    }).finally(() => {
+      setIsLoadingProducts(false);
+    });
+  }, []);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -97,6 +118,7 @@ export const ShopProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ShopContext.Provider
       value={{
+        products, isLoadingProducts,
         cart, wishlist, compare,
         addToCart, addToCartWithQuantity, removeFromCart, updateCartQuantity,
         toggleWishlist, toggleCompare,

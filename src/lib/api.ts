@@ -1,5 +1,7 @@
+import { API_BASE_URL } from "@/lib/config";
+
 // API configuration and helpers for communicating with the backend
-export const API_BASE = "/api";
+export const API_BASE = API_BASE_URL;
 
 function getToken(): string | null {
   return localStorage.getItem("token");

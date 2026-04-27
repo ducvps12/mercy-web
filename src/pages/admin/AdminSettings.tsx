@@ -25,15 +25,15 @@ export default function AdminSettings() {
             </div>
             <div className="space-y-2">
               <Label>Hotline (Mr. Hùng)</Label>
-              <Input defaultValue="0763 068 614" />
+              <Input defaultValue="0898 273 899" />
             </div>
             <div className="space-y-2">
               <Label>Hotline (Mr. Mạnh)</Label>
-              <Input defaultValue="0398 684 921" />
+              <Input defaultValue="0898 273 899" />
             </div>
             <div className="space-y-2">
               <Label>Zalo OA</Label>
-              <Input defaultValue="https://zalo.me/0763068614" />
+              <Input defaultValue="https://zalo.me/0898273899" />
             </div>
             <div className="space-y-2">
               <Label>Địa chỉ CS TP.HCM</Label>

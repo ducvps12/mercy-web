@@ -47,21 +47,32 @@ function saveHeroBanner(banner: BannerItem) {
 
 // ── Promo banners (dual banners below hero) ──
 const PROMO_STORAGE_KEY = "mercy_promo_banners";
+
 const defaultPromos: BannerItem[] = [
-  { id: 1, image: "/src/assets/banners/banner/1.png", alt: "Banner 1", link: "/shop" },
-  { id: 2, image: "/src/assets/banners/banner/2.png", alt: "Banner 2", link: "/shop" },
-  { id: 3, image: "/src/assets/banners/banner/3.png", alt: "Banner 3", link: "/shop" },
-  { id: 4, image: "/src/assets/banners/banner/4.png", alt: "Banner 4", link: "/shop" },
+  {
+    id: 1,
+    image: "/banners/promo-combo.png",
+    alt: "Combo Phụ Kiện Giảm Sốc",
+    link: "/shop"
+  },
+  {
+    id: 2,
+    image: "/banners/promo-flash-sale.png",
+    alt: "Flash Sale Mỗi Ngày",
+    link: "/shop"
+  }
 ];
 
 export function getPromoBanners(): BannerItem[] {
-  // Temporary bypass localStorage to ensure new banners are shown
-  /*
   try {
     const saved = localStorage.getItem(PROMO_STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
   } catch {}
-  */
   return defaultPromos;
 }
 

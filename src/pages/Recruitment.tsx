@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import SEOHead from "@/components/SEOHead";
+import { makeSiteUrl } from "@/lib/config";
 
 const Recruitment = () => {
   return (
@@ -10,7 +11,7 @@ const Recruitment = () => {
       <SEOHead
         title="Thông tin tuyển dụng"
         description="Thông tin tuyển dụng và cơ hội việc làm tại Mercy."
-        canonical="https://mercy.vn/tuyen-dung"
+        canonical={makeSiteUrl("/tuyen-dung")}
       />
       <Header />
 

@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { apiGet, apiPost } from "@/lib/api";
+import { BANK_ACCOUNT, BANK_ACCOUNT_NAME, BANK_CODE, makeVietQrUrl } from "@/lib/config";
 
 const Checkout = () => {
   const { cartTotal, cart, clearCart } = useShop();
@@ -23,14 +25,14 @@ const Checkout = () => {
   const totalWithShipping = cartTotal + shippingFee;
 
   // Bank Info
-  const BANK_ACCOUNT = "24488671";
-  const BANK_NAME = "ACB";
-  const ACCOUNT_NAME = "MAI XUAN ANH";
+  const BANK_ACCOUNT_NUMBER = BANK_ACCOUNT;
+  const BANK_NAME = BANK_CODE;
+  const ACCOUNT_NAME = BANK_ACCOUNT_NAME;
   // The structure `ThanhToan + orderId` is used.
   const description = `ThanhToan${orderId}`;
 
   // Generate VietQR image
-  const qrUrl = `https://img.vietqr.io/image/${BANK_NAME}-${BANK_ACCOUNT}-compact2.png?amount=${totalWithShipping}&addInfo=${description}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+  const qrUrl = makeVietQrUrl(totalWithShipping, description);
 
   useEffect(() => {
     if (cart.length === 0 && !isSuccess) {
@@ -44,36 +46,38 @@ const Checkout = () => {
 
     const checkPayment = async () => {
       try {
-        const res = await fetch("https://api.sieuthicode.net/historyapiacb/ec4f8aeb9d87bc0ffa48f709365313d1");
-        const json = await res.json();
-        
-        if (json.messageStatus === "success" && json.data) {
-          const match = json.data.find((tx: any) => 
-            // In a real API we check type "IN" and amount && description.
-            // Using includes to loosely match the description string since banks sometimes prepend/append characters
-            (tx.amount >= totalWithShipping) && 
-            tx.description.toLowerCase().includes(orderId.toLowerCase())
-          );
+        const json = await apiGet<{ paid: boolean }>(`/orders/check-payment?amount=${totalWithShipping}&content=${encodeURIComponent(orderId)}`);
 
-          if (match) {
-            setIsSuccess(true);
-            toast.success("Thanh toán thành công! Cảm ơn bạn.");
-            
-            // Post order to backend
-            fetch(`http://localhost:3000/api/orders`, { 
-              method: "POST", 
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                total: totalWithShipping,
-                orderCode: orderId,
-                affiliateCode: refCode,
-                userId: user?.id || null,
-                items: cart
-              }) 
-            }).then(() => {
-              clearCart();
-            }).catch(e => console.error("Could not save order", e));
-          }
+        if (json.paid) {
+          setIsSuccess(true);
+          toast.success("Thanh toán thành công! Cảm ơn bạn.");
+
+          // Post order to backend
+          apiPost("/orders", {
+            total: totalWithShipping,
+            orderCode: orderId,
+            affiliateCode: refCode,
+            userId: user?.id || null,
+            items: cart.map(c => ({
+              productId: c.id,
+              productName: c.name,
+              price: c.price,
+              quantity: c.quantity || 1,
+              imageUrl: c.image,
+              originalPrice: c.price
+            })),
+            shippingInfo: {
+              name: user?.name || "Khách hàng",
+              email: user?.email || "",
+              phone: user?.phone || "",
+              address: "",
+              paymentMethod: "chuyen_khoan",
+              notes: description
+            },
+            status: "confirmed"
+          }).then(() => {
+            clearCart();
+          }).catch(e => console.error("Could not save order", e));
         }
       } catch (err) {
         console.error("Lỗi kiểm tra lịch sử thanh toán", err);
@@ -82,7 +86,7 @@ const Checkout = () => {
 
     const interval = setInterval(checkPayment, 5000);
     return () => clearInterval(interval);
-  }, [cartTotal, isSuccess, orderId, totalWithShipping, clearCart, refCode]);
+  }, [cart, cartTotal, isSuccess, orderId, totalWithShipping, clearCart, refCode, user]);
 
   if (isSuccess) {
     return (
@@ -127,7 +131,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between border-b border-border pb-2">
                   <span className="text-muted-foreground">Số tài khoản</span>
-                  <span className="font-bold text-primary text-lg">{BANK_ACCOUNT}</span>
+                  <span className="font-bold text-primary text-lg">{BANK_ACCOUNT_NUMBER}</span>
                 </div>
                 <div className="flex justify-between border-b border-border pb-2">
                   <span className="text-muted-foreground">Chủ tài khoản</span>

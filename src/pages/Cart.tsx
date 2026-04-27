@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -6,18 +6,20 @@ import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import CheckoutPopup from "@/components/CheckoutPopup";
 import { useShop } from "@/context/ShopContext";
-import { products, formatPrice } from "@/data/products";
+import { formatPrice } from "@/data/products";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Check, Gift } from "lucide-react";
 import { toast } from "sonner";
 
-// Upsell combo products
-const comboProducts = products.filter(p => p.price < 2000000).slice(0, 4);
-
 const Cart = () => {
-  const { cart, removeFromCart, updateCartQuantity, cartTotal, cartCount, addToCart, clearCart } = useShop();
+  const { cart, removeFromCart, updateCartQuantity, cartTotal, cartCount, addToCart, clearCart, products } = useShop();
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedCombos, setSelectedCombos] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
+
+  // Upsell combo products
+  const comboProducts = useMemo(() => {
+    return products.filter(p => p.price < 2000000).slice(0, 4);
+  }, [products]);
 
   const handleRemove = (id: number, name: string) => {
     removeFromCart(id);

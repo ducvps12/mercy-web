@@ -11,6 +11,19 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+server/.env
+server/.env.*
+
+# Large/local assets and temporary maintenance scripts
+Product-20260407T075101Z-3-001/
+*.rar
+check.cjs
+fix.cjs
+fix2.cjs
+replace.cjs
+replace.js
 
 # Editor directories and files
 .vscode/*

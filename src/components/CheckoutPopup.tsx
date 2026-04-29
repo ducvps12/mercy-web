@@ -891,7 +891,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                 <li>Chúng tôi tuyệt đối không cung cấp, chia sẻ thông tin khách hàng cho bất kỳ bên thứ ba nào vì mục đích thương mại mà không có sự đồng ý của Quý khách.</li>
               </ul>
               <p className="font-medium text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
-                Mọi thắc mắc hoặc yêu cầu hỗ trợ, Quý khách vui lòng liên hệ Hotline 0898.273.899 để được giải quyết nhanh nhất.
+                Mọi thắc mắc hoặc yêu cầu hỗ trợ, Quý khách vui lòng liên hệ Hotline 0898 273 899 để được giải quyết nhanh nhất.
               </p>
             </div>
             

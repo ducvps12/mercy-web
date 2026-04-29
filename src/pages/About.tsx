@@ -36,17 +36,18 @@ const About = () => {
 
       <main>
         {/* Hero Banner */}
-        <section className="relative bg-secondary text-secondary-foreground overflow-hidden">
-          <div className="absolute inset-0 bg-[#1a1a2e]" />
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-white rounded-full blur-[120px]" />
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#2d2d44] to-[#1a1a2e]" />
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-red-500 rounded-full blur-[120px]" />
+            <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-[120px]" />
           </div>
           <div className="relative container mx-auto px-4 py-20 md:py-32 text-center">
-            <p className="text-primary font-semibold tracking-widest uppercase text-sm mb-4">Về chúng tôi</p>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-              Mercy
+            <p className="text-red-500 font-bold tracking-widest uppercase text-sm md:text-base mb-6 animate-fade-in">VỀ CHÚNG TÔI</p>
+            <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-8 text-white drop-shadow-2xl animate-fade-in-scale">
+              MERCY
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed font-medium animate-fade-in">
               Thương hiệu tiên phong trong lĩnh vực kính thông minh tại Việt Nam
             </p>
           </div>
@@ -70,23 +71,23 @@ const About = () => {
         </section>
 
         {/* Features Grid */}
-        <section className="py-16 md:py-24 bg-muted/50">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-white to-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">Tính năng nổi bật</h2>
-            <p className="text-muted-foreground text-center mb-12 max-w-xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-black text-center mb-4 text-gray-900">Tính năng nổi bật</h2>
+            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto text-base md:text-lg font-medium">
               Kính Thông Minh Mercy MCK 5.0 – người bạn đồng hành đa năng
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
               {features.map((f, i) => (
                 <div
                   key={i}
-                  className="bg-card rounded-xl p-6 text-center border border-border/60 hover:border-gray-300 hover:shadow-sm transition-all duration-200 group"
+                  className="bg-white rounded-2xl p-5 md:p-7 text-center border border-gray-200 hover:border-red-300 hover:shadow-xl transition-all duration-300 group hover:-translate-y-1"
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                    <f.icon className="w-5 h-5 text-primary" />
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <f.icon className="w-7 h-7 md:w-9 md:h-9 text-white" strokeWidth={2.5} />
                   </div>
-                  <h3 className="font-semibold text-sm mb-1">{f.title}</h3>
-                  <p className="text-muted-foreground text-xs">{f.desc}</p>
+                  <h3 className="font-bold text-sm md:text-base mb-2 text-gray-900">{f.title}</h3>
+                  <p className="text-gray-600 text-xs md:text-sm leading-relaxed">{f.desc}</p>
                 </div>
               ))}
             </div>

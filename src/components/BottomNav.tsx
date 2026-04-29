@@ -29,31 +29,43 @@ const BottomNav = () => {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border md:hidden">
-      <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
-        {items.map((item, i) => (
-          <button
-            key={item.label}
-            onClick={() => handleTap(i)}
-            className={`flex flex-col items-center gap-0.5 px-1 py-1 min-w-0 relative transition-colors duration-200 ${
-              i === activeIndex ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <span className={`absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-primary transition-all duration-300 ${i === activeIndex ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'}`} />
-            <span className="relative">
-              <item.icon
-                className={`w-5 h-5 shrink-0 transition-all duration-300 ${
-                  tapped === i ? 'scale-125' : i === activeIndex ? 'scale-110' : 'scale-100'
-                }`}
-              />
-            </span>
-            <span className={`text-[9px] font-medium leading-tight text-center truncate max-w-[60px] transition-all duration-200 ${i === activeIndex ? 'font-semibold' : ''}`}>
-              {item.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </nav>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2 pointer-events-none">
+        <div className="pointer-events-auto relative mx-auto max-w-md overflow-hidden rounded-[24px] border border-white/70 bg-white/92 shadow-[0_18px_45px_rgba(15,23,42,0.22)] backdrop-blur-xl">
+          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
+          <div className="grid grid-cols-5 items-center px-1.5 py-2">
+            {items.map((item, i) => {
+              const active = i === activeIndex;
+              return (
+                <button
+                  id={`bottom-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  key={item.label}
+                  onClick={() => handleTap(i)}
+                  className={`relative flex min-h-[54px] min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 transition-all duration-300 ${
+                    active ? "text-white" : "text-slate-500 hover:text-red-600"
+                  }`}
+                  aria-label={item.label}
+                >
+                  <span
+                    className={`absolute inset-1 rounded-2xl bg-gradient-to-br from-[#e11d2e] to-[#a90015] shadow-[0_10px_24px_rgba(203,28,34,0.28)] transition-all duration-300 ${
+                      active ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                    }`}
+                  />
+                  <span className="relative">
+                    <item.icon
+                      className={`h-5 w-5 shrink-0 transition-all duration-300 ${
+                        tapped === i ? "scale-125" : active ? "scale-110" : "scale-100"
+                      }`}
+                    />
+                  </span>
+                  <span className={`relative max-w-[62px] truncate text-center text-[10px] font-semibold leading-tight ${active ? "text-white" : "text-slate-500"}`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
       {/* ═══ Store Modal ═══ */}
       {storeModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4" onClick={() => setStoreModalOpen(false)}>

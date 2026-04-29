@@ -12,6 +12,7 @@ import {
   UserCheck,
   CreditCard,
   History,
+  TrendingUp,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -34,6 +35,7 @@ const mainItems = [
   { title: "Sản phẩm", url: "/admin/products", icon: Package },
   { title: "Thành viên", url: "/admin/members", icon: UserCheck },
   { title: "Khách hàng", url: "/admin/customers", icon: Users },
+  { title: "CRM Tăng trưởng", url: "/admin/crm", icon: TrendingUp },
   { title: "Thống kê", url: "/admin/analytics", icon: BarChart3 },
 ];
 

@@ -1,5 +1,10 @@
 import { Helmet } from "react-helmet-async";
 
+interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
@@ -9,6 +14,7 @@ interface SEOHeadProps {
   ogType?: string;
   noindex?: boolean;
   jsonLd?: Record<string, unknown>;
+  breadcrumbs?: BreadcrumbItem[];
 }
 
 const SITE_NAME = "Mercy - Smart Vision • Smart Life";
@@ -27,8 +33,23 @@ const SEOHead = ({
   ogType = "website",
   noindex = false,
   jsonLd,
+  breadcrumbs,
 }: SEOHeadProps) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
+
+  // Generate BreadcrumbList JSON-LD
+  const breadcrumbJsonLd = breadcrumbs && breadcrumbs.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": breadcrumbs.map((item, i) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "name": item.name,
+          "item": item.url,
+        })),
+      }
+    : null;
 
   return (
     <Helmet>
@@ -45,6 +66,7 @@ const SEOHead = ({
       <meta property="og:image" content={ogImage} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="vi_VN" />
+      {canonical && <meta property="og:url" content={canonical} />}
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -55,6 +77,9 @@ const SEOHead = ({
       {/* JSON-LD */}
       {jsonLd && (
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      )}
+      {breadcrumbJsonLd && (
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
       )}
     </Helmet>
   );

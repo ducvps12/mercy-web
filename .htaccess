@@ -1,1 +1,12 @@
- 
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Keep API calls handled by backend/proxy config
+  RewriteCond %{REQUEST_URI} ^/api [NC]
+  RewriteRule ^ - [L]
+
+  # If request is not an existing file or directory, route to index.html
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>

@@ -9,6 +9,8 @@ import productRoutes from './routes/products';
 import articleRoutes from './routes/articles';
 import reviewRoutes from './routes/reviews';
 import bankRoutes from './routes/bank';
+import contactRoutes from './routes/contact';
+import settingsRoutes from './routes/settings';
 import { startAcbCronJob } from './cron/acbJob';
 import { FRONTEND_URL, SERVER_PORT } from './config';
 
@@ -28,6 +30,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/bank', bankRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

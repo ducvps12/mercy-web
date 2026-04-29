@@ -3,23 +3,59 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Shield, Trash2, Users, Crown, UserCheck, Loader2, RefreshCw } from "lucide-react";
+import { Search, Shield, Trash2, Users, Crown, UserCheck, Loader2, RefreshCw, Edit, User, Lock, Unlock, Download, Key, Eye, ChevronLeft, ChevronRight, Award, Gem, Medal, PackageOpen } from "lucide-react";
 import { toast } from "sonner";
-import { apiGet, apiPut, apiDelete } from "@/lib/api";
+import { apiGet, apiPut, apiDelete, API_BASE } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Member {
   id: number;
   name: string | null;
   email: string;
+  phone?: string | null;
   role: string;
-  affiliateCode: string | null;
+  isActive?: boolean;
   createdAt: string;
 }
+
+interface MemberDetail {
+  id: number; email: string; name: string; phone: string; address: string;
+  role: string; isActive: boolean; createdAt: string; totalOrders: number;
+  totalSpent: number; tier: string;
+  orders: { id: string; total: number; status: string; date: string }[];
+}
+
+const TIER_CONFIG: Record<string, { icon: any; label: string; className: string }> = {
+  diamond: { icon: Gem, label: "Diamond", className: "bg-gradient-to-r from-cyan-400 to-blue-500 text-white" },
+  gold: { icon: Crown, label: "Gold", className: "bg-gradient-to-r from-yellow-400 to-amber-500 text-white" },
+  silver: { icon: Award, label: "Silver", className: "bg-gradient-to-r from-gray-300 to-gray-400 text-white" },
+  bronze: { icon: Medal, label: "Bronze", className: "bg-gradient-to-r from-orange-300 to-orange-400 text-white" },
+};
+
+const PAGE_SIZE = 15;
 
 export default function AdminMembers() {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+
+  // Edit dialog
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", phone: "", role: "user" });
+  const [saving, setSaving] = useState(false);
+
+  // Detail dialog
+  const [detailMember, setDetailMember] = useState<MemberDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  // Reset password dialog
+  const [resetMember, setResetMember] = useState<Member | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const loadMembers = async () => {
     setLoading(true);
@@ -33,23 +69,50 @@ export default function AdminMembers() {
     }
   };
 
-  useEffect(() => {
-    loadMembers();
-  }, []);
+  useEffect(() => { loadMembers(); }, []);
 
-  const filteredMembers = members.filter(
-    (m) =>
-      (m.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMembers = members.filter((m) => {
+    const matchSearch = (m.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchRole = roleFilter === "all" || m.role === roleFilter;
+    const matchStatus = statusFilter === "all" ||
+      (statusFilter === "active" && m.isActive !== false) ||
+      (statusFilter === "locked" && m.isActive === false);
+    return matchSearch && matchRole && matchStatus;
+  });
 
-  const toggleRole = async (id: number) => {
+  const totalPages = Math.ceil(filteredMembers.length / PAGE_SIZE);
+  const paged = filteredMembers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [searchQuery, roleFilter, statusFilter]);
+
+  const handleEditClick = (member: Member) => {
+    setEditingMember(member);
+    setEditForm({ name: member.name || "", phone: member.phone || "", role: member.role || "user" });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMember) return;
+    setSaving(true);
     try {
-      await apiPut(`/admin/members/${id}/role`);
+      await apiPut(`/admin/members/${editingMember.id}`, editForm);
+      toast.success("Cập nhật thành công");
+      setEditingMember(null);
       await loadMembers();
-      toast.success("Đã cập nhật quyền thành viên");
     } catch (err: any) {
-      toast.error(err.message || "Lỗi cập nhật quyền");
+      toast.error(err.message || "Có lỗi xảy ra");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleActive = async (id: number) => {
+    try {
+      await apiPut(`/admin/members/${id}/toggle-active`);
+      await loadMembers();
+      toast.success("Đã cập nhật trạng thái");
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi");
     }
   };
 
@@ -64,69 +127,127 @@ export default function AdminMembers() {
     }
   };
 
+  const handleViewDetail = async (id: number) => {
+    setDetailLoading(true);
+    try {
+      const data = await apiGet<MemberDetail>(`/admin/members/${id}/detail`);
+      setDetailMember(data);
+    } catch (err: any) {
+      toast.error(err.message || "Không thể tải chi tiết");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetMember || !newPassword) return;
+    setSaving(true);
+    try {
+      await apiPut(`/admin/members/${resetMember.id}/reset-password`, { newPassword });
+      toast.success("Đã đặt lại mật khẩu");
+      setResetMember(null);
+      setNewPassword("");
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const exportCSV = () => {
+    const token = localStorage.getItem("token");
+    const url = `${API_BASE}/admin/members/export`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "members.csv";
+    // Use fetch to include auth header
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.blob())
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        a.href = blobUrl;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+        toast.success("Đã xuất CSV");
+      });
+  };
+
   const adminCount = members.filter((m) => m.role === "admin").length;
-  const userCount = members.filter((m) => m.role === "user").length;
+  const userCount = members.filter((m) => m.role !== "admin").length;
+  const lockedCount = members.filter((m) => m.isActive === false).length;
+
+  const getStatusBadge = (status: string) => {
+    const map: Record<string, { label: string; cls: string }> = {
+      pending: { label: "Chờ xử lý", cls: "bg-yellow-100 text-yellow-700" },
+      confirmed: { label: "Đã xác nhận", cls: "bg-blue-100 text-blue-700" },
+      shipping: { label: "Đang giao", cls: "bg-indigo-100 text-indigo-700" },
+      delivered: { label: "Đã giao", cls: "bg-green-100 text-green-700" },
+      cancelled: { label: "Đã hủy", cls: "bg-red-100 text-red-700" },
+    };
+    const s = map[status] || { label: status, cls: "bg-gray-100 text-gray-700" };
+    return <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${s.cls}`}>{s.label}</span>;
+  };
 
   return (
     <AdminLayout title="Thành viên">
       <div className="space-y-4">
         {/* Summary cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card className="border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-blue-600" />
+          {[
+            { icon: Users, label: "Tổng thành viên", value: members.length, color: "bg-blue-100 text-blue-600" },
+            { icon: Crown, label: "Admin", value: adminCount, color: "bg-red-100 text-red-600" },
+            { icon: UserCheck, label: "Thành viên", value: userCount, color: "bg-green-100 text-green-600" },
+            { icon: Lock, label: "Đã khóa", value: lockedCount, color: "bg-orange-100 text-orange-600" },
+          ].map((s) => (
+            <Card key={s.label} className="border-border">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg ${s.color.split(" ")[0]} flex items-center justify-center`}>
+                    <s.icon className={`h-5 w-5 ${s.color.split(" ")[1]}`} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{s.value}</p>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{members.length}</p>
-                  <p className="text-xs text-muted-foreground">Tổng thành viên</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                  <Crown className="h-5 w-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{adminCount}</p>
-                  <p className="text-xs text-muted-foreground">Admin</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <UserCheck className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{userCount}</p>
-                  <p className="text-xs text-muted-foreground">Thành viên</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Search */}
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 justify-between">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Tìm theo tên hoặc email..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Tìm theo tên hoặc email..." className="pl-9" value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)} />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-[130px]"><SelectValue placeholder="Quyền" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="customer">User</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Trạng thái" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="active">Hoạt động</SelectItem>
+                <SelectItem value="locked">Đã khóa</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Button variant="outline" onClick={loadMembers} disabled={loading} className="gap-2">
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Làm mới
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5">
+              <Download className="w-4 h-4" /> Xuất CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={loadMembers} disabled={loading} className="gap-1.5">
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Làm mới
+            </Button>
+          </div>
         </div>
 
         {/* Table */}
@@ -136,7 +257,7 @@ export default function AdminMembers() {
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
-            ) : filteredMembers.length > 0 ? (
+            ) : paged.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -145,20 +266,19 @@ export default function AdminMembers() {
                       <th className="text-left p-4 font-medium text-muted-foreground">Thành viên</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Email</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Quyền</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">Trạng thái</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Ngày đăng ký</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredMembers.map((member, i) => (
+                    {paged.map((member, i) => (
                       <tr key={member.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                        <td className="p-4 text-muted-foreground">{i + 1}</td>
+                        <td className="p-4 text-muted-foreground">{(page - 1) * PAGE_SIZE + i + 1}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                              member.role === "admin"
-                                ? "bg-red-100 text-red-600"
-                                : "bg-primary/10 text-primary"
+                              member.role === "admin" ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"
                             }`}>
                               {(member.name || member.email).charAt(0).toUpperCase()}
                             </div>
@@ -168,34 +288,37 @@ export default function AdminMembers() {
                         <td className="p-4 text-muted-foreground">{member.email}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
-                            member.role === "admin"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-blue-100 text-blue-700"
+                            member.role === "admin" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
                           }`}>
-                            {member.role === "admin" ? (
-                              <><Crown className="w-3 h-3" /> Admin</>
-                            ) : (
-                              <><Users className="w-3 h-3" /> User</>
-                            )}
+                            {member.role === "admin" ? <><Crown className="w-3 h-3" /> Admin</> : <><Users className="w-3 h-3" /> User</>}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            member.isActive !== false ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                          }`}>
+                            {member.isActive !== false ? "Hoạt động" : "Đã khóa"}
                           </span>
                         </td>
                         <td className="p-4 text-muted-foreground text-xs">
                           {new Date(member.createdAt).toLocaleDateString("vi-VN")}
                         </td>
                         <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => toggleRole(member.id)}
-                              className="p-1.5 rounded hover:bg-muted transition-colors"
-                              title={member.role === "admin" ? "Gỡ quyền admin" : "Phong admin"}
-                            >
-                              <Shield className={`h-4 w-4 ${member.role === "admin" ? "text-red-500" : "text-muted-foreground"}`} />
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => handleViewDetail(member.id)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Xem chi tiết">
+                              <Eye className="h-4 w-4 text-primary" />
                             </button>
-                            <button
-                              onClick={() => deleteMember(member.id, member.email)}
-                              className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
-                              title="Xóa thành viên"
-                            >
+                            <button onClick={() => handleEditClick(member)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Sửa">
+                              <Edit className="h-4 w-4 text-blue-500" />
+                            </button>
+                            <button onClick={() => toggleActive(member.id)} className="p-1.5 rounded hover:bg-muted transition-colors"
+                              title={member.isActive !== false ? "Khóa" : "Mở khóa"}>
+                              {member.isActive !== false ? <Lock className="h-4 w-4 text-orange-500" /> : <Unlock className="h-4 w-4 text-green-500" />}
+                            </button>
+                            <button onClick={() => { setResetMember(member); setNewPassword(""); }} className="p-1.5 rounded hover:bg-muted transition-colors" title="Đặt lại mật khẩu">
+                              <Key className="h-4 w-4 text-purple-500" />
+                            </button>
+                            <button onClick={() => deleteMember(member.id, member.email)} className="p-1.5 rounded hover:bg-destructive/10 transition-colors" title="Xóa">
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </button>
                           </div>
@@ -208,19 +331,165 @@ export default function AdminMembers() {
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <Users className="w-12 h-12 mb-3 opacity-30" />
-                <p className="text-sm font-medium">
-                  {searchQuery ? "Không tìm thấy thành viên nào" : "Chưa có thành viên đăng ký"}
-                </p>
-                <p className="text-xs mt-1">Thành viên đăng ký qua trang web sẽ hiển thị ở đây</p>
+                <p className="text-sm font-medium">{searchQuery ? "Không tìm thấy" : "Chưa có thành viên"}</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <p className="text-xs text-muted-foreground text-center">
-          📊 Dữ liệu từ MySQL ({members.length} bản ghi) • Click 🛡️ để phong/gỡ quyền admin
-        </p>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Hiển thị {(page-1)*PAGE_SIZE+1}-{Math.min(page*PAGE_SIZE, filteredMembers.length)} / {filteredMembers.length}</p>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page-1)}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
+                <Button key={p} variant={p === page ? "default" : "outline"} size="sm" onClick={() => setPage(p)}>{p}</Button>
+              ))}
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page+1)}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
+        <DialogContent className="sm:max-w-[500px] bg-background">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Edit className="w-5 h-5" /> Chỉnh sửa thành viên</DialogTitle>
+            <DialogDescription>Cập nhật thông tin cho {editingMember?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Họ và tên</Label>
+              <Input value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} placeholder="Nhập họ tên" />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input type="email" value={editingMember?.email || ""} disabled />
+              <p className="text-xs text-muted-foreground">Email không thể thay đổi</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Số điện thoại</Label>
+              <Input value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} placeholder="0898273899" />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Shield className="w-4 h-4" /> Quyền hạn</Label>
+              <Select value={editForm.role} onValueChange={(val) => setEditForm({...editForm, role: val})}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user"><div className="flex items-center gap-2"><User className="w-4 h-4" /> Thành viên</div></SelectItem>
+                  <SelectItem value="admin"><div className="flex items-center gap-2"><Shield className="w-4 h-4" /> Quản trị viên</div></SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setEditingMember(null)} disabled={saving}>Hủy</Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null} Lưu thay đổi
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Dialog */}
+      <Dialog open={!!detailMember || detailLoading} onOpenChange={() => setDetailMember(null)}>
+        <DialogContent className="sm:max-w-[650px] bg-background max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Eye className="w-5 h-5" /> Chi tiết thành viên</DialogTitle>
+          </DialogHeader>
+          {detailLoading ? (
+            <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          ) : detailMember ? (
+            <div className="flex-1 overflow-auto space-y-4 mt-2">
+              <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
+                <div className="w-14 h-14 rounded-full bg-primary/10 text-primary text-xl font-bold flex items-center justify-center">
+                  {detailMember.name?.charAt(0)?.toUpperCase() || "?"}
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg font-bold">{detailMember.name}</p>
+                  <p className="text-sm text-muted-foreground">{detailMember.email}</p>
+                  <div className="flex gap-2 mt-1">
+                    {(() => {
+                      const cfg = TIER_CONFIG[detailMember.tier] || TIER_CONFIG.bronze;
+                      const Icon = cfg.icon;
+                      return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${cfg.className}`}><Icon className="w-3 h-3" /> {cfg.label}</span>;
+                    })()}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${detailMember.role === "admin" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
+                      {detailMember.role === "admin" ? "Admin" : "User"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-3 bg-muted/20 rounded-lg">
+                  <p className="text-xl font-bold text-primary">{detailMember.totalOrders}</p>
+                  <p className="text-xs text-muted-foreground">Đơn hàng</p>
+                </div>
+                <div className="text-center p-3 bg-muted/20 rounded-lg">
+                  <p className="text-xl font-bold text-emerald-600">₫{detailMember.totalSpent.toLocaleString("vi-VN")}</p>
+                  <p className="text-xs text-muted-foreground">Tổng chi tiêu</p>
+                </div>
+                <div className="text-center p-3 bg-muted/20 rounded-lg">
+                  <p className="text-xl font-bold">{detailMember.phone || "—"}</p>
+                  <p className="text-xs text-muted-foreground">Số ĐT</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Lịch sử đơn hàng</h4>
+                {detailMember.orders.length > 0 ? (
+                  <div className="space-y-2 max-h-[200px] overflow-auto">
+                    {detailMember.orders.map(o => (
+                      <div key={o.id} className="flex items-center justify-between p-2.5 border border-border rounded-lg hover:bg-muted/10">
+                        <div>
+                          <p className="text-sm font-medium">#{o.id}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(o.date).toLocaleDateString("vi-VN")}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold">₫{o.total.toLocaleString("vi-VN")}</span>
+                          {getStatusBadge(o.status)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center py-6 text-muted-foreground">
+                    <PackageOpen className="w-8 h-8 mb-2 opacity-30" />
+                    <p className="text-xs">Chưa có đơn hàng</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={!!resetMember} onOpenChange={() => setResetMember(null)}>
+        <DialogContent className="sm:max-w-[400px] bg-background">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Key className="w-5 h-5" /> Đặt lại mật khẩu</DialogTitle>
+            <DialogDescription>Đặt mật khẩu mới cho {resetMember?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Mật khẩu mới</Label>
+              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Tối thiểu 6 ký tự" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setResetMember(null)}>Hủy</Button>
+            <Button onClick={handleResetPassword} disabled={saving || newPassword.length < 6}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null} Xác nhận
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

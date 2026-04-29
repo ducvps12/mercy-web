@@ -85,6 +85,37 @@ router.delete('/members/:id', async (req, res) => {
   }
 });
 
+// Update user info
+router.put('/members/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { name, phone, role } = req.body;
+    
+    const updateData: any = { updated_at: new Date() };
+    if (name !== undefined) updateData.full_name = name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (role !== undefined) updateData.role = role;
+
+    const updated = await prisma.users.update({
+      where: { id },
+      data: updateData,
+      select: { id: true, email: true, full_name: true, phone: true, role: true },
+    });
+
+    res.json({ 
+      id: updated.id, 
+      email: updated.email, 
+      name: updated.full_name, 
+      phone: updated.phone,
+      role: updated.role 
+    });
+  } catch (error) {
+    console.error('Update member error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+
 // ═══════════════════════════════════
 // CUSTOMERS (Users & Guests with Orders)
 // ═══════════════════════════════════
@@ -110,9 +141,11 @@ router.get('/customers', async (req, res) => {
       const validOrders = u.orders.filter(o => o.status !== 'cancelled');
       return {
         id: `U${u.id}`,
+        userId: u.id,
         name: u.full_name || u.username,
         email: u.email || '—',
         phone: u.phone || '—',
+        role: u.role,
         orders: u.orders.length,
         spent: validOrders.reduce((sum, o) => sum + Number(o.total), 0),
         joined: u.created_at,
@@ -695,7 +728,11 @@ router.get('/categories', async (req, res) => {
 
 router.get('/dashboard', async (req, res) => {
   try {
-    const [totalUsers, totalOrders, totalRevenue, nonCancelledOrders, latestOrders, orderItems, products] = await Promise.all([
+    const now = new Date();
+    const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [totalUsers, totalOrders, totalRevenue, nonCancelledOrders, latestOrders, orderItems, products, thisMonthRev, lastMonthRev, allOrderPhones] = await Promise.all([
       prisma.users.count(),
       prisma.orders.count(),
       prisma.orders.aggregate({ _sum: { total: true }, where: { status: { not: 'cancelled' } } }),
@@ -710,8 +747,28 @@ router.get('/dashboard', async (req, res) => {
       prisma.order_items.findMany({
         include: { orders: { select: { status: true } } }
       }),
-      prisma.products.findMany({ select: { product_id: true, category_name: true } })
+      prisma.products.findMany({ select: { product_id: true, category_name: true } }),
+      prisma.orders.aggregate({ 
+        _sum: { total: true }, 
+        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayThisMonth } } 
+      }),
+      prisma.orders.aggregate({ 
+        _sum: { total: true }, 
+        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } } 
+      }),
+      prisma.orders.findMany({ select: { customer_phone: true } })
     ]);
+
+    const distinctCustomers = new Set(allOrderPhones.map(o => o.customer_phone).filter(Boolean)).size;
+
+    const currentMonthRev = Number(thisMonthRev._sum.total || 0);
+    const prevMonthRev = Number(lastMonthRev._sum.total || 0);
+    let revenueGrowth = 0;
+    if (prevMonthRev > 0) {
+      revenueGrowth = Math.round(((currentMonthRev - prevMonthRev) / prevMonthRev) * 100);
+    } else if (currentMonthRev > 0) {
+      revenueGrowth = 100;
+    }
 
     // Format revenue over months chart
     const monthlyRevenue = new Map<string, number>();
@@ -787,6 +844,10 @@ router.get('/dashboard', async (req, res) => {
       totalUsers,
       totalOrders,
       totalRevenue: Number(totalRevenue._sum.total || 0),
+      distinctCustomers,
+      revenueGrowth,
+      currentMonthRev,
+      prevMonthRev,
       revenueData,
       categoryData,
       topProducts,
@@ -881,11 +942,14 @@ router.get('/analytics', async (req, res) => {
        }
     });
 
+    const allOrderPhones = await prisma.orders.findMany({ select: { customer_phone: true } });
+    const totalCustomers = new Set(allOrderPhones.map(o => o.customer_phone).filter(Boolean)).size;
+
     res.json({
        visitData,
        sourceData,
        summary: {
-         totalVisits: totalOrdersCompleted.toString(),
+         totalCustomers: totalCustomers.toString(),
          totalOrders: totalOrders.toString(),
          monthlyRev,
          bestProduct
@@ -893,6 +957,482 @@ router.get('/analytics', async (req, res) => {
     });
   } catch (error) {
     console.error('Analytics error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// ═══════════════════════════════════
+// MEMBER MANAGEMENT (Extended)
+// ═══════════════════════════════════
+
+// Toggle user active status (lock/unlock)
+router.put('/members/:id/toggle-active', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const user = await prisma.users.findUnique({ where: { id } });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const updated = await prisma.users.update({
+      where: { id },
+      data: { is_active: !user.is_active, updated_at: new Date() },
+    });
+    res.json({ id: updated.id, isActive: updated.is_active });
+  } catch (error) {
+    console.error('Toggle active error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// Reset password (admin action)
+router.put('/members/:id/reset-password', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.users.update({
+      where: { id },
+      data: { password_hash: hashedPassword, updated_at: new Date() },
+    });
+    res.json({ message: 'Đã đặt lại mật khẩu thành công' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// GET member detail with orders + stats
+router.get('/members/:id/detail', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const user = await prisma.users.findUnique({
+      where: { id },
+      include: {
+        orders: {
+          select: { id: true, order_code: true, total: true, status: true, created_at: true, payment_method: true },
+          orderBy: { created_at: 'desc' },
+          take: 20
+        }
+      }
+    });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    const validOrders = user.orders.filter(o => o.status !== 'cancelled');
+    const totalSpent = validOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    
+    // Determine tier
+    let tier = 'bronze';
+    if (totalSpent >= 50000000) tier = 'diamond';
+    else if (totalSpent >= 10000000) tier = 'gold';
+    else if (totalSpent >= 2000000) tier = 'silver';
+    
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.full_name || user.username,
+      username: user.username,
+      phone: user.phone || '',
+      address: user.address || '',
+      avatar: user.avatar || '',
+      role: user.role,
+      isActive: user.is_active,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at,
+      totalOrders: user.orders.length,
+      totalSpent,
+      tier,
+      orders: user.orders.map(o => ({
+        id: o.order_code,
+        total: Number(o.total),
+        status: o.status,
+        paymentMethod: o.payment_method,
+        date: o.created_at
+      }))
+    });
+  } catch (error) {
+    console.error('Get member detail error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// Export members CSV
+router.get('/members/export', async (req, res) => {
+  try {
+    const users = await prisma.users.findMany({
+      select: { id: true, email: true, full_name: true, username: true, phone: true, role: true, is_active: true, created_at: true },
+      orderBy: { created_at: 'desc' },
+    });
+    
+    const csvHeader = 'ID,Tên,Email,Số điện thoại,Quyền,Trạng thái,Ngày đăng ký\n';
+    const csvRows = users.map(u => 
+      `${u.id},"${u.full_name || u.username}","${u.email}","${u.phone || ''}","${u.role}","${u.is_active ? 'Hoạt động' : 'Đã khóa'}","${u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : ''}"`
+    ).join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=members.csv');
+    res.send('\uFEFF' + csvHeader + csvRows);
+  } catch (error) {
+    console.error('Export members error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// ═══════════════════════════════════
+// CRM DASHBOARD
+// ═══════════════════════════════════
+
+// CRM Overview
+router.get('/crm/overview', async (req, res) => {
+  try {
+    const now = new Date();
+    const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [
+      totalUsers,
+      newUsersThisMonth,
+      newUsersLastMonth,
+      allNonCancelledOrders,
+      thisMonthOrders,
+      lastMonthOrders,
+      allOrdersByUser,
+      recentBuyers
+    ] = await Promise.all([
+      prisma.users.count(),
+      prisma.users.count({ where: { created_at: { gte: firstDayThisMonth } } }),
+      prisma.users.count({ where: { created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } } }),
+      prisma.orders.findMany({
+        where: { status: { not: 'cancelled' } },
+        select: { user_id: true, total: true, customer_phone: true }
+      }),
+      prisma.orders.aggregate({
+        _sum: { total: true },
+        _count: true,
+        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayThisMonth } }
+      }),
+      prisma.orders.aggregate({
+        _sum: { total: true },
+        _count: true,
+        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } }
+      }),
+      prisma.orders.findMany({
+        where: { status: { not: 'cancelled' } },
+        select: { user_id: true, customer_phone: true, total: true, created_at: true }
+      }),
+      prisma.orders.findMany({
+        where: { status: { not: 'cancelled' }, created_at: { gte: thirtyDaysAgo } },
+        select: { user_id: true, customer_phone: true }
+      })
+    ]);
+
+    // User growth rate
+    const userGrowthRate = newUsersLastMonth > 0
+      ? Math.round(((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100)
+      : (newUsersThisMonth > 0 ? 100 : 0);
+
+    // Conversion: registered -> bought
+    const uniqueBuyers = new Set(allNonCancelledOrders.map(o => o.user_id || o.customer_phone).filter(Boolean));
+    const totalBuyers = uniqueBuyers.size;
+    const conversionRate = totalUsers > 0 ? Math.round((totalBuyers / totalUsers) * 100 * 10) / 10 : 0;
+
+    // Retention: unique buyers last 30 days vs total buyers
+    const recentUniqueBuyers = new Set(recentBuyers.map(o => o.user_id || o.customer_phone).filter(Boolean));
+    const retentionRate = totalBuyers > 0 ? Math.round((recentUniqueBuyers.size / totalBuyers) * 100 * 10) / 10 : 0;
+
+    // Revenue metrics
+    const currentMonthRev = Number(thisMonthOrders._sum.total || 0);
+    const lastMonthRev = Number(lastMonthOrders._sum.total || 0);
+    const revenueGrowthRate = lastMonthRev > 0
+      ? Math.round(((currentMonthRev - lastMonthRev) / lastMonthRev) * 100)
+      : (currentMonthRev > 0 ? 100 : 0);
+
+    const totalRevenue = allNonCancelledOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    const avgOrderValue = allNonCancelledOrders.length > 0
+      ? Math.round(totalRevenue / allNonCancelledOrders.length)
+      : 0;
+
+    // Customer segments by spending
+    const customerSpending = new Map<string, number>();
+    allOrdersByUser.forEach(o => {
+      const key = String(o.user_id || o.customer_phone);
+      if (key) customerSpending.set(key, (customerSpending.get(key) || 0) + Number(o.total));
+    });
+
+    let bronze = 0, silver = 0, gold = 0, diamond = 0;
+    customerSpending.forEach(spent => {
+      if (spent >= 50000000) diamond++;
+      else if (spent >= 10000000) gold++;
+      else if (spent >= 2000000) silver++;
+      else bronze++;
+    });
+
+    // Avg CLV
+    const avgCLV = customerSpending.size > 0
+      ? Math.round(Array.from(customerSpending.values()).reduce((a, b) => a + b, 0) / customerSpending.size)
+      : 0;
+
+    res.json({
+      totalUsers,
+      newUsersThisMonth,
+      newUsersLastMonth,
+      userGrowthRate,
+      totalBuyers,
+      conversionRate,
+      retentionRate,
+      activeUsersLast30Days: recentUniqueBuyers.size,
+      currentMonthRev,
+      lastMonthRev,
+      revenueGrowthRate,
+      avgOrderValue,
+      avgCLV,
+      segments: { bronze, silver, gold, diamond },
+      totalOrdersThisMonth: thisMonthOrders._count,
+      totalOrdersLastMonth: lastMonthOrders._count
+    });
+  } catch (error) {
+    console.error('CRM overview error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// CRM Growth data (user registrations + orders by month)
+router.get('/crm/growth', async (req, res) => {
+  try {
+    const users = await prisma.users.findMany({
+      select: { created_at: true },
+      orderBy: { created_at: 'asc' }
+    });
+    
+    const orders = await prisma.orders.findMany({
+      where: { status: { not: 'cancelled' } },
+      select: { created_at: true, total: true },
+      orderBy: { created_at: 'asc' }
+    });
+
+    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    const now = new Date();
+    const growthData: { month: string; newUsers: number; cumulativeUsers: number; revenue: number; orders: number }[] = [];
+    
+    let cumulative = 0;
+    for (let i = 0; i < 12; i++) {
+      const monthStart = new Date(now.getFullYear(), i, 1);
+      const monthEnd = new Date(now.getFullYear(), i + 1, 1);
+      
+      const newUsers = users.filter(u => u.created_at && u.created_at >= monthStart && u.created_at < monthEnd).length;
+      cumulative += newUsers;
+      
+      const monthOrders = orders.filter(o => o.created_at && o.created_at >= monthStart && o.created_at < monthEnd);
+      const revenue = monthOrders.reduce((sum, o) => sum + Number(o.total), 0);
+      
+      growthData.push({
+        month: months[i],
+        newUsers,
+        cumulativeUsers: cumulative,
+        revenue,
+        orders: monthOrders.length
+      });
+    }
+
+    res.json(growthData);
+  } catch (error) {
+    console.error('CRM growth error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// CRM Top Customers
+router.get('/crm/top-customers', async (req, res) => {
+  try {
+    const usersWithOrders = await prisma.users.findMany({
+      where: { orders: { some: {} } },
+      include: {
+        orders: {
+          where: { status: { not: 'cancelled' } },
+          select: { total: true, created_at: true }
+        }
+      }
+    });
+
+    const topCustomers = usersWithOrders
+      .map(u => {
+        const totalSpent = u.orders.reduce((sum, o) => sum + Number(o.total), 0);
+        let tier = 'bronze';
+        if (totalSpent >= 50000000) tier = 'diamond';
+        else if (totalSpent >= 10000000) tier = 'gold';
+        else if (totalSpent >= 2000000) tier = 'silver';
+        
+        return {
+          id: u.id,
+          name: u.full_name || u.username,
+          email: u.email,
+          phone: u.phone || '',
+          totalOrders: u.orders.length,
+          totalSpent,
+          tier,
+          lastOrder: u.orders.length > 0 ? u.orders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at : null,
+          monthlySpend: u.orders.map(o => ({
+            month: new Date(o.created_at).getMonth(),
+            amount: Number(o.total)
+          }))
+        };
+      })
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 10);
+
+    res.json(topCustomers);
+  } catch (error) {
+    console.error('CRM top customers error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// CRM Recent Activity (simulated from orders + users)
+router.get('/crm/activity', async (req, res) => {
+  try {
+    const recentOrders = await prisma.orders.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 10,
+      select: { order_code: true, customer_name: true, total: true, status: true, created_at: true }
+    });
+
+    const recentUsers = await prisma.users.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 5,
+      select: { full_name: true, username: true, email: true, created_at: true }
+    });
+
+    const activities: { type: string; title: string; description: string; time: Date }[] = [];
+
+    recentOrders.forEach(o => {
+      activities.push({
+        type: 'order',
+        title: `Đơn hàng #${o.order_code}`,
+        description: `${o.customer_name} - ${Number(o.total).toLocaleString('vi-VN')}₫`,
+        time: o.created_at
+      });
+    });
+
+    recentUsers.forEach(u => {
+      activities.push({
+        type: 'register',
+        title: 'Thành viên mới đăng ký',
+        description: `${u.full_name || u.username} (${u.email})`,
+        time: u.created_at
+      });
+    });
+
+    activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+    res.json(activities.slice(0, 15));
+  } catch (error) {
+    console.error('CRM activity error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// ═══════════════════════════════════
+// PAYMENTS (Bank Accounts)
+// ═══════════════════════════════════
+
+// GET all payment methods
+router.get('/payments', async (req, res) => {
+  try {
+    const payments = await prisma.payment_methods.findMany({
+      orderBy: { created_at: 'desc' }
+    });
+    const mapped = payments.map(p => ({
+      id: p.id,
+      bankCode: p.bank_code,
+      bankName: p.bank_name,
+      accountNumber: p.account_number,
+      accountName: p.account_name,
+      isActive: p.is_active,
+    }));
+    res.json(mapped);
+  } catch (error) {
+    console.error('Get payments error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// POST create payment method
+router.post('/payments', async (req, res) => {
+  try {
+    const { bankCode, bankName, accountNumber, accountName } = req.body;
+    if (!bankCode || !accountNumber || !accountName) {
+      return res.status(400).json({ message: 'Thiếu thông tin' });
+    }
+    const payment = await prisma.payment_methods.create({
+      data: {
+        bank_code: bankCode,
+        bank_name: bankName || null,
+        account_number: accountNumber,
+        account_name: accountName,
+      }
+    });
+    res.json({ id: payment.id, message: 'Đã thêm tài khoản' });
+  } catch (error) {
+    console.error('Create payment error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// PUT update payment method
+router.put('/payments/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { bankCode, bankName, accountNumber, accountName } = req.body;
+    await prisma.payment_methods.update({
+      where: { id },
+      data: {
+        bank_code: bankCode,
+        bank_name: bankName,
+        account_number: accountNumber,
+        account_name: accountName,
+        updated_at: new Date()
+      }
+    });
+    res.json({ message: 'Đã cập nhật' });
+  } catch (error) {
+    console.error('Update payment error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// PUT toggle active status
+router.put('/payments/:id/toggle', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const payment = await prisma.payment_methods.findUnique({ where: { id } });
+    if (!payment) return res.status(404).json({ message: 'Không tìm thấy' });
+
+    // Deactivate all others first, then activate this one
+    if (!payment.is_active) {
+      await prisma.payment_methods.updateMany({ data: { is_active: false } });
+    }
+
+    await prisma.payment_methods.update({
+      where: { id },
+      data: { is_active: !payment.is_active, updated_at: new Date() }
+    });
+    res.json({ message: 'Đã cập nhật trạng thái' });
+  } catch (error) {
+    console.error('Toggle payment error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// DELETE payment method
+router.delete('/payments/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await prisma.payment_methods.delete({ where: { id } });
+    res.json({ message: 'Đã xóa' });
+  } catch (error) {
+    console.error('Delete payment error:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });

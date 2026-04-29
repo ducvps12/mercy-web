@@ -132,7 +132,7 @@ export default function AdminAnalytics() {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { label: "Tổng đơn hàng thành công", value: summary.totalVisits || "0" },
+                { label: "Khách hàng đã mua", value: summary.totalCustomers || "0" },
                 { label: "Tất cả mọi đơn hàng", value: summary.totalOrders || "0" },
                 { label: "Doanh thu tháng này", value: summary.monthlyRev || "₫0" },
                 { label: "Sản phẩm bán chạy nhất", value: summary.bestProduct || "—" },

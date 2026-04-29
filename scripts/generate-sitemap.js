@@ -7,11 +7,24 @@ const TODAY = new Date().toISOString().split('T')[0];
 const staticPages = [
   { url: '/', priority: '1.0', changefreq: 'daily' },
   { url: '/shop', priority: '0.9', changefreq: 'daily' },
+  // Dedicated category pages (SEO sitelinks)
+  { url: '/danh-muc/kinh-thong-minh-ai', priority: '0.85', changefreq: 'weekly' },
+  { url: '/danh-muc/kinh-camera', priority: '0.85', changefreq: 'weekly' },
+  { url: '/danh-muc/kinh-dich-thuat', priority: '0.85', changefreq: 'weekly' },
+  { url: '/danh-muc/robot-ai', priority: '0.85', changefreq: 'weekly' },
+  { url: '/danh-muc/phu-kien', priority: '0.85', changefreq: 'weekly' },
+  // Other important pages
+  { url: '/flash-sale', priority: '0.8', changefreq: 'daily' },
+  { url: '/about', priority: '0.7', changefreq: 'monthly' },
+  { url: '/lien-he', priority: '0.6', changefreq: 'monthly' },
+  { url: '/faq', priority: '0.5', changefreq: 'monthly' },
   { url: '/login', priority: '0.3', changefreq: 'monthly' },
   { url: '/register', priority: '0.3', changefreq: 'monthly' },
-  { url: '/wishlist', priority: '0.5', changefreq: 'weekly' },
-  { url: '/compare', priority: '0.5', changefreq: 'weekly' },
-  { url: '/cart', priority: '0.4', changefreq: 'weekly' },
+  // Policy pages
+  { url: '/chinh-sach/bao-hanh', priority: '0.4', changefreq: 'monthly' },
+  { url: '/chinh-sach/doi-tra', priority: '0.4', changefreq: 'monthly' },
+  { url: '/chinh-sach/bao-mat', priority: '0.4', changefreq: 'monthly' },
+  { url: '/chinh-sach/giao-hang', priority: '0.4', changefreq: 'monthly' },
 ];
 
 // Read product IDs from products.ts

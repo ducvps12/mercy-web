@@ -7,26 +7,34 @@ const prisma = new PrismaClient();
 // Get all articles
 router.get('/', async (req, res) => {
   try {
+    const limitParam = req.query.limit;
+    const limit = limitParam ? parseInt(String(limitParam), 10) : undefined;
+
     const articles = await prisma.articles.findMany({
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: 'desc' },
+      ...(limit && !isNaN(limit) ? { take: limit } : {}),
     });
     
-    // Map to frontend interface
+    // Map to frontend interface — return plain array (frontend expects Array.isArray check)
     const mapped = articles.map(a => ({
-      id: a.slug, // using slug as ID for frontend
+      id: a.slug,
+      slug: a.slug,
       title: a.title,
       excerpt: a.excerpt || "",
       content: a.content || "",
       image: a.image || "",
       date: a.date,
+      month: "",
+      views: 0,
+      comments: 0,
       category: a.category || "Tin Tức",
       author: a.author || "Admin",
     }));
 
-    res.json({ data: mapped });
+    res.json(mapped);
   } catch (error) {
     console.error('Fetch articles error:', error);
-    res.status(500).json({ data: [] });
+    res.status(500).json([]);
   }
 });
 

@@ -73,7 +73,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
         content: [
           "Gửi CV (hồ sơ cá nhân) qua email: mercytechglobal@gmail.com",
           "Tiêu đề email: [Ứng tuyển] – Họ tên – Vị trí ứng tuyển",
-          "Hoặc liên hệ trực tiếp qua Hotline: 0898 273 899 (Mr. Hùng)",
+          "Hoặc liên hệ trực tiếp qua Hotline: 0898 273 899",
           "Nhắn tin qua Fanpage Facebook: Mercy – Kính Thông Minh",
           "Thời gian phản hồi: Mercy sẽ liên hệ lại trong vòng 3–5 ngày làm việc sau khi nhận CV.",
           "Lưu ý: Chúng tôi không thu bất kỳ khoản phí nào từ ứng viên trong quá trình tuyển dụng.",
@@ -152,8 +152,8 @@ const companyInfoData: Record<string, CompanyInfoData> = {
         title: "6. Thông tin liên hệ hợp tác",
         content: [
           "📧 Email hợp tác: mercytechglobal@gmail.com",
-          "📞 Hotline: 0898 273 899 (Mr. Hùng) – Tư vấn hợp tác đại lý/affiliate",
-          "📞 Hotline: 0898 273 899 (Mr. Mạnh) – Hợp tác KOL/doanh nghiệp",
+          "📞 Hotline: 0898 273 899 – Tư vấn hợp tác đại lý/affiliate",
+          "📞 Hotline: 0898 273 899 – Hợp tác KOL/doanh nghiệp",
           "💬 Zalo/Fanpage: Mercy – Kính Thông Minh",
           "🏢 VP HCM: Số 109 đường Nguyễn Thị Nhung, KĐT Vạn Phúc, Hiệp Bình Phước, TP. HCM",
           "🏢 VP Hà Nội: Số 10, Đường Thanh Niên, Xã Ba Vì, Hà Nội",
@@ -212,7 +212,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
       {
         title: "5. Về tài khoản và ưu đãi",
         content: [
-          "❓ Làm sao để đăng ký tài khoản Mercy?\n→ Truy cập website mercy.vn, click \"Đăng ký\" và điền thông tin. Hoặc đăng nhập nhanh bằng tài khoản Google.",
+          "❓ Làm sao để đăng ký tài khoản Mercy?\n→ Truy cập website kinhthongminhmercy.vn, click \"Đăng ký\" và điền thông tin. Hoặc đăng nhập nhanh bằng tài khoản Google.",
           "❓ Tôi quên mật khẩu thì làm sao?\n→ Vào trang Đăng nhập → Click \"Quên mật khẩu\" → Nhập email → Nhận link đặt lại mật khẩu.",
           "❓ Chương trình khách hàng thân thiết hoạt động như thế nào?\n→ Mỗi 10.000đ chi tiêu tích 1 điểm Mercy. Tích đủ điểm đổi voucher giảm giá. 3 cấp bậc: Bạc → Vàng → Kim Cương với ưu đãi tăng dần.",
           "❓ Tôi giới thiệu bạn bè mua hàng có được thưởng không?\n→ Có! Chương trình Referral: bạn nhận voucher 100.000đ cho mỗi khách hàng mới giới thiệu thành công.",
@@ -223,8 +223,8 @@ const companyInfoData: Record<string, CompanyInfoData> = {
         title: "6. Liên hệ hỗ trợ",
         content: [
           "Nếu bạn không tìm thấy câu trả lời cho thắc mắc của mình, vui lòng liên hệ:",
-          "📞 Hotline tư vấn: 0898 273 899 (Mr. Hùng)",
-          "📞 Hotline kỹ thuật: 0898 273 899 (Mr. Mạnh)",
+          "📞 Hotline tư vấn: 0898 273 899",
+          "📞 Hotline kỹ thuật: 0898 273 899",
           "📧 Email: mercytechglobal@gmail.com",
           "💬 Fanpage Facebook: Mercy – Kính Thông Minh",
           "⏰ Thời gian hỗ trợ: 9:00 – 21:30 (Thứ 2 – Chủ nhật)",

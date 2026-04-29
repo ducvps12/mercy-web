@@ -24,6 +24,11 @@ fix.cjs
 fix2.cjs
 replace.cjs
 replace.js
+fetch_fpt.js
+import-products.cjs
+import-products.js
+vite.config.ts.timestamp-*.mjs
+web-mercy/
 
 # Editor directories and files
 .vscode/*

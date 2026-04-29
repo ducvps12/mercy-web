@@ -41,7 +41,9 @@ router.get('/check-payment', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    console.log('Incoming order POST payload:', req.body);
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('Incoming order POST request');
+    }
     const { total, items, affiliateCode, userId, shippingInfo, orderCode: providedOrderCode, status: providedStatus } = req.body;
     
     // Auto-generate ordercode if not provided

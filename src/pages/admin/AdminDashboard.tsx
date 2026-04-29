@@ -44,11 +44,42 @@ export default function AdminDashboard() {
 
   if (loading) return <AdminLayout title="Dashboard"><div className="p-8 text-center text-muted-foreground">Đang tải biểu đồ...</div></AdminLayout>;
 
+  const revenueGrowth = data?.revenueGrowth || 0;
+  const isGrowthPositive = revenueGrowth >= 0;
+
   const stats = [
-    { label: "Doanh thu", value: `₫${(data?.totalRevenue || 0).toLocaleString('vi-VN')}`, change: "Cập nhật", up: true, icon: DollarSign },
-    { label: "Đơn hàng", value: data?.totalOrders?.toString() || "0", change: "Toàn thời gian", up: true, icon: ShoppingCart },
-    { label: "Khách hàng", value: data?.totalUsers?.toString() || "0", change: "Toàn thời gian", up: true, icon: Users },
-    { label: "Tỷ lệ chuyển đổi", value: data?.totalOrders && data?.totalUsers ? `${Math.round((data.totalOrders / data.totalUsers) * 100)}%` : "0%", change: "Trung bình", up: true, icon: TrendingUp },
+    { 
+      label: "Doanh thu tháng này", 
+      value: `₫${(data?.currentMonthRev || 0).toLocaleString('vi-VN')}`, 
+      change: `${isGrowthPositive ? '+' : ''}${revenueGrowth}% so với tháng trước`, 
+      up: isGrowthPositive, 
+      icon: DollarSign,
+      trendColor: isGrowthPositive ? "text-green-600" : "text-red-600"
+    },
+    { 
+      label: "Khách đã mua hàng", 
+      value: data?.distinctCustomers?.toString() || "0", 
+      change: `Trọng tổng ${data?.totalUsers || 0} user đăng ký`, 
+      up: true, 
+      icon: Users,
+      trendColor: "text-blue-600"
+    },
+    { 
+      label: "Tổng số đơn hàng", 
+      value: data?.totalOrders?.toString() || "0", 
+      change: "Toàn thời gian", 
+      up: true, 
+      icon: ShoppingCart,
+      trendColor: "text-muted-foreground" 
+    },
+    { 
+      label: "Tổng doanh thu", 
+      value: `₫${(data?.totalRevenue || 0).toLocaleString('vi-VN')}`, 
+      change: "Toàn thời gian", 
+      up: true, 
+      icon: TrendingUp,
+      trendColor: "text-muted-foreground"
+    },
   ];
 
   const revenueData = data?.revenueData || [];
@@ -68,7 +99,7 @@ export default function AdminDashboard() {
                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <stat.icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                   </div>
-                  <span className="flex items-center gap-0.5 text-[10px] md:text-xs font-medium text-muted-foreground">
+                  <span className={`flex items-center gap-0.5 text-[10px] md:text-xs font-medium ${stat.trendColor}`}>
                     {stat.change}
                   </span>
                 </div>

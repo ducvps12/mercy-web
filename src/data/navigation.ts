@@ -1,9 +1,9 @@
 export const categories = [
-  { name: "Kính Thông Minh AI", hasSubmenu: true, href: "/shop?category=Kính Thông Minh AI" },
-  { name: "Kính Dịch Thuật", hasSubmenu: true, href: "/shop?category=Kính Dịch Thuật" },
-  { name: "Kính Có Camera", hasSubmenu: true, href: "/shop?category=Kính Có Camera" },
-  { name: "Robot AI", hasSubmenu: false, href: "/shop?category=Robot AI" },
-  { name: "Phụ Kiện", hasSubmenu: false, href: "/shop?category=Phụ Kiện" },
+  { name: "Kính Thông Minh AI", hasSubmenu: true, href: "/danh-muc/kinh-thong-minh-ai" },
+  { name: "Kính Dịch Thuật", hasSubmenu: true, href: "/danh-muc/kinh-dich-thuat" },
+  { name: "Kính Có Camera", hasSubmenu: true, href: "/danh-muc/kinh-camera" },
+  { name: "Robot AI", hasSubmenu: false, href: "/danh-muc/robot-ai" },
+  { name: "Phụ Kiện", hasSubmenu: false, href: "/danh-muc/phu-kien" },
   { name: "Flash Sale", hasSubmenu: false, href: "/flash-sale" },
 ];
 

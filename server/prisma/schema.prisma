@@ -135,6 +135,8 @@ model products {
   is_flash_sale      Boolean?    @default(false)
   flash_sale_percent Int?        @default(0)
   is_active          Boolean?    @default(true)
+  created_at         DateTime    @default(now()) @db.Timestamp(0)
+  updated_at         DateTime    @default(now()) @db.Timestamp(0)
   features_vn        String?     @db.LongText
   features_en        String?     @db.LongText
   footer_info        String?     @db.Text
@@ -144,8 +146,6 @@ model products {
   campaign_price     BigInt?     @default(0)
   off_platform_price BigInt?     @default(0)
   warranty_data      String?     @db.Text
-  created_at         DateTime    @default(now()) @db.Timestamp(0)
-  updated_at         DateTime    @default(now()) @db.Timestamp(0)
   categories         categories? @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "products_ibfk_1")
 
   @@index([category_id], map: "idx_category")
@@ -202,22 +202,6 @@ model product_reviews {
   @@index([product_id], map: "idx_product_id")
 }
 
-model articles {
-  id         Int       @id @default(autoincrement())
-  slug       String    @unique(map: "slug") @db.VarChar(200)
-  title      String    @db.VarChar(500)
-  excerpt    String?   @db.Text
-  content    String?   @db.LongText
-  image      String?   @db.VarChar(500)
-  date       String    @db.VarChar(50)
-  category   String?   @db.VarChar(100)
-  author     String?   @db.VarChar(100)
-  created_at DateTime? @default(now()) @db.DateTime(0)
-  updated_at DateTime? @default(now()) @db.DateTime(0)
-
-  @@index([slug], map: "idx_slug")
-}
-
 enum users_role {
   customer
   admin
@@ -235,4 +219,24 @@ enum orders_status {
   shipping
   delivered
   cancelled
+}
+
+model settings {
+  id         Int      @id @default(autoincrement())
+  key        String   @unique @db.VarChar(100)
+  value      String?  @db.Text
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([key], map: "idx_key")
+}
+
+model payment_methods {
+  id             Int      @id @default(autoincrement())
+  bank_code      String   @db.VarChar(20)
+  bank_name      String?  @db.VarChar(100)
+  account_number String   @db.VarChar(50)
+  account_name   String   @db.VarChar(100)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+  updated_at     DateTime @default(now()) @db.Timestamp(0)
 }

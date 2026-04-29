@@ -47,6 +47,7 @@ import NotFound from "./pages/NotFound.tsx";
 import OrderWarehouse from "./pages/OrderWarehouse.tsx";
 import Policy from "./pages/Policy.tsx";
 import FlashSale from "./pages/FlashSale.tsx";
+import Category from "./pages/Category.tsx";
 import Account from "./pages/Account.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import AdminOrders from "./pages/admin/AdminOrders.tsx";
@@ -61,6 +62,7 @@ import AdminMembers from "./pages/admin/AdminMembers.tsx";
 import AdminPayments from "./pages/admin/AdminPayments.tsx";
 import AdminBankHistory from "./pages/admin/AdminBankHistory.tsx";
 import AdminProductEdit from "./pages/admin/AdminProductEdit.tsx";
+import AdminCRM from "./pages/admin/AdminCRM.tsx";
 import AdminGuard from "./components/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -79,6 +81,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/shop" element={<Shop />} />
+                <Route path="/danh-muc/:slug" element={<Category />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -102,6 +105,7 @@ const App = () => (
                 <Route path="/admin/products" element={<AdminGuard><AdminProducts /></AdminGuard>} />
                 <Route path="/admin/products/:id" element={<AdminGuard><AdminProductEdit /></AdminGuard>} />
                 <Route path="/admin/customers" element={<AdminGuard><AdminCustomers /></AdminGuard>} />
+                <Route path="/admin/crm" element={<AdminGuard><AdminCRM /></AdminGuard>} />
                 <Route path="/admin/analytics" element={<AdminGuard><AdminAnalytics /></AdminGuard>} />
                 <Route path="/admin/posts" element={<AdminGuard><AdminPosts /></AdminGuard>} />
                 <Route path="/admin/notifications" element={<AdminGuard><AdminNotifications /></AdminGuard>} />

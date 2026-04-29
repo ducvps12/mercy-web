@@ -190,6 +190,14 @@ html {
   animation: float-pulse-red 2s ease-in-out infinite;
 }
 
+@keyframes float-pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.34); }
+  50% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+}
+.float-pulse-blue {
+  animation: float-pulse-blue 2.2s ease-in-out infinite;
+}
+
 /* Shimmer animation */
 @keyframes shimmer {
   0% { background-position: 200% 0; }
@@ -222,3 +230,42 @@ html {
 body { top: 0 !important; }
 .skiptranslate iframe, .goog-te-banner-frame.skiptranslate, #goog-gt-tt { display: none !important; }
 .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
+
+/* Mobile safe-area helpers */
+.mobile-safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+}
+
+/* Premium mobile shadow utility */
+.mobile-soft-shadow {
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
+}
+
+/* Hero Section Background - mobile vs desktop */
+.hero-bg-mobile {
+  background: linear-gradient(
+    180deg,
+    #be0117 0%,
+    #c41522 20%,
+    #d4502a 40%,
+    #e8a04e 55%,
+    rgba(255, 255, 255, 0.6) 70%,
+    #ffffff 85%
+  );
+}
+
+@media (min-width: 768px) {
+  .hero-bg-desktop {
+    background: url('/banner2/bgimg.png') no-repeat top center;
+    background-size: cover;
+  }
+}
+
+/* Hide scrollbar for horizontal scroll */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

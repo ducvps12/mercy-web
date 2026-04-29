@@ -11,6 +11,7 @@ import reviewRoutes from './routes/reviews';
 import bankRoutes from './routes/bank';
 import contactRoutes from './routes/contact';
 import settingsRoutes from './routes/settings';
+import bannerRoutes from './routes/banners';
 import { startAcbCronJob } from './cron/acbJob';
 import { FRONTEND_URL, SERVER_PORT } from './config';
 
@@ -32,6 +33,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/bank', bankRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/banners', bannerRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -40,7 +42,9 @@ app.get('/api/health', (req, res) => {
 // In production, serve the React build from the project root /dist directory.
 // server/src/index.ts -> server/src -> server -> project root -> dist
 const clientDistPath = path.resolve(__dirname, '../../dist');
+const publicPath = path.resolve(__dirname, '../../public');
 app.use(express.static(clientDistPath));
+app.use(express.static(publicPath)); // Serve uploaded banners from public/
 
 // React Router fallback for non-API routes such as /login, /shop, /admin.
 app.get(/^\/(?!api).*/, (req, res) => {

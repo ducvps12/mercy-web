@@ -241,18 +241,13 @@ body { top: 0 !important; }
   box-shadow: 0 16px 34px rgba(15, 23, 42, 0.16);
 }
 
-/* Hero Section Background - mobile: gradient overlay / desktop: inline bg image */
+/* Hero Section Background - mobile: vertical bg image / desktop: inline bg image */
 @media (max-width: 767px) {
   .hero-bg-mobile {
-    background: linear-gradient(
-      180deg,
-      #be0117 0%,
-      #c41522 20%,
-      #d4502a 40%,
-      #e8a04e 55%,
-      rgba(255, 255, 255, 0.6) 70%,
-      #ffffff 85%
-    ) !important;
+    background-image: url('/banner2/bgimg-mobile.png') !important;
+    background-size: cover !important;
+    background-position: top center !important;
+    background-repeat: no-repeat !important;
   }
 }
 

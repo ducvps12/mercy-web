@@ -17,13 +17,14 @@ const defaultBanners: BannerItem[] = [
 ];
 
 export function getBanners(): BannerItem[] {
-  // Temporary workaround to force the new images: ignore localStorage
-  /*
+  // Read from localStorage (synced with Admin panel)
   try {
-    const saved = localStorage.getItem("mercy_banners");
-    if (saved) return JSON.parse(saved);
+    const saved = localStorage.getItem("mercy_promo_banners");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
   } catch {}
-  */
   return defaultBanners;
 }
 

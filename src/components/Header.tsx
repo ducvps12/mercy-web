@@ -322,54 +322,6 @@ const Header = () => {
         */}
       </div>
 
-      {/* ═══ Mobile inline search bar (below header) ═══ */}
-      <div className="md:hidden bg-[#b5001a] px-3 pb-2">
-        <form onSubmit={handleSearchSubmit} className="flex items-center bg-white rounded-lg overflow-hidden h-9">
-          <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm sản phẩm..."
-            className="flex-1 px-2 py-1.5 text-sm bg-white outline-none text-gray-800 placeholder:text-gray-400"
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-            aria-label="Tìm kiếm sản phẩm"
-          />
-          {searchQuery && (
-            <button type="button" onClick={() => setSearchQuery("")} className="px-2 text-gray-400 hover:text-gray-600">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-          <button type="submit" className="bg-[#d70018] hover:bg-[#b5001a] text-white px-3 h-full flex items-center justify-center">
-            <Search className="w-4 h-4" />
-          </button>
-        </form>
-        {/* Mobile search results dropdown */}
-        {searchFocused && searchResults.length > 0 && (
-          <div className="mt-1 bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden max-h-60 overflow-y-auto">
-            {searchResults.map((p) => (
-              <button
-                key={p.id}
-                onMouseDown={() => handleSearchSelect(p.id)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-left hover:bg-red-50 transition-colors"
-              >
-                <img src={p.image} alt={p.name} className="w-9 h-9 object-cover rounded" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{p.name}</p>
-                  <p className="text-xs text-red-600 font-bold">{p.price.toLocaleString("vi-VN")}₫</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-        {searchFocused && searchQuery.trim() && searchResults.length === 0 && (
-          <div className="mt-1 bg-white rounded-lg shadow-2xl border p-3 text-center text-sm text-gray-500">
-            Không tìm thấy sản phẩm nào
-          </div>
-        )}
-      </div>
-
       {/* ═══ Promo Strip + Navigation (white bar, FPT style) ═══ */}
       <div className={`hidden md:block bg-white border-b border-gray-100 transition-shadow ${scrolled ? 'shadow-md' : ''}`}>
         <div className="container flex items-center justify-between h-11">

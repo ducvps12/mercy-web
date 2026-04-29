@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { apiPost } from "@/lib/api";
 
 /* ═══════════════════════════════════════════
    Types & storage helpers
@@ -28,7 +29,7 @@ export interface BannerItem {
 const HERO_STORAGE_KEY = "mercy_hero_banner";
 const defaultHero: BannerItem = {
   id: 1,
-  image: "/header-img.png",
+  image: "/banner2/img.png",
   alt: "Đại lễ 30/4 - 1/5: Giảm 20% toàn shop",
   link: "/shop",
 };
@@ -45,22 +46,14 @@ function saveHeroBanner(banner: BannerItem) {
   localStorage.setItem(HERO_STORAGE_KEY, JSON.stringify(banner));
 }
 
-// ── Promo banners (dual banners below hero) ──
+// ── Promo banners (carousel banners below hero) ──
 const PROMO_STORAGE_KEY = "mercy_promo_banners";
 
 const defaultPromos: BannerItem[] = [
-  {
-    id: 1,
-    image: "/banners/promo-combo.png",
-    alt: "Combo Phụ Kiện Giảm Sốc",
-    link: "/shop"
-  },
-  {
-    id: 2,
-    image: "/banners/promo-flash-sale.png",
-    alt: "Flash Sale Mỗi Ngày",
-    link: "/shop"
-  }
+  { id: 1, image: "/banners/banner/1.png", alt: "Ưu đãi 30/4 - 1/5", link: "/shop" },
+  { id: 2, image: "/banners/banner/2.png", alt: "Baby3 Three Thông Minh", link: "/shop?category=Robot+AI" },
+  { id: 3, image: "/banners/banner/3.png", alt: "Thunder Sale Smart Glasses", link: "/shop?category=Kính+Thông+Minh+AI" },
+  { id: 4, image: "/banners/banner/4.png", alt: "Quà tặng Bao Da Cao Cấp", link: "/shop?category=Phụ+Kiện" },
 ];
 
 export function getPromoBanners(): BannerItem[] {
@@ -81,6 +74,128 @@ function savePromoBanners(banners: BannerItem[]) {
 }
 
 /* ═══════════════════════════════════════════
+   Image Upload Component
+   ═══════════════════════════════════════════ */
+const ImageUploader = ({
+  currentImage,
+  onImageChange,
+}: {
+  currentImage: string;
+  onImageChange: (url: string) => void;
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File quá lớn (tối đa 10MB)");
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/banners/upload`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
+      });
+      
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      onImageChange(data.url);
+      toast.success("Đã tải ảnh lên thành công!");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Tải ảnh lên thất bại");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      handleUpload(file);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Preview */}
+      {currentImage && (
+        <div className="rounded-lg overflow-hidden border border-border bg-gray-50">
+          <img
+            src={currentImage}
+            alt="Preview"
+            className="w-full h-40 object-contain"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/placeholder.svg";
+            }}
+          />
+        </div>
+      )}
+
+      {/* Upload zone */}
+      <div
+        className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
+          dragOver
+            ? "border-red-400 bg-red-50"
+            : "border-gray-300 hover:border-red-300 hover:bg-red-50/50"
+        }`}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleUpload(file);
+          }}
+        />
+        {uploading ? (
+          <div className="flex flex-col items-center gap-2 py-2">
+            <Loader2 className="h-8 w-8 text-red-500 animate-spin" />
+            <p className="text-sm text-gray-600">Đang tải lên...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 py-2">
+            <Upload className="h-8 w-8 text-gray-400" />
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold text-red-600">Nhấn để tải ảnh</span> hoặc kéo thả vào đây
+            </p>
+            <p className="text-xs text-gray-400">PNG, JPG, WEBP (tối đa 10MB)</p>
+          </div>
+        )}
+      </div>
+
+      {/* URL input fallback */}
+      <div>
+        <Label className="text-xs text-gray-500">Hoặc nhập URL ảnh</Label>
+        <Input
+          value={currentImage}
+          onChange={(e) => onImageChange(e.target.value)}
+          placeholder="/banners/banner/1.png hoặc https://..."
+          className="mt-1"
+        />
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════
    Admin Banners Page
    ═══════════════════════════════════════════ */
 const AdminBanners = () => {
@@ -93,7 +208,7 @@ const AdminBanners = () => {
   const [promos, setPromos] = useState<BannerItem[]>([]);
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<BannerItem | null>(null);
-  const [promoForm, setPromoForm] = useState({ image: "", alt: "", link: "#" });
+  const [promoForm, setPromoForm] = useState({ image: "", alt: "", link: "/shop" });
   const [deletePromoId, setDeletePromoId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -122,7 +237,7 @@ const AdminBanners = () => {
   /* ── Promo banner handlers ── */
   const openAddPromo = () => {
     setEditingPromo(null);
-    setPromoForm({ image: "", alt: "", link: "#" });
+    setPromoForm({ image: "", alt: "", link: "/shop" });
     setPromoDialogOpen(true);
   };
 
@@ -177,7 +292,7 @@ const AdminBanners = () => {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Quản lý Banner</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Quản lý banner đầu trang và các banner khuyến mãi trên trang chủ
+            Quản lý banner đầu trang và các banner khuyến mãi trên trang chủ. Tải ảnh mới hoặc nhập URL.
           </p>
         </div>
 
@@ -229,7 +344,7 @@ const AdminBanners = () => {
                 </div>
                 <div>
                   <CardTitle className="text-lg">Banner Khuyến Mãi ({promos.length})</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">Các banner nhỏ hiển thị bên dưới banner đầu trang</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Các banner hiển thị carousel bên dưới hero</p>
                 </div>
               </div>
               <Button onClick={openAddPromo} className="gap-2">
@@ -318,24 +433,19 @@ const AdminBanners = () => {
 
         {/* ═══ Hero Edit Dialog ═══ */}
         <Dialog open={heroDialogOpen} onOpenChange={setHeroDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Chỉnh sửa Banner Đầu Trang</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>URL hình ảnh</Label>
-                <Input
-                  value={heroForm.image}
-                  onChange={(e) => setHeroForm({ ...heroForm, image: e.target.value })}
-                  placeholder="/header-img.png hoặc https://..."
-                  className="mt-1.5"
-                />
-                {heroForm.image && (
-                  <div className="mt-2 rounded-md overflow-hidden border border-border">
-                    <img src={heroForm.image} alt="Preview" className="w-full h-32 object-contain bg-gray-50" />
-                  </div>
-                )}
+                <Label className="font-semibold">Hình ảnh banner</Label>
+                <div className="mt-2">
+                  <ImageUploader
+                    currentImage={heroForm.image}
+                    onImageChange={(url) => setHeroForm({ ...heroForm, image: url })}
+                  />
+                </div>
               </div>
               <div>
                 <Label>Mô tả (alt text)</Label>
@@ -365,7 +475,7 @@ const AdminBanners = () => {
 
         {/* ═══ Promo Add/Edit Dialog ═══ */}
         <Dialog open={promoDialogOpen} onOpenChange={setPromoDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
                 {editingPromo ? "Chỉnh sửa banner khuyến mãi" : "Thêm banner khuyến mãi"}
@@ -373,18 +483,13 @@ const AdminBanners = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>URL hình ảnh</Label>
-                <Input
-                  value={promoForm.image}
-                  onChange={(e) => setPromoForm({ ...promoForm, image: e.target.value })}
-                  placeholder="/banners/your-banner.png"
-                  className="mt-1.5"
-                />
-                {promoForm.image && (
-                  <div className="mt-2 rounded-md overflow-hidden border border-border">
-                    <img src={promoForm.image} alt="Preview" className="w-full h-32 object-cover" />
-                  </div>
-                )}
+                <Label className="font-semibold">Hình ảnh banner</Label>
+                <div className="mt-2">
+                  <ImageUploader
+                    currentImage={promoForm.image}
+                    onImageChange={(url) => setPromoForm({ ...promoForm, image: url })}
+                  />
+                </div>
               </div>
               <div>
                 <Label>Mô tả (alt text)</Label>

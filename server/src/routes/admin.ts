@@ -138,7 +138,7 @@ router.get('/customers', async (req, res) => {
     });
 
     const customers = usersWithOrders.map(u => {
-      const validOrders = u.orders.filter(o => o.status !== 'cancelled');
+      const validOrders = u.orders.filter(o => ['confirmed', 'shipping', 'delivered'].includes(o.status));
       return {
         id: `U${u.id}`,
         userId: u.id,
@@ -175,7 +175,7 @@ router.get('/customers', async (req, res) => {
       }
       const g = guestMap.get(key);
       g.orders++;
-      if (o.status !== 'cancelled') {
+      if (['confirmed', 'shipping', 'delivered'].includes(o.status)) {
         g.spent += Number(o.total);
       }
       g.orderList.push({
@@ -739,9 +739,9 @@ router.get('/dashboard', async (req, res) => {
     const [totalUsers, totalOrders, totalRevenue, nonCancelledOrders, latestOrders, orderItems, products, thisMonthRev, lastMonthRev, allOrderPhones] = await Promise.all([
       prisma.users.count(),
       prisma.orders.count(),
-      prisma.orders.aggregate({ _sum: { total: true }, where: { status: { not: 'cancelled' } } }),
+      prisma.orders.aggregate({ _sum: { total: true }, where: { status: { in: ['confirmed', 'shipping', 'delivered'] } } }),
       prisma.orders.findMany({
-        where: { status: { not: 'cancelled' } },
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] } },
         select: { created_at: true, total: true }
       }),
       prisma.orders.findMany({
@@ -754,11 +754,11 @@ router.get('/dashboard', async (req, res) => {
       prisma.products.findMany({ select: { product_id: true, category_name: true } }),
       prisma.orders.aggregate({ 
         _sum: { total: true }, 
-        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayThisMonth } } 
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] }, created_at: { gte: firstDayThisMonth } } 
       }),
       prisma.orders.aggregate({ 
         _sum: { total: true }, 
-        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } } 
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] }, created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } } 
       }),
       prisma.orders.findMany({ select: { customer_phone: true } })
     ]);
@@ -892,7 +892,7 @@ router.get('/analytics', async (req, res) => {
         const dayStr = `${d.getDate()}/${d.getMonth()+1}`;
         if (visitDataMap.has(dayStr)) {
           const entry = visitDataMap.get(dayStr);
-          if (o.status !== 'cancelled') {
+          if (['confirmed', 'shipping', 'delivered'].includes(o.status)) {
              entry.visits += Number(o.total); 
           }
            entry.orders += 1;
@@ -903,7 +903,7 @@ router.get('/analytics', async (req, res) => {
     const visitData = Array.from(visitDataMap.values());
 
     const allOrders = await prisma.orders.findMany({
-      where: { status: { not: 'cancelled' } },
+      where: { status: { in: ['confirmed', 'shipping', 'delivered'] } },
       select: { payment_method: true }
     });
     
@@ -923,7 +923,7 @@ router.get('/analytics', async (req, res) => {
     firstDayOfMonth.setHours(0,0,0,0);
     const monthOrders = await prisma.orders.aggregate({
        _sum: { total: true },
-       where: { status: { not: 'cancelled' }, created_at: { gte: firstDayOfMonth } }
+       where: { status: { in: ['confirmed', 'shipping', 'delivered'] }, created_at: { gte: firstDayOfMonth } }
     });
     const monthlyRev = '₫' + Number(monthOrders._sum.total || 0).toLocaleString('vi-VN');
 
@@ -1022,7 +1022,7 @@ router.get('/members/:id/detail', async (req, res) => {
     });
     if (!user) return res.status(404).json({ message: 'User not found' });
     
-    const validOrders = user.orders.filter(o => o.status !== 'cancelled');
+    const validOrders = user.orders.filter(o => ['confirmed', 'shipping', 'delivered'].includes(o.status));
     const totalSpent = validOrders.reduce((sum, o) => sum + Number(o.total), 0);
     
     // Determine tier
@@ -1109,25 +1109,25 @@ router.get('/crm/overview', async (req, res) => {
       prisma.users.count({ where: { created_at: { gte: firstDayThisMonth } } }),
       prisma.users.count({ where: { created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } } }),
       prisma.orders.findMany({
-        where: { status: { not: 'cancelled' } },
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] } },
         select: { user_id: true, total: true, customer_phone: true }
       }),
       prisma.orders.aggregate({
         _sum: { total: true },
         _count: true,
-        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayThisMonth } }
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] }, created_at: { gte: firstDayThisMonth } }
       }),
       prisma.orders.aggregate({
         _sum: { total: true },
         _count: true,
-        where: { status: { not: 'cancelled' }, created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } }
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] }, created_at: { gte: firstDayLastMonth, lt: firstDayThisMonth } }
       }),
       prisma.orders.findMany({
-        where: { status: { not: 'cancelled' } },
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] } },
         select: { user_id: true, customer_phone: true, total: true, created_at: true }
       }),
       prisma.orders.findMany({
-        where: { status: { not: 'cancelled' }, created_at: { gte: thirtyDaysAgo } },
+        where: { status: { in: ['confirmed', 'shipping', 'delivered'] }, created_at: { gte: thirtyDaysAgo } },
         select: { user_id: true, customer_phone: true }
       })
     ]);
@@ -1211,7 +1211,7 @@ router.get('/crm/growth', async (req, res) => {
     });
     
     const orders = await prisma.orders.findMany({
-      where: { status: { not: 'cancelled' } },
+      where: { status: { in: ['confirmed', 'shipping', 'delivered'] } },
       select: { created_at: true, total: true },
       orderBy: { created_at: 'asc' }
     });
@@ -1254,7 +1254,7 @@ router.get('/crm/top-customers', async (req, res) => {
       where: { orders: { some: {} } },
       include: {
         orders: {
-          where: { status: { not: 'cancelled' } },
+          where: { status: { in: ['confirmed', 'shipping', 'delivered'] } },
           select: { total: true, created_at: true }
         }
       }

@@ -32,12 +32,12 @@ const HeroSection = () => {
 
       {/* ═══════════ Hero Banner – FPT Shop style: full-width ═══════════ */}
       <div className="w-full">
-        <div className="container pt-1 md:pt-2">
+        <div className="md:container pt-1 md:pt-2">
           <a href={hero.link} className="block cursor-pointer">
             <img
-              src="/banner2/img.png"
-              alt={hero.alt || "Mercy 30/4 Promotion"}
-              className="w-full h-auto object-contain drop-shadow-sm rounded-lg md:rounded-xl"
+              src={hero.image}
+              alt={hero.alt || "Mercy Promotion"}
+              className="w-full h-auto object-contain drop-shadow-sm md:rounded-xl"
               loading="eager"
             />
           </a>

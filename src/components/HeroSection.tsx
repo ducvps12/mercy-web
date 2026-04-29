@@ -60,9 +60,9 @@ const HeroSection = () => {
             ]}
             className="w-full relative group"
           >
-            <CarouselContent className="-ml-3 md:-ml-4">
+            <CarouselContent className="-ml-2 md:-ml-4">
               {(promoBanners.length === 2 ? [...promoBanners, ...promoBanners] : promoBanners).map((banner, i) => (
-                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-3 md:pl-4 basis-[85%] md:basis-1/2">
+                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-2 md:pl-4 basis-1/2">
                   <button
                     onClick={(e) => {
                       navigate(banner.link);

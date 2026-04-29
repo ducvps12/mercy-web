@@ -21,26 +21,23 @@ const HeroSection = () => {
     <section id="hero-section" className="relative z-0">
       {/* Background — desktop: full image / mobile: lightweight CSS gradient */}
       <div
-        className="absolute inset-x-0 top-0 h-screen -z-10 hero-bg-mobile md:hero-bg-desktop"
+        className="absolute inset-x-0 top-0 h-screen -z-10 hero-bg-mobile"
+        style={{
+          backgroundImage: "url('/banner2/bgimg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "top center",
+          backgroundRepeat: "no-repeat",
+        }}
       />
 
       {/* ═══════════ Hero Banner – FPT Shop style: full-width ═══════════ */}
       <div className="w-full">
         <div className="container pt-1 md:pt-2">
           <a href={hero.link} className="block cursor-pointer">
-            {/* Mobile: taller aspect ratio for readability / Desktop: auto height */}
-            <div className="md:hidden w-full overflow-hidden rounded-lg">
-              <img
-                src="/banner2/img.png"
-                alt={hero.alt || "Mercy 30/4 Promotion"}
-                className="w-full h-auto object-cover drop-shadow-sm"
-                loading="eager"
-              />
-            </div>
             <img
               src="/banner2/img.png"
               alt={hero.alt || "Mercy 30/4 Promotion"}
-              className="hidden md:block w-full h-auto object-contain drop-shadow-sm rounded-xl"
+              className="w-full h-auto object-contain drop-shadow-sm rounded-lg md:rounded-xl"
               loading="eager"
             />
           </a>
@@ -63,17 +60,16 @@ const HeroSection = () => {
             ]}
             className="w-full relative group"
           >
-            <CarouselContent className="-ml-2 md:-ml-4">
+            <CarouselContent className="-ml-3 md:-ml-4">
               {(promoBanners.length === 2 ? [...promoBanners, ...promoBanners] : promoBanners).map((banner, i) => (
-                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-2 md:pl-4 basis-full sm:basis-[85%] md:basis-1/2">
+                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-3 md:pl-4 basis-[85%] md:basis-1/2">
                   <button
                     onClick={(e) => {
                       navigate(banner.link);
                     }}
                     className="w-full relative rounded-xl overflow-hidden group/banner hover:shadow-md transition-all duration-200 active:scale-[0.98] bg-white border border-gray-100 block"
                   >
-                    {/* Mobile: taller ratio for better readability / Desktop: wider */}
-                    <div className="w-full aspect-[16/9] sm:aspect-[5/2] lg:aspect-[3/1] rounded-xl overflow-hidden">
+                    <div className="w-full aspect-[21/9] sm:aspect-[5/2] lg:aspect-[3/1] rounded-xl overflow-hidden">
                       <img
                         src={banner.image}
                         alt={banner.alt}

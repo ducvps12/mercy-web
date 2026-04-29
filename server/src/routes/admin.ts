@@ -242,6 +242,10 @@ router.get('/orders', async (req, res) => {
       paymentMethod: finalPaymentMethod,
       status: o.status === 'cancelled' && isRefunded ? 'refunded' : o.status,
       notes: cleanTransferContent,
+      ipAddress: o.ip_address,
+      paymentStatus: o.payment_status,
+      paymentRef: o.payment_ref,
+      paymentAmount: Number(o.payment_amount),
       createdAt: o.created_at,
       updatedAt: o.updated_at,
       items: o.order_items.map(i => ({

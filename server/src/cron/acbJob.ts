@@ -46,7 +46,10 @@ export const startAcbCronJob = () => {
             await prisma.orders.update({
               where: { id: order.id },
               data: { 
-                status: 'confirmed'
+                status: 'confirmed',
+                payment_status: 'paid',
+                payment_ref: String(matchedTx.description).substring(0, 250),
+                payment_amount: BigInt(matchedTx.amount)
               }
             });
             

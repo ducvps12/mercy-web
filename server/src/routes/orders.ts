@@ -50,6 +50,9 @@ router.post('/', async (req, res) => {
     const randomNum = Math.floor(10000 + Math.random() * 90000);
     const orderCode = providedOrderCode || `MERCY-${randomNum}`;
 
+    // Capture IP address
+    const ipAddress = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || req.ip || '';
+
     // Preserve 'deposit' or 'full' intention in notes since DB only accepts 'bank_transfer'
     const actualPaymentType = shippingInfo?.paymentMethod;
     let finalNotes = shippingInfo?.notes || '';
@@ -74,6 +77,7 @@ router.post('/', async (req, res) => {
         payment_method: (['cod', 'ewallet', 'bank_transfer'].includes(shippingInfo?.paymentMethod) ? shippingInfo.paymentMethod : 'bank_transfer'),
         notes: finalNotes || null,
         status: providedStatus || 'pending',
+        ip_address: String(ipAddress).substring(0, 50),
       }
     });
 

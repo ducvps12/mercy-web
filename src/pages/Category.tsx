@@ -53,20 +53,32 @@ const Category = () => {
     });
   }, []);
 
+  // SKU prefix → category mapping
+  const skuPrefixCategory: Record<string, string> = {
+    'MCK': 'Kính Thông Minh AI',
+    'KDT': 'Kính Dịch Thuật',
+    'POV': 'Kính Có Camera',
+    'RB': 'Robot AI',
+    'BD': 'Phụ Kiện',
+  };
+
   // Filter products by category
   const filteredProducts = useMemo(() => {
     if (!category) return [];
     let result = products.filter(p => {
+      // 1. Exact category match
       if (p.category === category.categoryName) return true;
+
+      // 2. SKU prefix match
+      const sku = p.sku || p.productId || '';
+      for (const [prefix, cat] of Object.entries(skuPrefixCategory)) {
+        if (sku.startsWith(prefix) && cat === category.categoryName) return true;
+      }
+
+      // 3. Fallback: navigation dropdown items
       const group = productDropdown.find(g => g.title === category.categoryName);
       if (group) {
         if (group.items.some(item => p.category === item.name)) return true;
-        if (group.items.some(item => {
-          const lowerItem = item.name.toLowerCase();
-          return p.name?.toLowerCase().includes(lowerItem) ||
-            p.sku?.toLowerCase().includes(lowerItem) ||
-            p.shortName?.toLowerCase().includes(lowerItem);
-        })) return true;
       }
       return false;
     });
@@ -151,52 +163,40 @@ const Category = () => {
       <Header />
 
       <main>
-        {/* ═══ Category Hero Banner ═══ */}
-        <section className="relative overflow-hidden">
-          <div className={`bg-gradient-to-r ${category.gradient} py-8 md:py-12`}>
-            <div className="absolute inset-0 bg-black/10" />
-            <div className="container relative z-10">
-              {/* Breadcrumb */}
-              <nav aria-label="Breadcrumb" className="mb-4">
-                <ol className="flex items-center gap-1.5 text-white/70 text-xs font-medium">
-                  <li>
-                    <Link to="/" className="flex items-center gap-1 hover:text-white transition-colors">
-                      <Home className="w-3.5 h-3.5" />
-                      <span>Trang chủ</span>
-                    </Link>
-                  </li>
-                  <li className="text-white/40">/</li>
-                  <li>
-                    <Link to="/shop" className="hover:text-white transition-colors">Cửa hàng</Link>
-                  </li>
-                  <li className="text-white/40">/</li>
-                  <li className="text-white font-semibold">{category.title}</li>
-                </ol>
-              </nav>
+        {/* ═══ Compact Category Header ═══ */}
+        <section className="bg-white border-b border-gray-100">
+          <div className="container py-5 md:py-6">
+            {/* Breadcrumb */}
+            <nav aria-label="Breadcrumb" className="mb-3">
+              <ol className="flex items-center gap-1.5 text-gray-500 text-xs font-medium">
+                <li>
+                  <Link to="/" className="flex items-center gap-1 hover:text-red-600 transition-colors">
+                    <Home className="w-3.5 h-3.5" />
+                    <span>Trang chủ</span>
+                  </Link>
+                </li>
+                <li className="text-gray-300">/</li>
+                <li>
+                  <Link to="/shop" className="hover:text-red-600 transition-colors">Cửa hàng</Link>
+                </li>
+                <li className="text-gray-300">/</li>
+                <li className="text-gray-900 font-semibold">{category.title}</li>
+              </ol>
+            </nav>
 
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center ring-2 ring-white/30 shadow-lg">
-                  <CatIcon className="w-7 h-7 md:w-8 md:h-8 text-white" />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center shadow-sm`}>
+                  <CatIcon className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-extrabold text-white drop-shadow-md">{category.title}</h1>
-                  <p className="text-sm md:text-base text-white/85 mt-1 max-w-2xl font-medium">{category.shortDesc}</p>
+                  <h1 className="text-xl md:text-2xl font-extrabold text-gray-900">{category.title}</h1>
+                  <p className="text-xs text-gray-500 mt-0.5 hidden md:block">{category.shortDesc}</p>
                 </div>
               </div>
-
-              <p className="text-white/75 text-sm mt-4 max-w-3xl leading-relaxed hidden md:block">
-                {category.description}
-              </p>
-
-              <div className="flex items-center gap-3 mt-5">
-                <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
+              <div className="flex items-center gap-2">
+                <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full">
                   {filteredProducts.length} sản phẩm
-                </span>
-                <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
-                  ✓ Bảo hành 12 tháng
-                </span>
-                <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hidden sm:block">
-                  ✓ Trả góp 0%
                 </span>
               </div>
             </div>

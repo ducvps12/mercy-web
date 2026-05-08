@@ -81,18 +81,31 @@ const Shop = () => {
 
 
 
+  // SKU prefix → category mapping for reliable matching
+  const skuPrefixCategory: Record<string, string> = {
+    'MCK': 'Kính Thông Minh AI',
+    'KDT': 'Kính Dịch Thuật',
+    'POV': 'Kính Có Camera',
+    'RB': 'Robot AI',
+    'BD': 'Phụ Kiện',
+  };
+
   const checkMatchesCategory = (p: any, categoryTitle: string) => {
+    // 1. Exact category match (primary - same as CategorySuggestions)
     if (p.category === categoryTitle) return true;
+
+    // 2. SKU prefix match
+    const sku = p.sku || p.productId || '';
+    for (const [prefix, cat] of Object.entries(skuPrefixCategory)) {
+      if (sku.startsWith(prefix) && cat === categoryTitle) return true;
+    }
+
+    // 3. Fallback: check navigation dropdown items
     const group = productDropdown.find(g => g.title === categoryTitle);
     if (group) {
-        if (group.items.some(item => p.category === item.name)) return true;
-        if (group.items.some(item => {
-           const lowerItem = item.name.toLowerCase();
-           return p.name?.toLowerCase().includes(lowerItem) || 
-                  p.sku?.toLowerCase().includes(lowerItem) || 
-                  p.shortName?.toLowerCase().includes(lowerItem);
-        })) return true;
+      if (group.items.some(item => p.category === item.name)) return true;
     }
+
     return false;
   };
 
@@ -156,12 +169,12 @@ const Shop = () => {
   };
 
   const clearFilters = () => {
-    setSelectedCategory(null);
+    setSearchParams(new URLSearchParams());
     setSelectedPrice(0);
     setCurrentPage(1);
   };
 
-  const hasFilters = selectedCategory !== null || selectedPrice !== 0;
+  const hasFilters = selectedCategory !== null || selectedPrice !== 0 || searchFilter !== "";
 
   const SidebarContent = () => (
     <div className="space-y-6">

@@ -10,7 +10,26 @@ const categoryTabs = [
   { label: "Kính Dịch Thuật", value: "Kính Dịch Thuật" },
   { label: "Kính Có Camera", value: "Kính Có Camera" },
   { label: "Robot AI", value: "Robot AI" },
+  { label: "Phụ Kiện", value: "Phụ Kiện" },
 ];
+
+// SKU prefix → category mapping
+const skuPrefixCategory: Record<string, string> = {
+  'MCK': 'Kính Thông Minh AI',
+  'KDT': 'Kính Dịch Thuật',
+  'POV': 'Kính Có Camera',
+  'RB': 'Robot AI',
+  'BD': 'Phụ Kiện',
+};
+
+const matchesCategory = (p: any, category: string) => {
+  if (p.category === category) return true;
+  const sku = p.sku || p.productId || '';
+  for (const [prefix, cat] of Object.entries(skuPrefixCategory)) {
+    if (sku.startsWith(prefix) && cat === category) return true;
+  }
+  return false;
+};
 
 const CategorySuggestions = () => {
   const navigate = useNavigate();
@@ -20,8 +39,8 @@ const CategorySuggestions = () => {
   // Filter products based on active tab
   const displayProducts = useMemo(() => {
     const filtered = activeTab === "all"
-      ? products.filter(p => p.category !== "Phụ Kiện")
-      : products.filter(p => p.category === activeTab);
+      ? products.filter(p => !matchesCategory(p, "Phụ Kiện"))
+      : products.filter(p => matchesCategory(p, activeTab));
     return filtered.slice(0, 12);
   }, [activeTab, products]);
 

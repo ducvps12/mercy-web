@@ -90,17 +90,28 @@ const Shop = () => {
     'BD': 'Phụ Kiện',
   };
 
+  // DB category name aliases → frontend category name
+  const categoryAliases: Record<string, string> = {
+    'Kính Mắt Thông Minh': 'Kính Thông Minh AI',
+    'Kính Camera POV': 'Kính Có Camera',
+    'Kính camera': 'Kính Có Camera',
+  };
+
   const checkMatchesCategory = (p: any, categoryTitle: string) => {
-    // 1. Exact category match (primary - same as CategorySuggestions)
+    // 1. Exact category match
     if (p.category === categoryTitle) return true;
 
-    // 2. SKU prefix match
+    // 2. Alias match (DB uses different name than frontend)
+    const normalizedCategory = categoryAliases[p.category];
+    if (normalizedCategory === categoryTitle) return true;
+
+    // 3. SKU prefix match
     const sku = p.sku || p.productId || '';
     for (const [prefix, cat] of Object.entries(skuPrefixCategory)) {
       if (sku.startsWith(prefix) && cat === categoryTitle) return true;
     }
 
-    // 3. Fallback: check navigation dropdown items
+    // 4. Fallback: check navigation dropdown items
     const group = productDropdown.find(g => g.title === categoryTitle);
     if (group) {
       if (group.items.some(item => p.category === item.name)) return true;

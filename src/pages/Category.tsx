@@ -62,6 +62,13 @@ const Category = () => {
     'BD': 'Phụ Kiện',
   };
 
+  // DB category name aliases → frontend category name
+  const categoryAliases: Record<string, string> = {
+    'Kính Mắt Thông Minh': 'Kính Thông Minh AI',
+    'Kính Camera POV': 'Kính Có Camera',
+    'Kính camera': 'Kính Có Camera',
+  };
+
   // Filter products by category
   const filteredProducts = useMemo(() => {
     if (!category) return [];
@@ -69,7 +76,11 @@ const Category = () => {
       // 1. Exact category match
       if (p.category === category.categoryName) return true;
 
-      // 2. SKU prefix match
+      // 2. Alias match
+      const normalized = categoryAliases[p.category];
+      if (normalized === category.categoryName) return true;
+
+      // 3. SKU prefix match
       const sku = p.sku || p.productId || '';
       for (const [prefix, cat] of Object.entries(skuPrefixCategory)) {
         if (sku.startsWith(prefix) && cat === category.categoryName) return true;

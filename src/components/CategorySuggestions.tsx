@@ -22,8 +22,17 @@ const skuPrefixCategory: Record<string, string> = {
   'BD': 'Phụ Kiện',
 };
 
+// DB category name aliases → frontend category name
+const categoryAliases: Record<string, string> = {
+  'Kính Mắt Thông Minh': 'Kính Thông Minh AI',
+  'Kính Camera POV': 'Kính Có Camera',
+  'Kính camera': 'Kính Có Camera',
+};
+
 const matchesCategory = (p: any, category: string) => {
   if (p.category === category) return true;
+  const normalized = categoryAliases[p.category];
+  if (normalized === category) return true;
   const sku = p.sku || p.productId || '';
   for (const [prefix, cat] of Object.entries(skuPrefixCategory)) {
     if (sku.startsWith(prefix) && cat === category) return true;

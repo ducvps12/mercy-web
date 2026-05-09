@@ -86,9 +86,9 @@ const HeroSection = () => {
 
   return (
     <section id="hero-section" className="relative z-0">
-      {/* Background — desktop only; mobile uses clean page bg to avoid visual noise */}
+      {/* Background — shown on all screen sizes */}
       <div
-        className="absolute inset-x-0 top-0 h-screen -z-10 hidden md:block"
+        className="absolute inset-x-0 top-0 h-screen -z-10"
         style={{
           backgroundImage: "url('/banner2/bgimg.png')",
           backgroundSize: "cover",
@@ -101,12 +101,15 @@ const HeroSection = () => {
       <div className="w-full">
         <div className="md:container pt-1 md:pt-2">
           <a href={hero.link} className="block cursor-pointer">
-            <img
-              src={hero.image}
-              alt={hero.alt || "Mercy Promotion"}
-              className="w-full h-auto object-contain drop-shadow-sm md:rounded-xl"
-              loading="eager"
-            />
+            <picture>
+              {hero.imageMobile && <source media="(max-width: 767px)" srcSet={hero.imageMobile} />}
+              <img
+                src={hero.image}
+                alt={hero.alt || "Mercy Promotion"}
+                className="w-full h-auto object-contain drop-shadow-sm md:rounded-xl"
+                loading="eager"
+              />
+            </picture>
           </a>
         </div>
       </div>
@@ -138,12 +141,15 @@ const HeroSection = () => {
                     className="w-full relative rounded-xl overflow-hidden group/banner hover:shadow-md transition-all duration-200 active:scale-[0.98] bg-white border border-gray-100 block"
                   >
                     <div className="w-full aspect-[5/2] md:aspect-[5/2] lg:aspect-[3/1] rounded-xl overflow-hidden">
-                      <img
-                        src={banner.image}
-                        alt={banner.alt}
-                        className="w-full h-full object-cover group-hover/banner:scale-[1.02] transition-transform duration-500"
-                        loading="lazy"
-                      />
+                      <picture>
+                        {banner.imageMobile && <source media="(max-width: 767px)" srcSet={banner.imageMobile} />}
+                        <img
+                          src={banner.image}
+                          alt={banner.alt}
+                          className="w-full h-full object-cover group-hover/banner:scale-[1.02] transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      </picture>
                     </div>
                   </button>
                 </CarouselItem>

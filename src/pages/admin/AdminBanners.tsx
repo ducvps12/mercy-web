@@ -21,6 +21,7 @@ import { apiPost } from "@/lib/api";
 export interface BannerItem {
   id: number;
   image: string;
+  imageMobile?: string;
   alt: string;
   link: string;
 }
@@ -30,6 +31,7 @@ const HERO_STORAGE_KEY = "mercy_hero_banner";
 const defaultHero: BannerItem = {
   id: 1,
   image: "/banner2/img.png",
+  imageMobile: "",
   alt: "Đại lễ 30/4 - 1/5: Giảm 20% toàn shop",
   link: "/shop",
 };
@@ -202,13 +204,13 @@ const AdminBanners = () => {
   // Hero banner state
   const [hero, setHero] = useState<BannerItem>(defaultHero);
   const [heroDialogOpen, setHeroDialogOpen] = useState(false);
-  const [heroForm, setHeroForm] = useState({ image: "", alt: "", link: "" });
+  const [heroForm, setHeroForm] = useState({ image: "", imageMobile: "", alt: "", link: "" });
 
   // Promo banners state
   const [promos, setPromos] = useState<BannerItem[]>([]);
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<BannerItem | null>(null);
-  const [promoForm, setPromoForm] = useState({ image: "", alt: "", link: "/shop" });
+  const [promoForm, setPromoForm] = useState({ image: "", imageMobile: "", alt: "", link: "/shop" });
   const [deletePromoId, setDeletePromoId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -218,7 +220,7 @@ const AdminBanners = () => {
 
   /* ── Hero banner handlers ── */
   const openEditHero = () => {
-    setHeroForm({ image: hero.image, alt: hero.alt, link: hero.link });
+    setHeroForm({ image: hero.image, imageMobile: hero.imageMobile || "", alt: hero.alt, link: hero.link });
     setHeroDialogOpen(true);
   };
 
@@ -237,13 +239,13 @@ const AdminBanners = () => {
   /* ── Promo banner handlers ── */
   const openAddPromo = () => {
     setEditingPromo(null);
-    setPromoForm({ image: "", alt: "", link: "/shop" });
+    setPromoForm({ image: "", imageMobile: "", alt: "", link: "/shop" });
     setPromoDialogOpen(true);
   };
 
   const openEditPromo = (banner: BannerItem) => {
     setEditingPromo(banner);
-    setPromoForm({ image: banner.image, alt: banner.alt, link: banner.link });
+    setPromoForm({ image: banner.image, imageMobile: banner.imageMobile || "", alt: banner.alt, link: banner.link });
     setPromoDialogOpen(true);
   };
 
@@ -438,13 +440,24 @@ const AdminBanners = () => {
               <DialogTitle>Chỉnh sửa Banner Đầu Trang</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label className="font-semibold">Hình ảnh banner</Label>
-                <div className="mt-2">
-                  <ImageUploader
-                    currentImage={heroForm.image}
-                    onImageChange={(url) => setHeroForm({ ...heroForm, image: url })}
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-semibold">Hình ảnh Desktop</Label>
+                  <div className="mt-2">
+                    <ImageUploader
+                      currentImage={heroForm.image}
+                      onImageChange={(url) => setHeroForm({ ...heroForm, image: url })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold text-blue-600">Hình ảnh Mobile (tùy chọn)</Label>
+                  <div className="mt-2">
+                    <ImageUploader
+                      currentImage={heroForm.imageMobile}
+                      onImageChange={(url) => setHeroForm({ ...heroForm, imageMobile: url })}
+                    />
+                  </div>
                 </div>
               </div>
               <div>
@@ -482,13 +495,24 @@ const AdminBanners = () => {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label className="font-semibold">Hình ảnh banner</Label>
-                <div className="mt-2">
-                  <ImageUploader
-                    currentImage={promoForm.image}
-                    onImageChange={(url) => setPromoForm({ ...promoForm, image: url })}
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-semibold">Hình ảnh Desktop</Label>
+                  <div className="mt-2">
+                    <ImageUploader
+                      currentImage={promoForm.image}
+                      onImageChange={(url) => setPromoForm({ ...promoForm, image: url })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold text-blue-600">Hình ảnh Mobile (tùy chọn)</Label>
+                  <div className="mt-2">
+                    <ImageUploader
+                      currentImage={promoForm.imageMobile}
+                      onImageChange={(url) => setPromoForm({ ...promoForm, imageMobile: url })}
+                    />
+                  </div>
                 </div>
               </div>
               <div>

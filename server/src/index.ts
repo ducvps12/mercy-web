@@ -43,8 +43,8 @@ app.use(rateLimit({
   message: { message: 'Quá nhiều yêu cầu, vui lòng thử lại sau.' },
 }));
 
-// Limit JSON body size to 10kb (prevent large payload attacks)
-app.use(express.json({ limit: '10kb' }));
+// Limit JSON body size to 5mb (support bulk operations like spam cleanup)
+app.use(express.json({ limit: '5mb' }));
 
 // Block access to sensitive files & directories
 app.use((req, res, next) => {

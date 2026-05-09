@@ -11,36 +11,42 @@ const tiktokReviews = [
     videoId: "7616957685631683861",
     title: "CHECK VAR KÍNH AI CÓ CAMERA",
     productIndex: 0,
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/oQAEIAqIQfyAnBE7XfQDKADneFjAh0bBBxfgAN~tplv-dmt-logom:tos-alisg-i-0000/cde8cfaecaee45c79c1c2c9f42a1e2c3.image?lk3s=b59d6b55&nonce=21428&refresh_token=4c0a2c936fe94c3dddcef3f82aaad54f&x-expires=1747310400&x-signature=tsMrqR4pSSjvlZd12aqIGPT9n0k%3D&shp=b59d6b55&shcp=fdd36af4",
   },
   {
     id: 2,
     videoId: "7616707469141740821",
     title: "GIỐNG RAYBAN MÀ RẺ 1/2",
     productIndex: 3,
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/oUDAAAAfIiAEExfyh7f0QDhKebBNgqABjAnNZ~tplv-dmt-logom:tos-alisg-i-0000/d6befc9b1f8e4be0b47f8bdf2fe72847.image?lk3s=b59d6b55&nonce=51282&refresh_token=7e27804f76e5fbb11f500b9b5dab3d29&x-expires=1747310400&x-signature=8qH9Rn%2BvYnVrMeA%2FC8VJMGEQbhg%3D&shp=b59d6b55&shcp=fdd36af4",
   },
   {
     id: 3,
     videoId: "7616353847182675220",
     title: "CHECK VAR KÍNH CAMERA MERCY",
     productIndex: 12,
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/oUhf0AAAABIQAqEfeD7gAgDxnyNKjBbfNieZEh~tplv-dmt-logom:tos-alisg-i-0000/f0e83b0d20fc430497dcf3e27be8e0c5.image?lk3s=b59d6b55&nonce=41768&refresh_token=ba7e9f5f2f16e4f28e3e5b9ae01e82ac&x-expires=1747310400&x-signature=qbdGJD%2BYLR8bOxvLG6gkZ43m%2FMQ%3D&shp=b59d6b55&shcp=fdd36af4",
   },
   {
     id: 4,
     videoId: "7578746935889104148",
     title: "Bị cướp điện thoại khi đang lái xe",
     productIndex: 6,
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/oUBDFf9AEAQhq3AeKCHINiBfXgiA2DnNjBA0ED~tplv-dmt-logom:tos-alisg-i-0000/43ec60b0aa0a42cdb4f3289ae4e1a0f1.image?lk3s=b59d6b55&nonce=66814&refresh_token=d71e8d8a8ff1c37a38f87b4e2c5b11cc&x-expires=1747310400&x-signature=dI1X6Nk52ZfVSXw%2FYG8kHfpZHsg%3D&shp=b59d6b55&shcp=fdd36af4",
   },
   {
     id: 5,
     videoId: "7578457567358192917",
     title: "Bật mí góc quay POV cho reviewer",
     productIndex: 14,
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/oMFAAfEgKN0Be3ghCIQxAAqEi2DBbjfNAjIHD9~tplv-dmt-logom:tos-alisg-i-0000/c36c7bfc0a4342e79c4bc0fc26a95ede.image?lk3s=b59d6b55&nonce=87012&refresh_token=dff0c3bd4d90f4dab75a52e91f68cf0f&x-expires=1747310400&x-signature=yh2kIlpFWXjwGfn5m%2BqFBYu4kqA%3D&shp=b59d6b55&shcp=fdd36af4",
   },
   {
     id: 6,
     videoId: "7575548507571096853",
     title: "Dịch thuật Real Time trên kính Mercy",
     productIndex: 8,
+    thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/o0hfAABD2E3xQIEqeN9bAAgfIj7gKDnAfNBiCi~tplv-dmt-logom:tos-alisg-i-0000/42d75d68bad7404cb18fc8b3aa36dcee.image?lk3s=b59d6b55&nonce=16693&refresh_token=f1f3a7a04a82cbb4f4ddf8e1d2bce45a&x-expires=1747310400&x-signature=v5N1hBXdOa4vJU5zYmTLgx6fJJk%3D&shp=b59d6b55&shcp=fdd36af4",
   }
 ];
 
@@ -71,17 +77,39 @@ const TikTokVideoCard = ({ item }: { item: any }) => {
         ) : (
           <button
             onClick={() => setIsPlaying(true)}
-            className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all group/play cursor-pointer"
+            className="w-full h-full relative flex flex-col items-center justify-center cursor-pointer group/play overflow-hidden"
             aria-label={`Phát video: ${item.title}`}
           >
-            {/* Thumbnail placeholder with TikTok branding */}
-            <div className="w-20 h-20 rounded-full bg-white/10 border-2 border-white/30 flex items-center justify-center mb-4 group-hover/play:scale-110 group-hover/play:bg-red-600/80 group-hover/play:border-red-400 transition-all duration-300">
-              <Play className="w-8 h-8 text-white ml-1" fill="white" />
+            {/* Product image as base thumbnail — always shown */}
+            {item.image && (
+              <img
+                src={item.image}
+                alt={item.title}
+                className="absolute inset-0 w-full h-full object-cover group-hover/play:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+            )}
+            {/* TikTok thumbnail on top (may expire, product image stays as fallback) */}
+            {item.thumbnail && (
+              <img
+                src={item.thumbnail}
+                alt={item.title}
+                className="absolute inset-0 w-full h-full object-cover group-hover/play:scale-105 transition-transform duration-500"
+                loading="lazy"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+            )}
+            {/* Dark overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70 group-hover/play:from-black/20 group-hover/play:via-black/30 group-hover/play:to-black/60 transition-all" />
+            
+            {/* Play button */}
+            <div className="relative z-10 w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center mb-3 group-hover/play:scale-110 group-hover/play:bg-red-600/80 group-hover/play:border-red-400 transition-all duration-300 shadow-xl">
+              <Play className="w-7 h-7 md:w-8 md:h-8 text-white ml-1" fill="white" />
             </div>
-            <p className="text-white/90 text-sm font-semibold px-6 text-center leading-snug">
+            <p className="relative z-10 text-white text-sm font-bold px-6 text-center leading-snug drop-shadow-lg">
               {item.title}
             </p>
-            <p className="text-white/50 text-xs mt-2 flex items-center gap-1.5">
+            <p className="relative z-10 text-white/70 text-xs mt-2 flex items-center gap-1.5">
               <svg viewBox="0 0 48 48" className="w-4 h-4" fill="currentColor">
                 <path d="M38.3 10.7c-1.5-1.6-2.5-3.7-2.7-6h-5.7V30c0 3.1-2.5 5.7-5.7 5.7-3.1 0-5.7-2.5-5.7-5.7 0-3.1 2.5-5.7 5.7-5.7.6 0 1.2.1 1.7.3v-5.9c-.6-.1-1.1-.1-1.7-.1-6.4 0-11.6 5.2-11.6 11.6S18 41.6 24.4 41.6 36 36.4 36 30V19.4c2.3 1.7 5.2 2.7 8.2 2.7v-5.8c-2.3-.1-4.4-1.1-5.9-2.6z" />
               </svg>

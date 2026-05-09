@@ -195,14 +195,36 @@ router.post('/members/bulk-delete', async (req, res) => {
       return res.status(400).json({ message: 'Không thể xóa tài khoản admin' });
     }
 
-    // Delete carts first (cascade may not cover all)
-    await prisma.cart.deleteMany({ where: { user_id: { in: safeIds } } });
-    // Delete users (orders cascade via schema)
-    const result = await prisma.users.deleteMany({ where: { id: { in: safeIds } } });
+    // Process in batches to avoid DB timeouts
+    const BATCH_SIZE = 500;
+    let totalDeleted = 0;
+
+    for (let i = 0; i < safeIds.length; i += BATCH_SIZE) {
+      const batch = safeIds.slice(i, i + BATCH_SIZE);
+
+      // Delete related data first to prevent foreign key constraint errors
+      // Delete order items for orders belonging to these users
+      const userOrders = await prisma.orders.findMany({
+        where: { user_id: { in: batch } },
+        select: { id: true },
+      });
+      const orderIds = userOrders.map(o => o.id);
+      if (orderIds.length > 0) {
+        await prisma.order_items.deleteMany({ where: { order_id: { in: orderIds } } });
+        await prisma.orders.deleteMany({ where: { id: { in: orderIds } } });
+      }
+
+      // Delete carts
+      await prisma.cart.deleteMany({ where: { user_id: { in: batch } } });
+
+      // Delete users
+      const result = await prisma.users.deleteMany({ where: { id: { in: batch } } });
+      totalDeleted += result.count;
+    }
 
     res.json({
-      message: `Đã xóa ${result.count} tài khoản${adminIds.size > 0 ? ` (bỏ qua ${adminIds.size} admin)` : ''}`,
-      deleted: result.count,
+      message: `Đã xóa ${totalDeleted} tài khoản${adminIds.size > 0 ? ` (bỏ qua ${adminIds.size} admin)` : ''}`,
+      deleted: totalDeleted,
       skippedAdmins: adminIds.size,
     });
   } catch (error) {

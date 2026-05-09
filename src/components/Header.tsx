@@ -115,12 +115,12 @@ const Header = () => {
           </button>
 
           {/* Logo — centered on mobile, left-aligned on desktop */}
-          <a href="/" className="absolute left-1/2 -translate-x-1/2 md:relative md:left-auto md:translate-x-0 flex items-center justify-center shrink-0 group mr-1 md:mr-4 h-full min-w-[80px] md:min-w-[120px]">
-            <span className="flex items-center justify-center h-11 md:h-20">
+          <a href="/" className="absolute left-1/2 -translate-x-1/2 md:relative md:left-auto md:translate-x-0 flex items-center justify-center shrink-0 group mr-1 md:mr-4 h-full min-w-[120px] md:min-w-[120px]">
+            <span className="flex items-center justify-center h-[48px] md:h-20">
               <img src={logoWhite} alt="MERCY" className="h-full w-auto object-contain dark:hidden" />
               <img src={logoBlack} alt="MERCY" className="h-full w-auto object-contain hidden dark:block" />
             </span>
-            <span className="absolute bottom-0.5 md:bottom-2 text-[4px] md:text-[8px] text-white/90 tracking-[0.13em] font-semibold whitespace-nowrap">
+            <span className="absolute -bottom-0.5 md:bottom-2 text-[6px] md:text-[8px] text-white/90 tracking-[0.15em] font-semibold whitespace-nowrap">
               SMART VISION • SMART LIFE
             </span>
           </a>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, CheckCircle, Clock, Trash2, ExternalLink, X, Search } from 'lucide-react';
 import { apiGet, apiPatch, apiDelete } from '@/lib/api';
 import { toast } from 'sonner';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 
 interface ContactRequest {
   id: number;
@@ -103,6 +104,7 @@ const AdminContacts = () => {
   );
 
   return (
+    <AdminLayout title="Liên hệ">
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -301,6 +303,7 @@ const AdminContacts = () => {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 };
 

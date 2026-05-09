@@ -57,7 +57,9 @@ export default function AdminProducts() {
   );
 
   // Delete
-  const deleteProduct = async (id: number, name: string) => {
+  const deleteProduct = async (e: React.MouseEvent, id: number, name: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!useApi) {
       toast.error("Cần kết nối server MySQL để xóa sản phẩm");
       return;
@@ -65,8 +67,8 @@ export default function AdminProducts() {
     if (!confirm(`Xác nhận xóa "${name}"?`)) return;
     try {
       await apiDelete(`/admin/products/${id}`);
-      await loadProducts();
       toast.success("Đã xóa sản phẩm");
+      await loadProducts();
     } catch (err: any) {
       toast.error(err.message || "Lỗi xóa");
     }
@@ -119,7 +121,12 @@ export default function AdminProducts() {
                       <tr
                         key={product.id}
                         className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
-                        onClick={() => useApi && navigate(`/admin/products/${product.id}`)}
+                        onClick={(e) => {
+                          // Only navigate if click didn't originate from action buttons
+                          const target = e.target as HTMLElement;
+                          if (target.closest('[data-actions]')) return;
+                          useApi && navigate(`/admin/products/${product.id}`);
+                        }}
                       >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
@@ -134,7 +141,7 @@ export default function AdminProducts() {
                         <td className="p-4 text-muted-foreground text-xs line-through">{product.originalPrice ? formatPrice(product.originalPrice) : "—"}</td>
                         <td className="p-4 text-muted-foreground text-xs font-mono">{product.sku}</td>
                         <td className="p-4">
-                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center gap-2" data-actions onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => navigate(`/admin/products/${product.id}`)}
                               className="p-1.5 rounded hover:bg-primary/10 transition-colors"
@@ -150,7 +157,7 @@ export default function AdminProducts() {
                               <Eye className="h-4 w-4 text-muted-foreground" />
                             </button>
                             <button
-                              onClick={() => deleteProduct(product.id, product.name)}
+                              onClick={(e) => deleteProduct(e, product.id, product.name)}
                               className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
                               title="Xóa sản phẩm"
                             >

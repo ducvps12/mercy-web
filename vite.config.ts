@@ -24,6 +24,10 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  build: {
+    // SECURITY: Disable source maps in production to prevent source code exposure
+    sourcemap: false,
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {

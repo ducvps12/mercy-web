@@ -66,6 +66,7 @@ import AdminCRM from "./pages/admin/AdminCRM.tsx";
 import AdminMedia from "./pages/admin/AdminMedia.tsx";
 import AdminCategories from "./pages/admin/AdminCategories.tsx";
 import AdminTransactions from "./pages/admin/AdminTransactions.tsx";
+import AdminContacts from "./pages/admin/AdminContacts.tsx";
 import AdminGuard from "./components/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,7 @@ const App = () => (
                 <Route path="/admin/media" element={<AdminGuard><AdminMedia /></AdminGuard>} />
                 <Route path="/admin/categories" element={<AdminGuard><AdminCategories /></AdminGuard>} />
                 <Route path="/admin/members" element={<AdminGuard><AdminMembers /></AdminGuard>} />
+                <Route path="/admin/contacts" element={<AdminGuard><AdminContacts /></AdminGuard>} />
                 <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
                 <Route path="/admin/bank-history" element={<AdminGuard><AdminBankHistory /></AdminGuard>} />
                 <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />

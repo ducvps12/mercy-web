@@ -49,6 +49,19 @@ export async function apiPut<T = any>(path: string, body?: any): Promise<T> {
   return res.json();
 }
 
+export async function apiPatch<T = any>(path: string, body?: any): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Lỗi server" }));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function apiDelete<T = any>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "DELETE",

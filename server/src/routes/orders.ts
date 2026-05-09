@@ -1,10 +1,19 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
+import rateLimit from 'express-rate-limit';
 import { ACB_HISTORY_API_URL } from '../config';
+import { requireAuth } from '../middleware/auth';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Rate limit order creation: max 10 orders per 15 minutes per IP
+const orderLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Quá nhiều yêu cầu đặt hàng, vui lòng thử lại sau.' },
+});
 
 // Public endpoint to check payment status directly without needing an order in DB
 router.get('/check-payment', async (req, res) => {
@@ -42,7 +51,7 @@ router.get('/check-payment', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', orderLimiter, async (req, res) => {
   try {
     if (process.env.NODE_ENV !== 'production') {
       console.info('Incoming order POST request');
@@ -115,7 +124,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(500).json({ success: false, error: 'Cannot create order', details: String(error) });
+    res.status(500).json({ success: false, error: 'Cannot create order' });
   }
 });
 
@@ -125,6 +134,22 @@ router.get('/history', async (req, res) => {
     let whereClause: any = {};
     
     if (userId) {
+       // When querying by userId, verify JWT auth and ownership
+       const authHeader = req.headers.authorization;
+       if (!authHeader || !authHeader.startsWith('Bearer ')) {
+         return res.status(401).json({ data: [], message: 'Chưa đăng nhập' });
+       }
+       try {
+         const jwt = await import('jsonwebtoken');
+         const { JWT_SECRET } = await import('../config');
+         const decoded: any = jwt.default.verify(authHeader.split(' ')[1], JWT_SECRET);
+         // Only allow users to view their own orders
+         if (decoded.id !== Number(userId) && decoded.role !== 'admin') {
+           return res.status(403).json({ data: [], message: 'Không có quyền' });
+         }
+       } catch {
+         return res.status(401).json({ data: [], message: 'Token không hợp lệ' });
+       }
        whereClause.user_id = Number(userId);
     } else if (codes) {
        whereClause.order_code = { in: String(codes).split(',') };
@@ -211,7 +236,7 @@ router.put('/:orderCode', async (req, res) => {
     res.json({ success: true, message: 'Order updated' });
   } catch (error) {
     console.error('Update order error:', error);
-    res.status(500).json({ success: false, error: 'Cannot update order', details: String(error) });
+    res.status(500).json({ success: false, error: 'Cannot update order' });
   }
 });
 

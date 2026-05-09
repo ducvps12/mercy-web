@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
@@ -22,8 +24,37 @@ import { FRONTEND_URL, SERVER_PORT } from './config';
 const app = express();
 const PORT = SERVER_PORT;
 
+// ═══ Security Middleware ═══════════════════════════════════════════
+// Helmet: Set secure HTTP headers (CSP, HSTS, X-Frame-Options, etc.)
+app.use(helmet({
+  contentSecurityPolicy: false,   // Let the SPA handle CSP via meta tags
+  crossOriginEmbedderPolicy: false,
+}));
+
+// CORS
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
-app.use(express.json());
+
+// Global rate limiter: 200 requests per 15 minutes per IP
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Quá nhiều yêu cầu, vui lòng thử lại sau.' },
+}));
+
+// Limit JSON body size to 10kb (prevent large payload attacks)
+app.use(express.json({ limit: '10kb' }));
+
+// Block access to sensitive files & directories
+app.use((req, res, next) => {
+  const blocked = /\.(env|git|gitignore|htaccess|user\.ini|ts|tsx|jsx|map)$/i;
+  const blockedPaths = /^\/(\.env|\.git|server|node_modules|src\/|prisma)/i;
+  if (blocked.test(req.path) || blockedPaths.test(req.path)) {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+  next();
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);

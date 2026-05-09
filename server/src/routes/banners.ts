@@ -2,8 +2,12 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { isAdmin } from '../middleware/auth';
 
 const router = express.Router();
+
+// All banner management routes require admin authentication
+router.use(isAdmin);
 
 // Determine the public directory (project root's public folder)
 const PUBLIC_DIR = path.resolve(__dirname, '../../../public');

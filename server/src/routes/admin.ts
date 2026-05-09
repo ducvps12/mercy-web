@@ -90,6 +90,10 @@ router.delete('/members/:id', async (req, res) => {
     if (user?.role === 'admin') {
       return res.status(403).json({ message: 'Không thể xóa tài khoản admin' });
     }
+    
+    // Delete carts first to prevent foreign key constraint errors
+    await prisma.cart.deleteMany({ where: { user_id: id } });
+    
     await prisma.users.delete({ where: { id } });
     res.json({ message: 'Đã xóa thành viên' });
   } catch (error) {
@@ -742,10 +746,18 @@ router.delete('/products/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     const product = await prisma.products.findUnique({ where: { id } });
     if (product) {
+      // Prevent deleting products that are in orders
+      const orderCount = await prisma.order_items.count({ where: { product_id: product.product_id } });
+      if (orderCount > 0) {
+        return res.status(400).json({ message: 'Không thể xóa sản phẩm đã có trong đơn hàng. Vui lòng ẩn sản phẩm thay vì xóa.' });
+      }
+
       // Clean up related data
       await prisma.product_images.deleteMany({ where: { product_id: product.product_id } });
       await prisma.product_specs.deleteMany({ where: { product_id: product.product_id } });
       await prisma.product_variants.deleteMany({ where: { product_id: product.product_id } });
+      await prisma.product_reviews.deleteMany({ where: { product_id: product.product_id } });
+      await prisma.cart.deleteMany({ where: { product_id: product.product_id } });
     }
     await prisma.products.delete({ where: { id } });
     res.json({ message: 'Đã xóa sản phẩm' });

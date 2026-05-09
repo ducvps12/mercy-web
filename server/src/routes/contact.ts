@@ -1,12 +1,21 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { sendContactNotification } from '../services/email';
+import { isAdmin } from '../middleware/auth';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-// POST /api/contact - Create new contact request
-router.post('/', async (req, res) => {
+// Rate limit contact form: max 5 submissions per 15 minutes per IP
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Quá nhiều yêu cầu, vui lòng thử lại sau 15 phút.' },
+});
+
+// POST /api/contact - Create new contact request (PUBLIC with rate limit)
+router.post('/', contactLimiter, async (req, res) => {
   try {
     const { name, phone, email, message } = req.body;
 
@@ -72,7 +81,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET /api/contact - Get all contact requests (Admin only)
-router.get('/', async (req, res) => {
+router.get('/', isAdmin, async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
     
@@ -114,7 +123,7 @@ router.get('/', async (req, res) => {
 });
 
 // PATCH /api/contact/:id - Update contact request status (Admin only)
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status, notes } = req.body;
@@ -145,7 +154,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 // DELETE /api/contact/:id - Delete contact request (Admin only)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

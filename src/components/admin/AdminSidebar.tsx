@@ -16,6 +16,7 @@ import {
   FolderOpen,
   Layers,
   Wallet,
+  Mail,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -36,6 +37,7 @@ const mainItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Đơn hàng", url: "/admin/orders", icon: ShoppingBag },
   { title: "Sản phẩm", url: "/admin/products", icon: Package },
+  { title: "Liên hệ", url: "/admin/contacts", icon: Mail },
   { title: "Thành viên", url: "/admin/members", icon: UserCheck },
   { title: "Khách hàng", url: "/admin/customers", icon: Users },
   { title: "CRM Tăng trưởng", url: "/admin/crm", icon: TrendingUp },

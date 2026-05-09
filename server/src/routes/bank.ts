@@ -2,9 +2,13 @@ import express from 'express';
 import axios from 'axios';
 import { ACB_HISTORY_API_URL } from '../config';
 import { PrismaClient } from '@prisma/client';
+import { isAdmin } from '../middleware/auth';
 
 const prisma = new PrismaClient();
 const router = express.Router();
+
+// All bank routes require admin authentication
+router.use(isAdmin);
 
 router.get('/history', async (_req, res) => {
   try {

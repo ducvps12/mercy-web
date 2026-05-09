@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { isAdmin } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// All settings routes require admin authentication
+router.use(isAdmin);
 
 // GET all settings
 router.get('/', async (req, res) => {

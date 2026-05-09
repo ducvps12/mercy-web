@@ -223,9 +223,13 @@ const Header = () => {
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     className="flex items-center gap-2 text-white hover:bg-white/15 px-3 py-2 rounded-lg transition-colors"
                   >
-                    <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
-                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                    </div>
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover border border-white/20" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
                     <span className="text-sm font-medium max-w-[100px] truncate">{user?.name}</span>
                     <ChevronDown className={`w-3 h-3 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -429,6 +433,38 @@ const Header = () => {
                 {link.hasSubmenu && <ChevronRight className="w-4 h-4 text-gray-300" />}
               </a>
             ))}
+            
+            {/* Mobile User Menu */}
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Tài khoản</h3>
+            {isAuthenticated ? (
+              <>
+                <button onClick={() => { setMenuOpen(false); navigate("/account"); }} className="flex items-center gap-3 w-full py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 text-left">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="w-6 h-6 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-xs font-bold text-red-600">
+                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                  )}
+                  <span>{user?.name}</span>
+                </button>
+                <button onClick={() => { setMenuOpen(false); navigate("/orders"); }} className="flex items-center gap-3 w-full py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 text-left">
+                  <Package className="w-5 h-5 text-gray-400" /> Đơn hàng của tôi
+                </button>
+                {isAdmin && (
+                  <button onClick={() => { setMenuOpen(false); navigate("/admin"); }} className="flex items-center gap-3 w-full py-3 text-[15px] text-red-600 font-semibold border-b border-gray-100 text-left">
+                    <Settings className="w-5 h-5" /> Quản trị Admin
+                  </button>
+                )}
+                <button onClick={() => { setMenuOpen(false); logout(); toast.success("Đã đăng xuất"); navigate("/"); }} className="flex items-center gap-3 w-full py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 text-left">
+                  <LogOut className="w-5 h-5 text-gray-400" /> Đăng xuất
+                </button>
+              </>
+            ) : (
+              <button onClick={() => { setMenuOpen(false); navigate("/login"); }} className="flex items-center gap-3 w-full py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 text-left">
+                <User className="w-5 h-5 text-gray-400" /> Đăng nhập / Đăng ký
+              </button>
+            )}
 
             {/* Promo links in mobile — only show flash sale, hide Bảo hành / Trả góp / Quà tặng */}
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Ưu đãi</h3>

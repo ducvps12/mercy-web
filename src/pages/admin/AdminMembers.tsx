@@ -216,11 +216,13 @@ export default function AdminMembers() {
     if (!confirm(`X\u00e1c nh\u1eadn x\u00f3a ${selected.size} t\u00e0i kho\u1ea3n?`)) return;
     setBulkDeleting(true);
     try {
-      const data = await (await fetch(`${API_BASE}/admin/members/bulk-delete`, {
+      const res = await fetch(`${API_BASE}/admin/members/bulk-delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ ids: Array.from(selected) }),
-      })).json();
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi xóa hàng loạt');
       toast.success(data.message);
       setSelected(new Set());
       if (spamMode) { setSpamUsers(spamUsers.filter(u => !selected.has(u.id))); }

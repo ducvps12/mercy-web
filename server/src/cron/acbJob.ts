@@ -31,13 +31,14 @@ export const startAcbCronJob = () => {
         });
         
         for (const order of pendingOrders) {
-          // Look for a transaction that matches the orderCode (e.g. MERCY-123) and amount
-          const cleanOrderId = String(order.order_code).toLowerCase().replace(/[^a-z0-9]/g, '');
+          // Lấy mã số đơn hàng (vd: MRC0023 -> 0023)
+          const orderNumStr = String(order.order_code).replace('MRC', '');
           const matchedTx = transactions.find((tx: any) => {
             const cleanDesc = String(tx.description).toLowerCase().replace(/[^a-z0-9]/g, '');
             return tx.type === 'IN' && // We check IN transactions
                    tx.amount >= Number(order.total) &&
-                   cleanDesc.includes(cleanOrderId);
+                   cleanDesc.includes('mercy') &&
+                   cleanDesc.includes(orderNumStr);
           });
           
           if (matchedTx) {

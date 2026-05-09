@@ -1,12 +1,17 @@
 const fs = require('fs');
-const file = 'd:/kientt.nemark/kinhmatmercy/server/src/routes/admin.ts';
-let code = fs.readFileSync(file, 'utf8');
+let content = fs.readFileSync('src/components/CheckoutPopup.tsx', 'utf8');
+content = content.replace(/bg-red-/g, 'bg-blue-')
+                 .replace(/text-red-/g, 'text-blue-')
+                 .replace(/border-red-/g, 'border-blue-')
+                 .replace(/shadow-red-/g, 'shadow-blue-')
+                 .replace(/ring-red-/g, 'ring-blue-')
+                 .replace(/accent-red-/g, 'accent-blue-');
+content = content.replace(/text-blue-500">\*/g, 'text-red-500">*');
+// Change specific hardcoded ACB blue color if we want, but blue-600 is fine.
+fs.writeFileSync('src/components/CheckoutPopup.tsx', content);
+console.log('Done CheckoutPopup');
 
-// Replace prisma queries
-code = code.replace(/status: \{ not: 'cancelled' \}/g, "status: { in: ['confirmed', 'shipping', 'delivered'] }");
-
-// Replace JS filters
-code = code.replace(/o\.status !== 'cancelled'/g, "['confirmed', 'shipping', 'delivered'].includes(o.status)");
-
-fs.writeFileSync(file, code);
-console.log('Replaced successfully');
+let adminPayments = fs.readFileSync('src/pages/admin/AdminPayments.tsx', 'utf8');
+adminPayments = adminPayments.replace(/bg-red-/g, 'bg-blue-').replace(/text-red-/g, 'text-blue-');
+fs.writeFileSync('src/pages/admin/AdminPayments.tsx', adminPayments);
+console.log('Done AdminPayments');

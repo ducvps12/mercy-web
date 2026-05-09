@@ -64,41 +64,30 @@ const FlashSale = () => {
       <Header />
 
       <main>
-        {/* Hero Banner */}
-        <section className="relative overflow-hidden">
-          <div className="deal-banner-gradient">
-            <div className="container mx-auto px-4 py-12 md:py-20 text-center relative z-10">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Zap className="w-10 h-10 text-yellow-300 fill-yellow-300" />
-                <h1 className="text-4xl md:text-6xl font-extrabold text-white">
-                  Flash Sale
-                </h1>
-                <Zap className="w-10 h-10 text-yellow-300 fill-yellow-300" />
+        {/* Compact Flash Sale Header */}
+        <section className="bg-white border-b border-gray-100">
+          <div className="container mx-auto px-4 py-5 md:py-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Zap className="w-6 h-6 text-red-600 fill-red-600" />
+                <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Flash Sale</h1>
+                <span className="text-sm text-gray-500 font-medium hidden md:inline">– Deal Online Giảm Kịch Sàn</span>
               </div>
-              <p className="text-white/80 text-lg mb-8">
-                Deal Online Giảm Kịch Sàn – Số lượng có hạn!
-              </p>
-              {/* Countdown */}
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-white/80" />
-                <span className="text-white/80 font-medium">Kết thúc trong</span>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                {[
-                  { val: pad(timeLeft.hours), label: "Giờ" },
-                  { val: pad(timeLeft.minutes), label: "Phút" },
-                  { val: pad(timeLeft.seconds), label: "Giây" },
-                ].map((item, i) => (
-                  <span key={i} className="flex items-center gap-2">
-                    <div className="flex flex-col items-center">
-                      <span className="bg-white text-red-600 font-extrabold text-2xl px-4 py-2 rounded-lg min-w-[56px] text-center shadow-lg">
-                        {item.val}
-                      </span>
-                      <span className="text-white/60 text-xs mt-1">{item.label}</span>
-                    </div>
-                    {i < 2 && <span className="text-white font-extrabold text-2xl mb-4">:</span>}
-                  </span>
-                ))}
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-red-500" />
+                <span className="text-sm font-semibold text-gray-600">Kết thúc trong</span>
+                <div className="flex items-center gap-1.5">
+                  {[
+                    { val: pad(timeLeft.hours), label: "h" },
+                    { val: pad(timeLeft.minutes), label: "m" },
+                    { val: pad(timeLeft.seconds), label: "s" },
+                  ].map((item, i) => (
+                    <span key={i} className="flex items-center gap-1.5">
+                      <span className="bg-red-600 text-white font-bold text-sm px-2 py-1 rounded-md min-w-[32px] text-center">{item.val}</span>
+                      {i < 2 && <span className="text-gray-400 font-bold">:</span>}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

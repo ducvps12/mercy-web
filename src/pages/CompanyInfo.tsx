@@ -71,7 +71,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
       {
         title: "5. Cách ứng tuyển",
         content: [
-          "Gửi CV (hồ sơ cá nhân) qua email: mercytechglobal@gmail.com",
+          "Gửi CV (hồ sơ cá nhân) qua email: mercyglobalstore@gmail.com",
           "Tiêu đề email: [Ứng tuyển] – Họ tên – Vị trí ứng tuyển",
           "Hoặc liên hệ trực tiếp qua Hotline: 0898 273 899",
           "Nhắn tin qua Fanpage Facebook: Mercy – Kính Thông Minh",
@@ -141,7 +141,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
       {
         title: "5. Quy trình đăng ký hợp tác",
         content: [
-          "Bước 1: Liên hệ qua email mercytechglobal@gmail.com hoặc Hotline 0898 273 899.",
+          "Bước 1: Liên hệ qua email mercyglobalstore@gmail.com hoặc Hotline 0898 273 899.",
           "Bước 2: Gửi thông tin cá nhân/doanh nghiệp và hình thức hợp tác mong muốn.",
           "Bước 3: Mercy đánh giá và phản hồi trong vòng 2–3 ngày làm việc.",
           "Bước 4: Ký kết thỏa thuận hợp tác (nếu cần) và bắt đầu triển khai.",
@@ -151,7 +151,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
       {
         title: "6. Thông tin liên hệ hợp tác",
         content: [
-          "📧 Email hợp tác: mercytechglobal@gmail.com",
+          "📧 Email hợp tác: mercyglobalstore@gmail.com",
           "📞 Hotline: 0898 273 899 – Tư vấn hợp tác đại lý/affiliate",
           "📞 Hotline: 0898 273 899 – Hợp tác KOL/doanh nghiệp",
           "💬 Zalo/Fanpage: Mercy – Kính Thông Minh",
@@ -225,7 +225,7 @@ const companyInfoData: Record<string, CompanyInfoData> = {
           "Nếu bạn không tìm thấy câu trả lời cho thắc mắc của mình, vui lòng liên hệ:",
           "📞 Hotline tư vấn: 0898 273 899",
           "📞 Hotline kỹ thuật: 0898 273 899",
-          "📧 Email: mercytechglobal@gmail.com",
+          "📧 Email: mercyglobalstore@gmail.com",
           "💬 Fanpage Facebook: Mercy – Kính Thông Minh",
           "⏰ Thời gian hỗ trợ: 9:00 – 21:30 (Thứ 2 – Chủ nhật)",
         ],
@@ -255,7 +255,6 @@ const CompanyInfo = () => {
     );
   }
 
-  const Icon = info.icon;
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
@@ -267,25 +266,6 @@ const CompanyInfo = () => {
       <Header />
 
       <main>
-        {/* Hero Banner */}
-        <section className="relative bg-[#1d2939] text-white overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1d2939] via-[#2d3a4a] to-[#0f1923]" />
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-red-500 rounded-full blur-[120px]" />
-            <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-orange-500 rounded-full blur-[100px]" />
-          </div>
-          <div className="relative container mx-auto px-4 py-16 md:py-24 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-6 border border-white/20">
-              <Icon className="w-8 h-8 text-red-400" />
-            </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-              {info.title}
-            </h1>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              {info.desc}
-            </p>
-          </div>
-        </section>
 
         {/* Content */}
         <section className="py-12 md:py-20 bg-gray-50">
@@ -327,7 +307,7 @@ const CompanyInfo = () => {
                     📞 Gọi: 0898 273 899
                   </a>
                   <a
-                    href="mailto:mercytechglobal@gmail.com"
+                    href="mailto:mercyglobalstore@gmail.com"
                     className="inline-flex items-center justify-center px-6 py-3 border border-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
                   >
                     ✉️ Email liên hệ

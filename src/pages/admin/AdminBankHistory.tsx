@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, RefreshCw, Landmark, ArrowDownToLine } from "lucide-react";
+import { Loader2, RefreshCw, Landmark, ArrowDownToLine, Activity, Play, Copy, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatPrice } from "@/data/products";
@@ -42,6 +42,31 @@ export default function AdminBankHistory() {
     fetchHistory();
   }, []);
 
+  const [runningCron, setRunningCron] = useState(false);
+  const [copiedCron, setCopiedCron] = useState(false);
+
+  const handleRunCron = async () => {
+    setRunningCron(true);
+    try {
+      const data = await apiGet<{ message: string, checkedOrders: number, updated: number }>('/bank/cron');
+      toast.success(`Quét xong: Kiểm tra ${data.checkedOrders} đơn chờ, đã chốt tự động ${data.updated} đơn!`);
+      fetchHistory();
+    } catch (error) {
+      console.error(error);
+      toast.error("Lỗi thực thi cron job");
+    } finally {
+      setRunningCron(false);
+    }
+  };
+
+  const cronUrl = typeof window !== 'undefined' ? `${window.location.origin}/api/bank/cron` : 'https://kinhthongminhmercy.vn/api/bank/cron';
+
+  const copyCronUrl = () => {
+    navigator.clipboard.writeText(cronUrl).catch(()=>{});
+    setCopiedCron(true);
+    setTimeout(() => setCopiedCron(false), 2000);
+  };
+
   return (
     <AdminLayout title="Lịch sử giao dịch ACB">
       <div className="flex flex-col gap-6 p-1 md:p-4">
@@ -57,6 +82,39 @@ export default function AdminBankHistory() {
             Làm mới dữ liệu
           </Button>
         </div>
+
+        {/* Cron Job Panel */}
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="p-4 sm:p-6 flex flex-col lg:flex-row gap-6 lg:items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-gray-900 text-base">Hệ thống Auto-ATM (Tự động chốt đơn)</h3>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">
+                Để hệ thống tự động kiểm tra và chốt đơn 24/7, hãy thiết lập Cron Job trên hosting gọi vào đường link bên dưới mỗi 1-2 phút/lần. Hoặc bấm nút <strong>Quét thủ công</strong> để chạy ngay.
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <code className="text-xs bg-white px-3 py-1.5 rounded border border-blue-100 text-blue-800 font-mono select-all w-full max-w-md truncate">
+                  {cronUrl}
+                </code>
+                <Button variant="outline" size="sm" onClick={copyCronUrl} className="shrink-0 h-8 px-2.5">
+                  {copiedCron ? <CheckCheck className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                </Button>
+              </div>
+            </div>
+            <div className="shrink-0 border-t lg:border-t-0 lg:border-l border-blue-200 pt-4 lg:pt-0 lg:pl-6">
+              <Button 
+                onClick={handleRunCron} 
+                disabled={runningCron} 
+                className="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 gap-2"
+              >
+                {runningCron ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                {runningCron ? "Đang quét ACB..." : "Chạy quét thủ công"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardContent className="p-0">

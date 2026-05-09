@@ -21,11 +21,14 @@ router.get('/check-payment', async (req, res) => {
     
     if (response.data && response.data.codeStatus === 200) {
       const transactions = response.data.data || [];
-      const matched = transactions.find((tx: any) => 
-        tx.type === 'IN' && 
-        tx.amount === Number(amount) && 
-        String(tx.description).toUpperCase().includes(String(content).toUpperCase())
-      );
+      const matched = transactions.find((tx: any) => {
+        const cleanDesc = String(tx.description).toLowerCase().replace(/[^a-z0-9]/g, '');
+        const orderNumStr = String(content).replace(/[^0-9]/g, ''); // Extract '0023' from 'CHUYEN TIEN KINH MERCY 0023'
+        return tx.type === 'IN' && 
+               tx.amount >= Number(amount) && 
+               cleanDesc.includes('mercy') &&
+               cleanDesc.includes(orderNumStr);
+      });
       
       if (matched) {
         return res.json({ paid: true });

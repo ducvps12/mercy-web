@@ -35,24 +35,6 @@ const About = () => {
       <Header />
 
       <main>
-        {/* Hero Banner */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#2d2d44] to-[#1a1a2e]" />
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-red-500 rounded-full blur-[120px]" />
-            <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-[120px]" />
-          </div>
-          <div className="relative container mx-auto px-4 py-20 md:py-32 text-center">
-            <p className="text-red-500 font-bold tracking-widest uppercase text-sm md:text-base mb-6 animate-fade-in">VỀ CHÚNG TÔI</p>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-8 text-white drop-shadow-2xl animate-fade-in-scale">
-              MERCY
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto leading-relaxed font-medium animate-fade-in">
-              Thương hiệu tiên phong trong lĩnh vực kính thông minh tại Việt Nam
-            </p>
-          </div>
-        </section>
-
         {/* About Content */}
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4">
@@ -135,7 +117,7 @@ const About = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:mercytechglobal@gmail.com"
+                href="mailto:mercyglobalstore@gmail.com"
                 className="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
               >
                 Email liên hệ

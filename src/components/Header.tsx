@@ -94,7 +94,7 @@ const Header = () => {
 
   const openContactMail = (subject: string) => {
     const body = "Tên khách hàng: \n\nSố điện thoại: ";
-    window.location.href = `mailto:mercytechglobal@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:mercyglobalstore@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   return (
@@ -103,19 +103,19 @@ const Header = () => {
       <div className="fpt-header-gradient">
        */}
       <div className="bg-[#cb1c22]">
-        <div className="container flex items-center gap-2 md:gap-5 h-[56px] md:h-[88px]">
+        <div className="container relative flex items-center gap-2 md:gap-5 h-[56px] md:h-[88px]">
           {/* Mobile hamburger */}
           <button
             id="mobile-menu-toggle"
-            className="md:hidden p-2.5 text-white rounded-xl bg-white/10 active:scale-90 transition-transform"
+            className="md:hidden p-2.5 text-white rounded-xl bg-white/10 active:scale-90 transition-transform z-10"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Mở menu"
           >
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Logo */}
-          <a href="/" className="relative flex items-center justify-center shrink-0 group mr-1 md:mr-4 h-full min-w-[80px] md:min-w-[120px]">
+          {/* Logo — centered on mobile, left-aligned on desktop */}
+          <a href="/" className="absolute left-1/2 -translate-x-1/2 md:relative md:left-auto md:translate-x-0 flex items-center justify-center shrink-0 group mr-1 md:mr-4 h-full min-w-[80px] md:min-w-[120px]">
             <span className="flex items-center justify-center h-11 md:h-20">
               <img src={logoWhite} alt="MERCY" className="h-full w-auto object-contain dark:hidden" />
               <img src={logoBlack} alt="MERCY" className="h-full w-auto object-contain hidden dark:block" />
@@ -344,8 +344,14 @@ const Header = () => {
           </div>
 
           {/* Right links */}
-          <div className="flex-1 basis-0 flex justify-end items-center gap-2 text-sm text-gray-600 shrink-0">
-            <button onClick={() => setStoreModalOpen(true)} className="hover:text-red-600 px-2 py-1 transition-colors font-medium text-xs">Cửa hàng</button>
+          <div className="flex-1 basis-0 flex justify-end items-center gap-3 shrink-0">
+            <button 
+              onClick={() => setStoreModalOpen(true)} 
+              className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold text-gray-700 hover:text-red-600 transition-colors"
+            >
+              <Store className="w-4 h-4 lg:w-4 lg:h-4 text-red-600" />
+              <span>Hệ thống cửa hàng</span>
+            </button>
             <span className="text-gray-300">|</span>
             <LanguageSwitcher />
           </div>
@@ -361,7 +367,7 @@ const Header = () => {
         className={`md:hidden fixed top-0 left-0 z-[70] h-full w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Mobile header */}
-        <div className="flex items-center justify-between p-4 fpt-header-gradient">
+        <div className="flex items-center justify-between p-4 bg-[#be0117]">
           <img src={logoWhite} alt="MERCY" className="h-12 object-contain dark:hidden" />
           <img src={logoBlack} alt="MERCY" className="h-12 object-contain hidden dark:block" />
           <button
@@ -374,7 +380,7 @@ const Header = () => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-24">
           {/* Mobile Search */}
           <div className="p-4">
             <form onSubmit={(e) => { handleSearchSubmit(e); setMenuOpen(false); }} className="relative">
@@ -424,9 +430,9 @@ const Header = () => {
               </a>
             ))}
 
-            {/* Promo links in mobile */}
+            {/* Promo links in mobile — only show flash sale, hide Bảo hành / Trả góp / Quà tặng */}
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Ưu đãi</h3>
-            {promoLinks.map((link, i) => (
+            {promoLinks.slice(0, 1).map((link, i) => (
               <a key={i} href={link.href} className="flex items-center gap-3 py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 last:border-0">
                 <link.icon className={`w-5 h-5 ${link.color}`} />
                 <span>{link.text}</span>

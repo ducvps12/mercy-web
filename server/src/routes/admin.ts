@@ -34,10 +34,14 @@ router.use(isAdmin);
 router.get('/members', async (req, res) => {
   try {
     const users = await prisma.users.findMany({
-      select: { id: true, email: true, full_name: true, username: true, role: true, phone: true, is_active: true, created_at: true },
+      select: {
+        id: true, email: true, full_name: true, username: true, role: true,
+        phone: true, is_active: true, created_at: true,
+        register_ip: true, last_login_at: true, user_agent: true,
+        _count: { select: { orders: true } },
+      },
       orderBy: { created_at: 'desc' },
     });
-    // Map to frontend expected format
     const mapped = users.map(u => ({
       id: u.id,
       email: u.email,
@@ -46,6 +50,10 @@ router.get('/members', async (req, res) => {
       phone: u.phone,
       isActive: u.is_active,
       createdAt: u.created_at,
+      registerIp: u.register_ip,
+      lastLoginAt: u.last_login_at,
+      userAgent: u.user_agent,
+      orderCount: u._count.orders,
     }));
     res.json(mapped);
   } catch (error) {
@@ -77,11 +85,125 @@ router.put('/members/:id/role', async (req, res) => {
 router.delete('/members/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    // Prevent deleting admin
+    const user = await prisma.users.findUnique({ where: { id }, select: { role: true } });
+    if (user?.role === 'admin') {
+      return res.status(403).json({ message: 'Không thể xóa tài khoản admin' });
+    }
     await prisma.users.delete({ where: { id } });
     res.json({ message: 'Đã xóa thành viên' });
   } catch (error) {
     console.error('Delete member error:', error);
     res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// ═══ Spam Check ═══════════════════════════════════════════
+router.get('/spam-check', async (req, res) => {
+  try {
+    const users = await prisma.users.findMany({
+      where: { role: 'customer' },
+      select: {
+        id: true, email: true, full_name: true, username: true,
+        register_ip: true, last_login_at: true, user_agent: true,
+        created_at: true, is_active: true,
+        _count: { select: { orders: true } },
+      },
+    });
+
+    // Count IPs
+    const ipCounts = new Map<string, number>();
+    users.forEach(u => {
+      if (u.register_ip) {
+        ipCounts.set(u.register_ip, (ipCounts.get(u.register_ip) || 0) + 1);
+      }
+    });
+
+    // Count user agents for device fingerprinting
+    const uaCounts = new Map<string, number>();
+    users.forEach(u => {
+      if (u.user_agent) {
+        uaCounts.set(u.user_agent, (uaCounts.get(u.user_agent) || 0) + 1);
+      }
+    });
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const spamUsers = users.map(u => {
+      const reasons: string[] = [];
+      const ipCount = u.register_ip ? (ipCounts.get(u.register_ip) || 0) : 0;
+
+      if (ipCount >= 3) reasons.push(`IP trùng (${ipCount} tài khoản)`);
+      if (u._count.orders === 0) reasons.push('Không có đơn hàng');
+      if (!u.last_login_at || u.last_login_at < thirtyDaysAgo) reasons.push('Không đăng nhập 30 ngày');
+
+      return {
+        id: u.id,
+        email: u.email,
+        name: u.full_name || u.username,
+        registerIp: u.register_ip,
+        lastLoginAt: u.last_login_at,
+        userAgent: u.user_agent,
+        createdAt: u.created_at,
+        orderCount: u._count.orders,
+        ipCount,
+        spamReasons: reasons,
+        isSpam: reasons.length >= 2, // at least 2 spam signals
+      };
+    }).filter(u => u.isSpam);
+
+    // Sort by IP count desc
+    spamUsers.sort((a, b) => b.ipCount - a.ipCount);
+
+    res.json({
+      total: spamUsers.length,
+      stats: {
+        duplicateIp: spamUsers.filter(u => u.spamReasons.some(r => r.includes('IP'))).length,
+        noOrders: spamUsers.filter(u => u.spamReasons.some(r => r.includes('đơn'))).length,
+        inactive: spamUsers.filter(u => u.spamReasons.some(r => r.includes('30'))).length,
+      },
+      users: spamUsers,
+    });
+  } catch (error) {
+    console.error('Spam check error:', error);
+    res.status(500).json({ message: 'Lỗi kiểm tra spam' });
+  }
+});
+
+// ═══ Bulk Delete ══════════════════════════════════════════
+router.post('/members/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ message: 'Danh sách ID trống' });
+    }
+
+    // Filter out admin accounts
+    const admins = await prisma.users.findMany({
+      where: { id: { in: ids }, role: 'admin' },
+      select: { id: true },
+    });
+    const adminIds = new Set(admins.map(a => a.id));
+    const safeIds = ids.filter((id: number) => !adminIds.has(id));
+
+    if (safeIds.length === 0) {
+      return res.status(400).json({ message: 'Không thể xóa tài khoản admin' });
+    }
+
+    // Delete carts first (cascade may not cover all)
+    await prisma.cart.deleteMany({ where: { user_id: { in: safeIds } } });
+    // Delete users (orders cascade via schema)
+    const result = await prisma.users.deleteMany({ where: { id: { in: safeIds } } });
+
+    res.json({
+      message: `Đã xóa ${result.count} tài khoản${adminIds.size > 0 ? ` (bỏ qua ${adminIds.size} admin)` : ''}`,
+      deleted: result.count,
+      skippedAdmins: adminIds.size,
+    });
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    res.status(500).json({ message: 'Lỗi xóa hàng loạt' });
   }
 });
 
@@ -1344,9 +1466,24 @@ router.get('/crm/activity', async (req, res) => {
 // GET all payment methods
 router.get('/payments', async (req, res) => {
   try {
-    const payments = await prisma.payment_methods.findMany({
+    let payments = await prisma.payment_methods.findMany({
       orderBy: { created_at: 'desc' }
     });
+
+    // Auto-seed default bank account from config if table is empty
+    if (payments.length === 0) {
+      const defaultPayment = await prisma.payment_methods.create({
+        data: {
+          bank_code: 'ACB',
+          bank_name: 'Ngân hàng Á Châu',
+          account_number: '24488671',
+          account_name: 'MAI XUAN ANH',
+          is_active: true
+        }
+      });
+      payments = [defaultPayment];
+    }
+
     const mapped = payments.map(p => ({
       id: p.id,
       bankCode: p.bank_code,
@@ -1437,6 +1574,113 @@ router.delete('/payments/:id', async (req, res) => {
     res.json({ message: 'Đã xóa' });
   } catch (error) {
     console.error('Delete payment error:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// ═══════════════════════════════════
+// TRANSACTIONS (Payment monitoring)
+// ═══════════════════════════════════
+
+router.get('/transactions', async (req, res) => {
+  try {
+    const { from, to, status } = req.query;
+
+    const where: any = {};
+
+    // Filter by date range
+    if (from || to) {
+      where.created_at = {};
+      if (from) where.created_at.gte = new Date(from as string);
+      if (to) {
+        const toDate = new Date(to as string);
+        toDate.setHours(23, 59, 59, 999);
+        where.created_at.lte = toDate;
+      }
+    }
+
+    // Filter by status
+    if (status && status !== 'all') {
+      where.status = status as string;
+    }
+
+    const orders = await prisma.orders.findMany({
+      where,
+      include: { order_items: true },
+      orderBy: { created_at: 'desc' },
+    });
+
+    // Calculate statistics
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let todayRevenue = 0;
+    let monthRevenue = 0;
+    let totalRevenue = 0;
+    let todayOrders = 0;
+    let monthOrders = 0;
+    let pendingCount = 0;
+    let confirmedCount = 0;
+
+    const transactions = orders.map(o => {
+      const amount = Number(o.payment_amount) || Number(o.total);
+      const createdAt = new Date(o.created_at);
+
+      // Only count paid/confirmed orders for revenue
+      const isPaid = ['confirmed', 'shipping', 'delivered'].includes(o.status);
+      if (isPaid) {
+        totalRevenue += amount;
+        if (createdAt >= monthStart) {
+          monthRevenue += amount;
+          monthOrders++;
+        }
+        if (createdAt >= todayStart) {
+          todayRevenue += amount;
+          todayOrders++;
+        }
+        confirmedCount++;
+      }
+      if (o.status === 'pending') pendingCount++;
+
+      // Detect payment type
+      let paymentType = 'full';
+      const notes = o.notes || '';
+      if (notes.includes('[DEPOSIT]')) paymentType = 'deposit';
+
+      return {
+        id: o.id,
+        orderCode: o.order_code,
+        customerName: o.customer_name || '—',
+        customerPhone: o.customer_phone || '',
+        amount,
+        total: Number(o.total),
+        paymentMethod: o.payment_method || paymentType,
+        paymentType,
+        paymentStatus: o.payment_status || 'pending',
+        paymentRef: o.payment_ref || '',
+        transferContent: notes.replace('[DEPOSIT] ', '').replace('[FULL] ', '').replace('[REFUNDED] ', ''),
+        status: o.status,
+        createdAt: o.created_at,
+        itemCount: o.order_items.length,
+      };
+    });
+
+    res.json({
+      stats: {
+        todayRevenue,
+        monthRevenue,
+        totalRevenue,
+        todayOrders,
+        monthOrders,
+        totalOrders: orders.length,
+        pendingCount,
+        confirmedCount,
+      },
+      transactions,
+    });
+  } catch (error) {
+    console.error('Get transactions error:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });

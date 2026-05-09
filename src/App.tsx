@@ -63,6 +63,9 @@ import AdminPayments from "./pages/admin/AdminPayments.tsx";
 import AdminBankHistory from "./pages/admin/AdminBankHistory.tsx";
 import AdminProductEdit from "./pages/admin/AdminProductEdit.tsx";
 import AdminCRM from "./pages/admin/AdminCRM.tsx";
+import AdminMedia from "./pages/admin/AdminMedia.tsx";
+import AdminCategories from "./pages/admin/AdminCategories.tsx";
+import AdminTransactions from "./pages/admin/AdminTransactions.tsx";
 import AdminGuard from "./components/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -110,10 +113,13 @@ const App = () => (
                 <Route path="/admin/posts" element={<AdminGuard><AdminPosts /></AdminGuard>} />
                 <Route path="/admin/notifications" element={<AdminGuard><AdminNotifications /></AdminGuard>} />
                 <Route path="/admin/banners" element={<AdminGuard><AdminBanners /></AdminGuard>} />
+                <Route path="/admin/media" element={<AdminGuard><AdminMedia /></AdminGuard>} />
+                <Route path="/admin/categories" element={<AdminGuard><AdminCategories /></AdminGuard>} />
                 <Route path="/admin/members" element={<AdminGuard><AdminMembers /></AdminGuard>} />
                 <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
                 <Route path="/admin/bank-history" element={<AdminGuard><AdminBankHistory /></AdminGuard>} />
                 <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
+                <Route path="/admin/transactions" element={<AdminGuard><AdminTransactions /></AdminGuard>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -76,7 +76,7 @@ const policiesData: Record<string, PolicyInfo> = {
         content: [
           "Mọi thắc mắc và yêu cầu bảo hành, Quý khách vui lòng gửi về:",
           "Hotline: 0898 273 899",
-          "Email: mercytechglobal@gmail.com",
+          "Email: mercyglobalstore@gmail.com",
           "Website: kinhthongminhmercy.vn",
         ],
       },
@@ -127,7 +127,7 @@ const policiesData: Record<string, PolicyInfo> = {
           "Tên đơn vị: CÔNG TY TNHH CÔNG NGHỆ MERCY",
           "Địa chỉ: 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.",
           "Hotline: 0898273899",
-          "Email: mercytechglobal@gmail.com",
+          "Email: mercyglobalstore@gmail.com",
         ],
       },
       {
@@ -203,7 +203,7 @@ const policiesData: Record<string, PolicyInfo> = {
           "Mọi thắc mắc liên quan đến quy trình và thủ tục trả góp, Quý khách vui lòng liên hệ:",
           "Địa chỉ: 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.",
           "Hotline: 0898 273 899",
-          "Email: mercytechglobal@gmail.com",
+          "Email: mercyglobalstore@gmail.com",
         ],
       },
     ],
@@ -265,7 +265,7 @@ const policiesData: Record<string, PolicyInfo> = {
         content: [
           "Địa chỉ tiếp nhận: 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam.",
           "Hotline hỗ trợ vận chuyển: 0898 273 899",
-          "Email: mercytechglobal@gmail.com",
+          "Email: mercyglobalstore@gmail.com",
         ],
       },
     ],
@@ -342,7 +342,6 @@ const Policy = () => {
     );
   }
 
-  const Icon = policy.icon;
 
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
@@ -354,25 +353,6 @@ const Policy = () => {
       <Header />
 
       <main>
-        {/* Hero Banner */}
-        <section className="relative bg-[#1d2939] text-white overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1d2939] via-[#2d3a4a] to-[#0f1923]" />
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-red-500 rounded-full blur-[120px]" />
-            <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-orange-500 rounded-full blur-[100px]" />
-          </div>
-          <div className="relative container mx-auto px-4 py-16 md:py-24 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-6 border border-white/20">
-              <Icon className="w-8 h-8 text-red-400" />
-            </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-              {policy.title}
-            </h1>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              {policy.desc}
-            </p>
-          </div>
-        </section>
 
         {/* Policy Content */}
         <section className="py-12 md:py-20 bg-gray-50">
@@ -414,7 +394,7 @@ const Policy = () => {
                     📞 Gọi: 0898 273 899
                   </a>
                   <a
-                    href="mailto:mercytechglobal@gmail.com"
+                    href="mailto:mercyglobalstore@gmail.com"
                     className="inline-flex items-center justify-center px-6 py-3 border border-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
                   >
                     ✉️ Email liên hệ

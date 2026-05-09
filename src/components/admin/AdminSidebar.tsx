@@ -13,6 +13,9 @@ import {
   CreditCard,
   History,
   TrendingUp,
+  FolderOpen,
+  Layers,
+  Wallet,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -41,7 +44,10 @@ const mainItems = [
 
 const otherItems = [
   { title: "Lịch sử nạp tiền", url: "/admin/bank-history", icon: History },
+  { title: "Giao dịch nhận tiền", url: "/admin/transactions", icon: Wallet },
   { title: "Thanh toán", url: "/admin/payments", icon: CreditCard },
+  { title: "Danh mục", url: "/admin/categories", icon: Layers },
+  { title: "Kho ảnh", url: "/admin/media", icon: FolderOpen },
   { title: "Banner", url: "/admin/banners", icon: Image },
   { title: "Bài viết", url: "/admin/posts", icon: FileText },
   { title: "Thông báo", url: "/admin/notifications", icon: Bell },

@@ -12,6 +12,7 @@ import bankRoutes from './routes/bank';
 import contactRoutes from './routes/contact';
 import settingsRoutes from './routes/settings';
 import bannerRoutes from './routes/banners';
+import mediaRoutes from './routes/media';
 import { startAcbCronJob } from './cron/acbJob';
 import { FRONTEND_URL, SERVER_PORT } from './config';
 
@@ -34,6 +35,7 @@ app.use('/api/bank', bankRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/media', mediaRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

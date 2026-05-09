@@ -380,7 +380,7 @@ const ProductDetail = () => {
                 {[
                   { icon: ShieldCheck, text: "Hàng chính hãng - BH 15 ngày", color: "text-green-600" },
                   { icon: Truck, text: "Giao hàng miễn phí toàn quốc", color: "text-blue-600" },
-                  { icon: RotateCcw, text: "Đổi trả dễ dàng trong 7 ngày", color: "text-orange-500" },
+                  { icon: RotateCcw, text: "Hỗ trợ kỹ thuật từ xa 24/7", color: "text-orange-500" },
                   { icon: Headphones, text: "Kỹ thuật viên hỗ trợ trực tuyến", color: "text-purple-600" },
                 ].map(({ icon: Icon, text, color }, i) => (
                   <div key={i} className="flex items-start gap-2">

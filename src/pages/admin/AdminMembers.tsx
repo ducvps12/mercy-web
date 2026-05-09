@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Shield, Trash2, Users, Crown, UserCheck, Loader2, RefreshCw, Edit, User, Lock, Unlock, Download, Key, Eye, ChevronLeft, ChevronRight, Award, Gem, Medal, PackageOpen } from "lucide-react";
+import { Search, Shield, Trash2, Users, Crown, UserCheck, Loader2, RefreshCw, Edit, User, Lock, Unlock, Download, Key, Eye, ChevronLeft, ChevronRight, Award, Gem, Medal, PackageOpen, CheckSquare, Square, ShieldAlert, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiPut, apiDelete, API_BASE } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -18,6 +18,17 @@ interface Member {
   role: string;
   isActive?: boolean;
   createdAt: string;
+  registerIp?: string | null;
+  lastLoginAt?: string | null;
+  userAgent?: string | null;
+  orderCount?: number;
+}
+
+interface SpamUser {
+  id: number; email: string; name: string;
+  registerIp: string | null; lastLoginAt: string | null;
+  createdAt: string; orderCount: number; ipCount: number;
+  spamReasons: string[]; isSpam: boolean;
 }
 
 interface MemberDetail {
@@ -56,6 +67,14 @@ export default function AdminMembers() {
   // Reset password dialog
   const [resetMember, setResetMember] = useState<Member | null>(null);
   const [newPassword, setNewPassword] = useState("");
+
+  // Selection & Spam
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [spamUsers, setSpamUsers] = useState<SpamUser[]>([]);
+  const [spamMode, setSpamMode] = useState(false);
+  const [spamLoading, setSpamLoading] = useState(false);
+  const [spamStats, setSpamStats] = useState({ duplicateIp: 0, noOrders: 0, inactive: 0 });
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const loadMembers = async () => {
     setLoading(true);
@@ -154,20 +173,75 @@ export default function AdminMembers() {
     }
   };
 
+  // Spam check
+  const runSpamCheck = async () => {
+    setSpamLoading(true);
+    try {
+      const data = await apiGet<{ total: number; stats: any; users: SpamUser[] }>("/admin/spam-check");
+      setSpamUsers(data.users);
+      setSpamStats(data.stats);
+      setSpamMode(true);
+      setSelected(new Set());
+      setPage(1);
+      toast.success(`T\u00ecm th\u1ea5y ${data.total} t\u00e0i kho\u1ea3n nghi spam`);
+    } catch (err: any) {
+      toast.error(err.message || "L\u1ed7i qu\u00e9t spam");
+    } finally {
+      setSpamLoading(false);
+    }
+  };
+
+  const exitSpamMode = () => { setSpamMode(false); setSelected(new Set()); setSpamUsers([]); };
+
+  const toggleSelect = (id: number) => {
+    const s = new Set(selected);
+    if (s.has(id)) s.delete(id); else s.add(id);
+    setSelected(s);
+  };
+  const displayList = spamMode ? spamUsers : filteredMembers;
+  const spamPaged = displayList.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) as any[];
+  const spamTotalPages = Math.ceil(displayList.length / PAGE_SIZE);
+  const toggleSelectAll = () => {
+    const pageIds = spamPaged.map((m: any) => m.id);
+    const allSelected = pageIds.every((id: number) => selected.has(id));
+    const s = new Set(selected);
+    if (allSelected) pageIds.forEach((id: number) => s.delete(id));
+    else pageIds.forEach((id: number) => s.add(id));
+    setSelected(s);
+  };
+  const selectAllSpam = () => { setSelected(new Set(spamUsers.map(u => u.id))); };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`X\u00e1c nh\u1eadn x\u00f3a ${selected.size} t\u00e0i kho\u1ea3n?`)) return;
+    setBulkDeleting(true);
+    try {
+      const data = await (await fetch(`${API_BASE}/admin/members/bulk-delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      })).json();
+      toast.success(data.message);
+      setSelected(new Set());
+      if (spamMode) { setSpamUsers(spamUsers.filter(u => !selected.has(u.id))); }
+      await loadMembers();
+    } catch (err: any) {
+      toast.error(err.message || "L\u1ed7i x\u00f3a");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const exportCSV = () => {
     const token = localStorage.getItem("token");
     const url = `${API_BASE}/admin/members/export`;
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "members.csv";
-    // Use fetch to include auth header
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.blob())
       .then(blob => {
-        const blobUrl = URL.createObjectURL(blob);
-        a.href = blobUrl;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "members.csv";
         a.click();
-        URL.revokeObjectURL(blobUrl);
         toast.success("Đã xuất CSV");
       });
   };
@@ -240,15 +314,51 @@ export default function AdminMembers() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            {selected.size > 0 && (
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={bulkDeleting} className="gap-1.5">
+                {bulkDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Xóa {selected.size} tài khoản
+              </Button>
+            )}
+            {spamMode ? (
+              <>
+                <Button variant="outline" size="sm" onClick={selectAllSpam} className="gap-1.5">
+                  <CheckSquare className="w-3.5 h-3.5" /> Chọn tất cả ({spamUsers.length})
+                </Button>
+                <Button variant="outline" size="sm" onClick={exitSpamMode} className="gap-1.5">
+                  Thoát Spam
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" size="sm" onClick={runSpamCheck} disabled={spamLoading} className="gap-1.5 border-orange-300 text-orange-600 hover:bg-orange-50">
+                {spamLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                Quét Spam
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5">
-              <Download className="w-4 h-4" /> Xuất CSV
+              <Download className="w-4 h-4" /> CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={loadMembers} disabled={loading} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => { exitSpamMode(); loadMembers(); }} disabled={loading} className="gap-1.5">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Làm mới
             </Button>
           </div>
         </div>
+
+        {/* Spam mode banner */}
+        {spamMode && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4 text-orange-600" />
+              <span className="font-semibold text-orange-800">Tìm thấy {spamUsers.length} tài khoản nghi spam</span>
+            </div>
+            <div className="flex gap-4 text-xs text-orange-700">
+              <span>🔴 IP trùng: {spamStats.duplicateIp}</span>
+              <span>📦 Không đơn hàng: {spamStats.noOrders}</span>
+              <span>💤 Không login 30 ngày: {spamStats.inactive}</span>
+            </div>
+          </div>
+        )}
 
         {/* Table */}
         <Card className="border-border">
@@ -257,23 +367,38 @@ export default function AdminMembers() {
               <div className="flex items-center justify-center py-16">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
-            ) : paged.length > 0 ? (
+            ) : (spamMode ? spamPaged : paged).length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
+                      <th className="p-4 w-10">
+                        <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-foreground">
+                          {spamPaged.length > 0 && spamPaged.every((m: any) => selected.has(m.id))
+                            ? <CheckSquare className="w-4 h-4 text-primary" />
+                            : <Square className="w-4 h-4" />}
+                        </button>
+                      </th>
                       <th className="text-left p-4 font-medium text-muted-foreground">#</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Thành viên</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Email</th>
+                      {spamMode && <th className="text-left p-4 font-medium text-muted-foreground">IP</th>}
                       <th className="text-left p-4 font-medium text-muted-foreground">Quyền</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Trạng thái</th>
-                      <th className="text-left p-4 font-medium text-muted-foreground">Ngày đăng ký</th>
+                      <th className="text-left p-4 font-medium text-muted-foreground">{spamMode ? 'Lý do' : 'Ngày ĐK'}</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {paged.map((member, i) => (
-                      <tr key={member.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                    {(spamMode ? spamPaged : paged).map((member: any, i: number) => (
+                      <tr key={member.id} className={`border-b border-border/50 hover:bg-muted/20 transition-colors ${selected.has(member.id) ? 'bg-primary/5' : ''}`}>
+                        <td className="p-4">
+                          <button onClick={() => toggleSelect(member.id)}>
+                            {selected.has(member.id)
+                              ? <CheckSquare className="w-4 h-4 text-primary" />
+                              : <Square className="w-4 h-4 text-muted-foreground" />}
+                          </button>
+                        </td>
                         <td className="p-4 text-muted-foreground">{(page - 1) * PAGE_SIZE + i + 1}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
@@ -285,7 +410,13 @@ export default function AdminMembers() {
                             <span className="font-medium text-foreground">{member.name || "—"}</span>
                           </div>
                         </td>
-                        <td className="p-4 text-muted-foreground">{member.email}</td>
+                        <td className="p-4 text-muted-foreground text-xs">{member.email}</td>
+                        {spamMode && (
+                          <td className="p-4">
+                            <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded">{member.registerIp || '—'}</span>
+                            {member.ipCount >= 3 && <span className="ml-1 text-[9px] text-red-600 font-bold">×{member.ipCount}</span>}
+                          </td>
+                        )}
                         <td className="p-4">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                             member.role === "admin" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
@@ -300,8 +431,16 @@ export default function AdminMembers() {
                             {member.isActive !== false ? "Hoạt động" : "Đã khóa"}
                           </span>
                         </td>
-                        <td className="p-4 text-muted-foreground text-xs">
-                          {new Date(member.createdAt).toLocaleDateString("vi-VN")}
+                        <td className="p-4 text-xs">
+                          {spamMode && member.spamReasons ? (
+                            <div className="flex flex-wrap gap-1">
+                              {member.spamReasons.map((r: string, ri: number) => (
+                                <span key={ri} className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px]">{r}</span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">{new Date(member.createdAt).toLocaleDateString("vi-VN")}</span>
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-1">
@@ -338,17 +477,17 @@ export default function AdminMembers() {
         </Card>
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {(spamMode ? spamTotalPages : totalPages) > 1 && (
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">Hiển thị {(page-1)*PAGE_SIZE+1}-{Math.min(page*PAGE_SIZE, filteredMembers.length)} / {filteredMembers.length}</p>
+            <p className="text-xs text-muted-foreground">Hiển thị {(page-1)*PAGE_SIZE+1}-{Math.min(page*PAGE_SIZE, displayList.length)} / {displayList.length}{selected.size > 0 ? ` • Đã chọn ${selected.size}` : ''}</p>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page-1)}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
+              {Array.from({ length: Math.min(spamMode ? spamTotalPages : totalPages, 5) }, (_, i) => i + 1).map(p => (
                 <Button key={p} variant={p === page ? "default" : "outline"} size="sm" onClick={() => setPage(p)}>{p}</Button>
               ))}
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page+1)}>
+              <Button variant="outline" size="sm" disabled={page >= (spamMode ? spamTotalPages : totalPages)} onClick={() => setPage(page+1)}>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>

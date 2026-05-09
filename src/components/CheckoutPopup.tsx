@@ -469,9 +469,6 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                     <p className="mb-1">Thanh toán & Đặt cọc: Đối với đơn hàng có yêu cầu cọc, số tiền cọc sẽ được trừ trực tiếp vào tổng giá trị thanh toán. Khoản cọc sẽ được hoàn trả 100% nếu giao dịch không thành công do lỗi hệ thống hoặc hết hàng từ phía Mercy.</p>
                     <p className="mb-2">Mua trả góp: Khách hàng tham gia chương trình trả góp cần đáp ứng các điều kiện phê duyệt từ đối tác tài chính (Ngân hàng/Công ty tài chính). Các quy định về kỳ hạn, lãi suất, phí chuyển đổi (nếu có) sẽ áp dụng theo chính sách của đối tác cung cấp dịch vụ trả góp. Mercy không trực tiếp can thiệp vào quyết định duyệt hồ sơ tín dụng.</p>
                     
-                    <p className="font-bold text-gray-800 mb-1">4. Đổi trả & Hoàn tiền</p>
-                    <p className="mb-2">Hỗ trợ 1 đổi 1 trong vòng 07 ngày đầu tiên nếu sản phẩm có lỗi phần cứng từ nhà sản xuất, với điều kiện sản phẩm còn nguyên vẹn, không trầy xước và đầy đủ hộp, phụ kiện đi kèm.</p>
-                    
                     <p className="font-semibold text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100 mt-2">
                       Bằng việc cuộn đến cuối văn bản này và xác nhận Đặt hàng, bạn xác nhận đã đọc, hiểu rõ và đồng ý toàn bộ với các Chính sách bảo mật, Bảo hành và Thanh toán của Mercy.
                     </p>
@@ -837,7 +834,6 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                       <div className="pt-2 border-t border-gray-100 space-y-1.5">
                         {[
                           { icon: ShieldCheck, text: "Hàng chính hãng 100%", color: "text-green-600" },
-                          { icon: RotateCcw, text: "Đổi trả trong 7 ngày", color: "text-orange-500" },
                           { icon: Truck, text: selectedPayment === "full" ? "Miễn phí vận chuyển" : "Giao hàng toàn quốc", color: "text-blue-600" },
                         ].map(({ icon: Icon, text, color }, i) => (
                           <div key={i} className="flex items-center gap-1.5">
@@ -878,7 +874,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                 <li><span className="font-semibold text-gray-800">Tên đơn vị:</span> CÔNG TY TNHH CÔNG NGHỆ MERCY</li>
                 <li><span className="font-semibold text-gray-800">Địa chỉ:</span> 8/1E Đường Tô Ký, Ấp Tam Đông 1, Xã Đông Thạnh, Thành phố Hồ Chí Minh, Việt Nam</li>
                 <li><span className="font-semibold text-gray-800">Hotline:</span> 0898273899</li>
-                <li><span className="font-semibold text-gray-800">Email:</span> mercytechglobal@gmail.com</li>
+                <li><span className="font-semibold text-gray-800">Email:</span> mercyglobalstore@gmail.com</li>
               </ul>
 
               <h4 className="font-bold text-gray-900 mt-4 text-base">2. PHƯƠNG THỨC THANH TOÁN & ĐẶT CỌC</h4>
@@ -914,15 +910,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                 <li><span className="font-semibold text-gray-800">Khu vực Ngoại tỉnh:</span> Thời gian giao hàng dự kiến từ 5 - 7 ngày làm việc.</li>
               </ul>
 
-              <h4 className="font-bold text-gray-900 mt-4 text-base">4. CHÍNH SÁCH ĐỔI TRẢ & HOÀN TIỀN</h4>
-              <p>Để đảm bảo quyền lợi, Quý khách vui lòng kiểm tra kỹ hàng hóa ngay khi nhận:</p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li><span className="font-semibold text-gray-800">Thời hạn đổi trả:</span> Trong vòng 07 ngày đầu kể từ ngày nhận hàng thành công.</li>
-                <li><span className="font-semibold text-gray-800">Điều kiện đổi trả:</span> Sản phẩm phải còn nguyên seal (tem niêm phong), không có dấu hiệu trầy xước, hỏng hóc vật lý và đầy đủ phụ kiện đi kèm.</li>
-                <li><span className="font-semibold text-gray-800">Phí vận chuyển:</span> Khách hàng là người chi trả toàn bộ phí vận chuyển phát sinh khi thực hiện đổi trả hàng.</li>
-              </ul>
-
-              <h4 className="font-bold text-gray-900 mt-4 text-base">5. CHÍNH SÁCH BẢO HÀNH</h4>
+              <h4 className="font-bold text-gray-900 mt-4 text-base">4. CHÍNH SÁCH BẢO HÀNH</h4>
               <p>Chúng tôi cung cấp các gói bảo hành linh hoạt dựa trên sự lựa chọn của Quý khách tại thời điểm mua hàng:</p>
               <ul className="list-disc space-y-1 pl-5">
                 <li><span className="font-semibold text-gray-800">Mặc định:</span> Bảo hành 15 ngày.</li>

@@ -27,9 +27,9 @@ export default function AdminSettings() {
   const [smtpSettings, setSmtpSettings] = useState({
     smtpHost: "smtp.gmail.com",
     smtpPort: "587",
-    smtpUser: "mercytechglobal@gmail.com",
+    smtpUser: "mercyglobalstore@gmail.com",
     smtpPass: "",
-    adminEmail: "mercytechglobal@gmail.com",
+    adminEmail: "mercyglobalstore@gmail.com",
   });
 
   // Payment Settings

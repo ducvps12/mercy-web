@@ -39,16 +39,6 @@ const FAQ = () => {
       <Header />
 
       <main>
-        <section className="relative bg-secondary text-secondary-foreground overflow-hidden py-16">
-          <div className="container mx-auto px-4 text-center">
-             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-              Câu Hỏi Thường Gặp
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Tìm câu trả lời nhanh chóng cho thắc mắc của bạn về sản phẩm và dịch vụ của Mercy.
-            </p>
-          </div>
-        </section>
 
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 max-w-3xl">

@@ -49,7 +49,7 @@ const StatItem = ({
 
   return (
     <div
-      className={`flex flex-col items-center text-center p-5 md:p-6 rounded-xl bg-white border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-500 ${
+      className={`flex flex-col items-center text-center p-3 md:p-6 rounded-xl bg-white border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-500 ${
         isVisible
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-8"
@@ -58,23 +58,23 @@ const StatItem = ({
     >
       {/* Icon */}
       <div
-        className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center mb-3 transition-transform duration-200`}
+        className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl ${stat.iconBg} flex items-center justify-center mb-1.5 md:mb-3 transition-transform duration-200`}
       >
-        <stat.icon className="w-6 h-6" />
+        <stat.icon className="w-4 h-4 md:w-6 md:h-6" />
       </div>
 
       {/* Counter */}
       <div className="flex items-baseline gap-0.5">
-        <span className={`text-3xl md:text-4xl font-extrabold ${stat.textColor}`}>
+        <span className={`text-xl md:text-4xl font-extrabold ${stat.textColor}`}>
           {count.toLocaleString("vi-VN")}
         </span>
-        <span className={`text-xl md:text-2xl font-bold ${stat.textColor}`}>
+        <span className={`text-sm md:text-2xl font-bold ${stat.textColor}`}>
           {stat.suffix}
         </span>
       </div>
 
       {/* Label */}
-      <p className="text-sm text-gray-500 font-medium mt-2">{stat.label}</p>
+      <p className="text-[11px] md:text-sm text-gray-500 font-medium mt-1 md:mt-2 leading-tight">{stat.label}</p>
     </div>
   );
 };
@@ -83,25 +83,25 @@ const StatsCounter = () => {
   const { ref, isVisible } = useScrollReveal(0.1);
 
   return (
-    <section ref={ref} className="py-4 md:py-6">
+    <section ref={ref} className="py-2 md:py-6">
       <div className="container">
-        <div className="bg-gray-50 rounded-2xl p-5 md:p-8 border border-gray-100">
+        <div className="bg-gray-50 rounded-2xl p-3 md:p-8 border border-gray-100">
           {/* Header */}
           <div
-            className={`text-center mb-6 md:mb-8 transition-all duration-700 ${
+            className={`text-center mb-3 md:mb-8 transition-all duration-700 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+            <h2 className="text-sm md:text-xl font-bold text-gray-900">
               Thương hiệu tích hợp trí tuệ nhân tạo vào thiết bị đầu tiên tại Việt Nam
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">
               Phân phối độc quyền của Mercy tại Việt Nam
             </p>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
             {stats.map((stat, i) => (
               <StatItem
                 key={i}

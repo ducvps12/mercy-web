@@ -113,7 +113,7 @@ const BottomNav = () => {
                 <button key={opt} onClick={() => {
                   setContactModalOpen(false);
                   const body = `Tên khách hàng: \n\nSố điện thoại: `;
-                  window.location.href = `mailto:mercytechglobal@gmail.com?subject=${encodeURIComponent(opt)}&body=${encodeURIComponent(body)}`;
+                  window.location.href = `mailto:mercyglobalstore@gmail.com?subject=${encodeURIComponent(opt)}&body=${encodeURIComponent(body)}`;
                 }} className="w-full flex items-center justify-between px-5 py-4 bg-gray-50 hover:bg-red-50 rounded-xl transition-colors group">
                   <span className="font-semibold text-gray-800 group-hover:text-red-600">{opt}</span>
                   <Mail className="w-5 h-5 text-gray-400 group-hover:text-red-600" />

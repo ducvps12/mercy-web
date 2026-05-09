@@ -1,11 +1,85 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { PrismaClient } from '@prisma/client';
 import { JWT_SECRET } from '../config';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// ═══ Avatar Upload Setup ═════════════════════════════════════════════
+const AVATARS_DIR = path.resolve(__dirname, '../../../public/avatars');
+if (!fs.existsSync(AVATARS_DIR)) {
+  fs.mkdirSync(AVATARS_DIR, { recursive: true });
+}
+
+const avatarStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, AVATARS_DIR),
+  filename: (req: any, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const uniqueName = `avatar-${req.userId}-${Date.now()}${ext}`;
+    cb(null, uniqueName);
+  },
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (_req, file, cb) => {
+    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(path.extname(file.originalname))) {
+      cb(null, true);
+    } else {
+      cb(new Error('Chỉ chấp nhận ảnh (jpg, png, gif, webp)'));
+    }
+  },
+});
+
+// ═══ Rate Limiter (in-memory) ═══════════════════════════════════════
+interface RateEntry { count: number; firstAt: number; }
+const registerLimiter = new Map<string, RateEntry>();
+const loginLimiter = new Map<string, RateEntry>();
+
+const REGISTER_LIMIT = 5;      // max 5 registrations per IP per hour
+const REGISTER_WINDOW = 3600000; // 1 hour
+const LOGIN_LIMIT = 10;         // max 10 login attempts per IP per 15 min
+const LOGIN_WINDOW = 900000;    // 15 minutes
+
+function getClientIP(req: any): string {
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.headers['x-real-ip'] ||
+    req.connection?.remoteAddress ||
+    req.ip ||
+    'unknown'
+  );
+}
+
+function checkRateLimit(
+  map: Map<string, RateEntry>,
+  key: string,
+  limit: number,
+  windowMs: number,
+): boolean {
+  const now = Date.now();
+  const entry = map.get(key);
+  if (!entry || now - entry.firstAt > windowMs) {
+    map.set(key, { count: 1, firstAt: now });
+    return true; // allowed
+  }
+  if (entry.count >= limit) return false; // blocked
+  entry.count++;
+  return true; // allowed
+}
+
+// Cleanup stale entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of registerLimiter) if (now - v.firstAt > REGISTER_WINDOW) registerLimiter.delete(k);
+  for (const [k, v] of loginLimiter) if (now - v.firstAt > LOGIN_WINDOW) loginLimiter.delete(k);
+}, 600000);
 
 // ── JWT Auth Middleware ──────────────────────────────────────────────
 function authMiddleware(req: any, res: any, next: any) {
@@ -25,7 +99,26 @@ function authMiddleware(req: any, res: any, next: any) {
 // ── Register ─────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
   try {
+    const clientIP = getClientIP(req);
+    const ua = (req.headers['user-agent'] || '').substring(0, 500);
+
+    // Rate limit check
+    if (!checkRateLimit(registerLimiter, clientIP, REGISTER_LIMIT, REGISTER_WINDOW)) {
+      return res.status(429).json({
+        message: 'Quá nhiều yêu cầu đăng ký. Vui lòng thử lại sau 1 giờ.',
+      });
+    }
+
     const { email, password, name } = req.body;
+    
+    // Basic validation
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email và mật khẩu là bắt buộc' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Mật khẩu phải có ít nhất 6 ký tự' });
+    }
+
     const existingUser = await prisma.users.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: 'Email đã tồn tại' });
@@ -39,6 +132,9 @@ router.post('/register', async (req, res) => {
         full_name: name || '',
         password_hash: hashedPassword,
         role: 'customer',
+        register_ip: clientIP,
+        user_agent: ua,
+        last_login_at: new Date(),
       },
     });
     const token = jwt.sign(
@@ -59,6 +155,16 @@ router.post('/register', async (req, res) => {
 // ── Login ────────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {
+    const clientIP = getClientIP(req);
+    const ua = (req.headers['user-agent'] || '').substring(0, 500);
+
+    // Rate limit check
+    if (!checkRateLimit(loginLimiter, clientIP, LOGIN_LIMIT, LOGIN_WINDOW)) {
+      return res.status(429).json({
+        message: 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.',
+      });
+    }
+
     const { email, password } = req.body;
     const user = await prisma.users.findUnique({ where: { email } });
     if (!user) {
@@ -68,6 +174,13 @@ router.post('/login', async (req, res) => {
     if (!isValid) {
       return res.status(400).json({ message: 'Sai email hoặc mật khẩu' });
     }
+
+    // Update last login time and user agent
+    await prisma.users.update({
+      where: { id: user.id },
+      data: { last_login_at: new Date(), user_agent: ua },
+    });
+
     const token = jwt.sign(
       { id: user.id, role: user.role, email: user.email, name: user.full_name },
       JWT_SECRET,
@@ -161,6 +274,48 @@ router.put('/change-password', authMiddleware, async (req: any, res) => {
     console.error('Change password error:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
+});
+
+// ── Upload Avatar ────────────────────────────────────────────────────
+router.post('/avatar', authMiddleware, (req: any, res: any, next: any) => {
+  avatarUpload.single('avatar')(req, res, async (err: any) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'Lỗi tải ảnh' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'Không có file ảnh' });
+    }
+    try {
+      const avatarUrl = `/avatars/${req.file.filename}`;
+
+      // Delete old avatar file if exists
+      const user = await prisma.users.findUnique({ where: { id: req.userId } });
+      if (user?.avatar && user.avatar.startsWith('/avatars/')) {
+        const oldPath = path.join(AVATARS_DIR, path.basename(user.avatar));
+        if (fs.existsSync(oldPath)) {
+          try { fs.unlinkSync(oldPath); } catch {}
+        }
+      }
+
+      // Update user avatar in DB
+      const updated = await prisma.users.update({
+        where: { id: req.userId },
+        data: { avatar: avatarUrl, updated_at: new Date() },
+      });
+
+      res.json({
+        message: 'Cập nhật ảnh đại diện thành công',
+        avatar: avatarUrl,
+        user: {
+          id: updated.id, name: updated.full_name, email: updated.email, role: updated.role,
+          phone: updated.phone || '', address: updated.address || '', avatar: updated.avatar || '',
+        },
+      });
+    } catch (error) {
+      console.error('Upload avatar error:', error);
+      res.status(500).json({ message: 'Lỗi server' });
+    }
+  });
 });
 
 export default router;

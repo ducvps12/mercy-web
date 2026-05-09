@@ -64,16 +64,6 @@ const Contact = () => {
       <Header />
 
       <main>
-        <section className="relative bg-secondary text-secondary-foreground overflow-hidden py-16">
-          <div className="container mx-auto px-4 text-center">
-             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4">
-              Liên Hệ Hợp Tác
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Trở thành đối tác của Mercy để mang sản phẩm công nghệ tiên tiến tới nhiều khách hàng hơn.
-            </p>
-          </div>
-        </section>
 
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 max-w-4xl">
@@ -91,7 +81,7 @@ const Contact = () => {
                     <Mail className="w-6 h-6" />
                   </div>
                   <h3 className="font-bold mb-2">Gửi email</h3>
-                  <a href="mailto:mercytechglobal@gmail.com" className="text-primary hover:underline font-semibold">mercytechglobal@gmail.com</a>
+                  <a href="mailto:mercyglobalstore@gmail.com" className="text-primary hover:underline font-semibold">mercyglobalstore@gmail.com</a>
                </div>
             </div>
 

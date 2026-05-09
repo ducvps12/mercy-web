@@ -28,8 +28,8 @@ const features = [
   },
   {
     icon: RotateCcw,
-    title: "Đổi trả dễ dàng",
-    desc: "Chính sách đổi trả linh hoạt trong 7 ngày",
+    title: "Cam kết chất lượng",
+    desc: "Sản phẩm chính hãng, kiểm định nghiêm ngặt",
     iconBg: "bg-purple-50 text-purple-600",
   },
   {
@@ -44,29 +44,29 @@ const FeaturesBar = () => {
   const { ref, isVisible } = useScrollReveal(0.1);
 
   return (
-    <section ref={ref} className="py-4 md:py-6">
+    <section ref={ref} className="py-2 md:py-6">
       <div className="container">
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-8">
+        <div className="bg-white rounded-2xl border border-gray-100 p-3 md:p-8">
           {/* Section Header */}
           <div
-            className={`text-center mb-6 md:mb-8 transition-all duration-700 ${
+            className={`text-center mb-3 md:mb-8 transition-all duration-700 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+            <h2 className="text-sm md:text-xl font-bold text-gray-900">
               Lý do Mercy được khách hàng tin tưởng
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1">
               Mercy mang đến sự an tâm thông qua sản phẩm chất lượng và dịch vụ chuyên nghiệp
             </p>
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-4">
             {features.map((f, i) => (
               <div
                 key={i}
-                className={`group text-center p-4 md:p-5 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-500 ${
+                className={`group text-center p-2 md:p-5 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-500 ${
                   isVisible
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-8"
@@ -75,16 +75,16 @@ const FeaturesBar = () => {
               >
                 {/* Icon */}
                 <div
-                  className={`w-12 h-12 mx-auto rounded-xl ${f.iconBg} flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-105`}
+                  className={`w-8 h-8 md:w-12 md:h-12 mx-auto rounded-lg md:rounded-xl ${f.iconBg} flex items-center justify-center mb-1.5 md:mb-3 transition-transform duration-200 group-hover:scale-105`}
                 >
-                  <f.icon className="w-6 h-6" />
+                  <f.icon className="w-4 h-4 md:w-6 md:h-6" />
                 </div>
 
                 {/* Text */}
-                <h3 className="font-semibold text-sm text-gray-900 mb-1">
+                <h3 className="font-semibold text-[10px] md:text-sm text-gray-900 mb-0.5 md:mb-1 leading-tight">
                   {f.title}
                 </h3>
-                <p className="text-[11px] text-gray-500 leading-relaxed">
+                <p className="text-[9px] md:text-[11px] text-gray-500 leading-snug hidden md:block">
                   {f.desc}
                 </p>
               </div>

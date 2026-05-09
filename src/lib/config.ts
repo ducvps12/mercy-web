@@ -17,7 +17,7 @@ export const VIETQR_BASE_URL = trimTrailingSlash(env.VITE_VIETQR_BASE_URL || "ht
 
 export const ZALO_URL = env.VITE_ZALO_URL || "https://zalo.me/0898273899";
 export const HOTLINE = env.VITE_HOTLINE || "0898273899";
-export const CONTACT_EMAIL = env.VITE_CONTACT_EMAIL || "mercytechglobal@gmail.com";
+export const CONTACT_EMAIL = env.VITE_CONTACT_EMAIL || "mercyglobalstore@gmail.com";
 
 export const BANK_HISTORY_API_PATH = "/bank/history";
 

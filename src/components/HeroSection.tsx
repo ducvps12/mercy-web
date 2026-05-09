@@ -12,16 +12,83 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
+// ═══ Category data with localStorage persistence ═══
+export interface CategoryItem {
+  name: string;
+  desc: string;
+  iconName: string; // stored as string key for serialization
+  gradient: string;
+  lightBg: string;
+  borderHover: string;
+  image: string;
+  count: number;
+  link: string;
+}
+
+const CATEGORY_STORAGE_KEY = "mercy_featured_categories";
+
+export const defaultCategories: CategoryItem[] = [
+  {
+    name: "Kính Bluetooth", desc: "Nghe nhạc, gọi điện, trợ lý AI", iconName: "Headphones",
+    gradient: "from-red-500 via-rose-500 to-pink-500", lightBg: "from-red-50 via-rose-50 to-pink-50",
+    borderHover: "hover:border-red-300", image: "/products/MCK5.0D-0.jpg", count: 6,
+    link: "/danh-muc/kinh-thong-minh-ai",
+  },
+  {
+    name: "Kính Camera", desc: "Quay 2K POV, chụp 32MP", iconName: "Camera",
+    gradient: "from-blue-500 via-indigo-500 to-violet-500", lightBg: "from-blue-50 via-indigo-50 to-violet-50",
+    borderHover: "hover:border-blue-300", image: "/products/POV5.0D-0.jpg", count: 6,
+    link: "/danh-muc/kinh-camera",
+  },
+  {
+    name: "Kính Dịch Thuật", desc: "Realtime 40+ ngôn ngữ", iconName: "Languages",
+    gradient: "from-emerald-500 via-teal-500 to-cyan-500", lightBg: "from-emerald-50 via-teal-50 to-cyan-50",
+    borderHover: "hover:border-emerald-300", image: "/products/KDT5.0D-0.jpg", count: 6,
+    link: "/danh-muc/kinh-dich-thuat",
+  },
+  {
+    name: "Robot AI", desc: "Gia sư AI, mắt LED biểu cảm", iconName: "Bot",
+    gradient: "from-purple-500 via-violet-500 to-fuchsia-500", lightBg: "from-purple-50 via-violet-50 to-fuchsia-50",
+    borderHover: "hover:border-purple-300", image: "/products/RBnu-capy-0.jpg", count: 4,
+    link: "/danh-muc/robot-ai",
+  },
+  {
+    name: "Phụ Kiện", desc: "Bao da cao cấp, quà tặng", iconName: "Glasses",
+    gradient: "from-amber-500 via-orange-500 to-red-500", lightBg: "from-amber-50 via-orange-50 to-red-50",
+    borderHover: "hover:border-amber-300", image: "/products/Bao-da-0.jpg", count: 2,
+    link: "/danh-muc/phu-kien",
+  },
+];
+
+export function getFeaturedCategories(): CategoryItem[] {
+  try {
+    const saved = localStorage.getItem(CATEGORY_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return defaultCategories;
+}
+
+export function saveFeaturedCategories(cats: CategoryItem[]) {
+  localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(cats));
+}
+
+const iconMap: Record<string, any> = { Headphones, Camera, Languages, Bot, Glasses };
+function getIcon(name: string) { return iconMap[name] || Glasses; }
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const hero = getHeroBanner();
   const promoBanners = getBanners();
+  const categoryItems = getFeaturedCategories();
 
   return (
     <section id="hero-section" className="relative z-0">
-      {/* Background — desktop: full image / mobile: lightweight CSS gradient */}
+      {/* Background — desktop only; mobile uses clean page bg to avoid visual noise */}
       <div
-        className="absolute inset-x-0 top-0 h-screen -z-10 hero-bg-mobile"
+        className="absolute inset-x-0 top-0 h-screen -z-10 hidden md:block"
         style={{
           backgroundImage: "url('/banner2/bgimg.png')",
           backgroundSize: "cover",
@@ -44,7 +111,7 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* ═══════════ Dual Promo Banners – FPT-style ═══════════ */}
+      {/* ═══════════ Promo Banners – compact on mobile, dual on desktop ═══════════ */}
       {promoBanners.length > 0 && (
         <div className="container py-2 md:py-4">
           <Carousel
@@ -54,22 +121,23 @@ const HeroSection = () => {
             }}
             plugins={[
               Autoplay({
-                delay: 3500,
-                stopOnInteraction: true,
+                delay: 3000,
+                stopOnInteraction: false,
+                stopOnMouseEnter: true,
               }),
             ]}
             className="w-full relative group"
           >
             <CarouselContent className="-ml-2 md:-ml-4">
               {(promoBanners.length === 2 ? [...promoBanners, ...promoBanners] : promoBanners).map((banner, i) => (
-                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-2 md:pl-4 basis-1/2">
+                <CarouselItem key={`${banner.id || 'banner'}-${i}`} className="pl-2 md:pl-4 basis-full md:basis-1/2">
                   <button
                     onClick={(e) => {
                       navigate(banner.link);
                     }}
                     className="w-full relative rounded-xl overflow-hidden group/banner hover:shadow-md transition-all duration-200 active:scale-[0.98] bg-white border border-gray-100 block"
                   >
-                    <div className="w-full aspect-[21/9] sm:aspect-[5/2] lg:aspect-[3/1] rounded-xl overflow-hidden">
+                    <div className="w-full aspect-[5/2] md:aspect-[5/2] lg:aspect-[3/1] rounded-xl overflow-hidden">
                       <img
                         src={banner.image}
                         alt={banner.alt}
@@ -91,14 +159,13 @@ const HeroSection = () => {
         </div>
       )}
 
-      {/* ═══════════ Featured Categories – Premium design ═══════════ */}
+      {/* ═══════════ Featured Categories – FPT Shop style icon grid on mobile ═══════════ */}
       <div className="container pb-3 md:pb-5">
         <div className="bg-white rounded-2xl p-4 md:p-7 border border-gray-100">
-          {/* Header with animated gradient accent */}
-          <div className="flex items-center justify-between mb-4 md:mb-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3 md:mb-6">
             <div>
               <h2 className="text-base md:text-xl font-bold text-gray-900">Danh mục nổi bật</h2>
-              {/* <p className="text-xs text-gray-400 mt-0.5">Khám phá các sản phẩm công nghệ đeo thông minh</p> */}
             </div>
             <button
               onClick={() => navigate("/shop")}
@@ -108,26 +175,39 @@ const HeroSection = () => {
             </button>
           </div>
 
-          {/* Category Grid — Mobile: horizontal scroll / Desktop: grid */}
-          {/* Desktop Grid */}
+          {/* Desktop Grid — keep existing card layout */}
           <div className="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-4">
             {categoryItems.map((cat, i) => (
               <CategoryCard key={i} cat={cat} navigate={navigate} />
             ))}
           </div>
 
-          {/* Mobile: Horizontal scroll */}
-          <div className="md:hidden -mx-1">
-            <div
-              className="flex gap-2.5 overflow-x-auto pb-2 px-1 snap-x snap-mandatory"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {categoryItems.map((cat, i) => (
-                <div key={i} className="snap-start flex-shrink-0 w-[140px]">
-                  <CategoryCard cat={cat} navigate={navigate} />
-                </div>
-              ))}
-            </div>
+          {/* Mobile: FPT Shop style compact icon grid */}
+          <div className="md:hidden grid grid-cols-5 gap-y-4 gap-x-2">
+            {categoryItems.map((cat, i) => {
+              const IconComp = getIcon(cat.iconName);
+              return (
+                <button
+                  key={i}
+                  onClick={() => navigate(cat.link)}
+                  className="flex flex-col items-center gap-1.5 group active:scale-95 transition-transform"
+                >
+                  {/* Circular image thumbnail */}
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-gray-100 group-active:border-red-200 transition-colors shadow-sm bg-gray-50">
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  {/* Label */}
+                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-2 w-full">
+                    {cat.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -135,104 +215,52 @@ const HeroSection = () => {
   );
 };
 
-// Category data extracted for reuse
-const categoryItems = [
-  {
-    name: "Kính Bluetooth",
-    desc: "Nghe nhạc, gọi điện, trợ lý AI",
-    icon: Headphones,
-    gradient: "from-red-500 via-rose-500 to-pink-500",
-    lightBg: "from-red-50 via-rose-50 to-pink-50",
-    borderHover: "hover:border-red-300",
-    image: "/products/MCK5.0D-0.jpg",
-    count: 6,
-    link: "/danh-muc/kinh-thong-minh-ai",
-  },
-  {
-    name: "Kính Camera",
-    desc: "Quay 2K POV, chụp 32MP",
-    icon: Camera,
-    gradient: "from-blue-500 via-indigo-500 to-violet-500",
-    lightBg: "from-blue-50 via-indigo-50 to-violet-50",
-    borderHover: "hover:border-blue-300",
-    image: "/products/POV5.0D-0.jpg",
-    count: 6,
-    link: "/danh-muc/kinh-camera",
-  },
-  {
-    name: "Kính Dịch Thuật",
-    desc: "Realtime 40+ ngôn ngữ",
-    icon: Languages,
-    gradient: "from-emerald-500 via-teal-500 to-cyan-500",
-    lightBg: "from-emerald-50 via-teal-50 to-cyan-50",
-    borderHover: "hover:border-emerald-300",
-    image: "/products/KDT5.0D-0.jpg",
-    count: 6,
-    link: "/danh-muc/kinh-dich-thuat",
-  },
-  {
-    name: "Robot AI",
-    desc: "Gia sư AI, mắt LED biểu cảm",
-    icon: Bot,
-    gradient: "from-purple-500 via-violet-500 to-fuchsia-500",
-    lightBg: "from-purple-50 via-violet-50 to-fuchsia-50",
-    borderHover: "hover:border-purple-300",
-    image: "/products/RBnu-capy-0.jpg",
-    count: 4,
-    link: "/danh-muc/robot-ai",
-  },
-  {
-    name: "Phụ Kiện",
-    desc: "Bao da cao cấp, quà tặng",
-    icon: Glasses,
-    gradient: "from-amber-500 via-orange-500 to-red-500",
-    lightBg: "from-amber-50 via-orange-50 to-red-50",
-    borderHover: "hover:border-amber-300",
-    image: "/products/Bao-da-0.jpg",
-    count: 2,
-    link: "/danh-muc/phu-kien",
-  },
-];
+
 
 // Shared category card component
-const CategoryCard = ({ cat, navigate }: { cat: typeof categoryItems[0]; navigate: any }) => (
+const CategoryCard = ({ cat, navigate, mobile }: { cat: CategoryItem; navigate: any; mobile?: boolean }) => {
+  const IconComp = getIcon(cat.iconName);
+  return (
   <button
     onClick={() => navigate(cat.link)}
     className="group relative overflow-hidden rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1 active:scale-[0.98] text-left w-full"
   >
     {/* Product image with gradient overlay */}
-    <div className="relative aspect-[4/3] overflow-hidden">
+    <div className={`relative overflow-hidden ${mobile ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
       <img
         src={cat.image}
         alt={cat.name}
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
         loading="lazy"
       />
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent" />
+      {/* Gradient overlay — strong for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
 
       {/* Product count badge */}
       <div className="absolute top-2 right-2 md:top-2.5 md:right-2.5">
-        <span className="text-[9px] md:text-[10px] font-bold text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded-full bg-black/40 backdrop-blur-sm">
+        <span className="text-[10px] md:text-[10px] font-bold text-white px-2 md:px-2 py-1 md:py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/25">
           {cat.count} SP
         </span>
       </div>
 
-      {/* Category info on image */}
-      <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3">
-        <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
-          <div className="w-5 h-5 md:w-7 md:h-7 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center ring-1 ring-white/30">
-            <cat.icon className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-white" />
+      {/* Category info on image — solid background bar for readability */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <div className={`${mobile ? 'px-4 py-3' : 'px-3 py-2.5'} bg-black/60 backdrop-blur-sm`}>
+          <div className="flex items-center gap-2 mb-0.5">
+            <div className={`${mobile ? 'w-8 h-8' : 'w-6 h-6 md:w-7 md:h-7'} rounded-lg bg-white/30 backdrop-blur-md flex items-center justify-center ring-1 ring-white/50`}>
+              <IconComp className={`${mobile ? 'w-4 h-4' : 'w-3 h-3 md:w-3.5 md:h-3.5'} text-white`} />
+            </div>
+            <h3 className={`${mobile ? 'text-base' : 'text-[13px] md:text-sm'} font-bold text-white drop-shadow-md`}>{cat.name}</h3>
           </div>
-          <h3 className="text-xs md:text-sm font-bold text-white drop-shadow-md">{cat.name}</h3>
+          <p className={`${mobile ? 'text-sm pl-10' : 'text-[10px] md:text-[11px] pl-8 md:pl-9'} text-white/95 font-semibold line-clamp-1`}>{cat.desc}</p>
         </div>
-        <p className="text-[9px] md:text-[10px] text-white/80 font-medium line-clamp-1">{cat.desc}</p>
       </div>
     </div>
 
     {/* Animated bottom accent line */}
     <div className="h-[2px] bg-gray-900 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
   </button>
-);
+  );
+};
 
 export default HeroSection;

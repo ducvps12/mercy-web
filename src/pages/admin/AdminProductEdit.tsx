@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft, Save, Loader2, Plus, Trash2, GripVertical,
   ImageIcon, FileText, Tag, Settings, BarChart3, Link2, Zap, Star, MessageSquare,
+  FolderOpen, Search, CheckSquare, Square, Filter, Play,
 } from "lucide-react";
 import { toast } from "sonner";
-import { apiGet, apiPut, apiPost } from "@/lib/api";
+import { apiGet, apiPut, apiPost, API_BASE } from "@/lib/api";
 import { formatPrice } from "@/data/products";
 import { productDropdown } from "@/data/navigation";
 
@@ -65,6 +69,17 @@ export default function AdminProductEdit() {
   const [saving, setSaving] = useState(false);
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [activeTab, setActiveTab] = useState<"info" | "images" | "specs" | "variants" | "reviews" | "seo">("info");
+
+  // Media picker state
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [mediaPickerMode, setMediaPickerMode] = useState<"replace" | "add">("add");
+  const [mediaPickerIndex, setMediaPickerIndex] = useState<number>(-1);
+  const [mediaFiles, setMediaFiles] = useState<{filename:string;url:string;size:number;group:string;type:string}[]>([]);
+  const [mediaGroups, setMediaGroups] = useState<string[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaSearch, setMediaSearch] = useState("");
+  const [mediaFilterGroup, setMediaFilterGroup] = useState("all");
+  const [mediaSelected, setMediaSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadProduct();
@@ -204,6 +219,61 @@ export default function AdminProductEdit() {
     const imgs = [...product.images];
     imgs[idx] = { ...imgs[idx], url };
     setProduct({ ...product, images: imgs });
+  };
+
+  // Media picker helpers
+  const loadMediaFiles = useCallback(async () => {
+    setMediaLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const headers: Record<string,string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(`${API_BASE}/media/list`, { headers });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setMediaFiles(data.files || []);
+      setMediaGroups(data.groups || []);
+    } catch { toast.error("Lỗi tải kho ảnh"); }
+    finally { setMediaLoading(false); }
+  }, []);
+
+  const openMediaPicker = (mode: "replace" | "add", index = -1) => {
+    setMediaPickerMode(mode);
+    setMediaPickerIndex(index);
+    setMediaSelected(new Set());
+    setMediaSearch("");
+    setMediaFilterGroup("all");
+    setMediaPickerOpen(true);
+    if (mediaFiles.length === 0) loadMediaFiles();
+  };
+
+  const confirmMediaPicker = () => {
+    if (!product) return;
+    const urls = Array.from(mediaSelected);
+    if (urls.length === 0) { toast.error("Chưa chọn ảnh nào"); return; }
+    if (mediaPickerMode === "replace" && mediaPickerIndex >= 0) {
+      // Replace single image
+      const imgs = [...product.images];
+      imgs[mediaPickerIndex] = { ...imgs[mediaPickerIndex], url: urls[0] };
+      setProduct({ ...product, images: imgs });
+    } else {
+      // Add multiple images
+      const newImgs = urls.map((url, i) => ({ url, sortOrder: product.images.length + i }));
+      setProduct({ ...product, images: [...product.images, ...newImgs] });
+    }
+    setMediaPickerOpen(false);
+    toast.success(`Đã ${mediaPickerMode === "replace" ? "thay" : "thêm"} ${urls.length} ảnh`);
+  };
+
+  const toggleMediaSelect = (url: string) => {
+    const s = new Set(mediaSelected);
+    if (mediaPickerMode === "replace") {
+      // Single select for replace
+      s.clear(); s.add(url);
+    } else {
+      if (s.has(url)) s.delete(url); else s.add(url);
+    }
+    setMediaSelected(s);
   };
 
   // Spec helpers
@@ -567,18 +637,28 @@ export default function AdminProductEdit() {
           <Card className="border-border">
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-semibold">Hình ảnh sản phẩm ({product.images.length})</CardTitle>
-              <Button size="sm" variant="outline" onClick={addImage} className="gap-1.5">
-                <Plus className="w-3.5 h-3.5" /> Thêm ảnh
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => openMediaPicker("add")} className="gap-1.5">
+                  <FolderOpen className="w-3.5 h-3.5" /> Chọn từ kho
+                </Button>
+                <Button size="sm" variant="outline" onClick={addImage} className="gap-1.5">
+                  <Plus className="w-3.5 h-3.5" /> Thêm thủ công
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {product.images.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p className="text-sm">Chưa có ảnh nào</p>
-                  <Button size="sm" variant="outline" onClick={addImage} className="mt-3 gap-1.5">
-                    <Plus className="w-3.5 h-3.5" /> Thêm ảnh đầu tiên
-                  </Button>
+                  <div className="flex gap-2 justify-center mt-3">
+                    <Button size="sm" variant="outline" onClick={() => openMediaPicker("add")} className="gap-1.5">
+                      <FolderOpen className="w-3.5 h-3.5" /> Chọn từ kho ảnh
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={addImage} className="gap-1.5">
+                      <Plus className="w-3.5 h-3.5" /> Nhập URL thủ công
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -603,6 +683,9 @@ export default function AdminProductEdit() {
                         />
                         {idx === 0 && <span className="text-[10px] text-primary font-medium">Ảnh chính</span>}
                       </div>
+                      <button onClick={() => openMediaPicker("replace", idx)} className="p-1.5 rounded hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" title="Chọn từ kho">
+                        <FolderOpen className="w-4 h-4 text-primary" />
+                      </button>
                       <button onClick={() => removeImage(idx)} className="p-1.5 rounded hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </button>
@@ -876,6 +959,109 @@ export default function AdminProductEdit() {
           </Button>
         </div>
       </div>
+
+      {/* ═══ Media Picker Dialog ═══ */}
+      <Dialog open={mediaPickerOpen} onOpenChange={setMediaPickerOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-primary" />
+              {mediaPickerMode === "replace" ? "Chọn media thay thế" : "Chọn media từ kho"}
+              {mediaSelected.size > 0 && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                  Đã chọn {mediaSelected.size}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Toolbar */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input value={mediaSearch} onChange={e => setMediaSearch(e.target.value)}
+                placeholder="Tìm ảnh..." className="pl-8 h-8 text-xs" />
+            </div>
+            <select value={mediaFilterGroup} onChange={e => setMediaFilterGroup(e.target.value)}
+              className="h-8 rounded-md border border-input bg-background px-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+              <option value="all">Tất cả</option>
+              {mediaGroups.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+
+          {/* Grid */}
+          <div className="flex-1 overflow-y-auto min-h-0 -mx-1 px-1">
+            {mediaLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (() => {
+              const filteredMedia = mediaFiles.filter(f => {
+                if (mediaFilterGroup !== "all" && f.group !== mediaFilterGroup) return false;
+                if (mediaSearch && !f.filename.toLowerCase().includes(mediaSearch.toLowerCase())) return false;
+                return true;
+              });
+              if (filteredMedia.length === 0) return (
+                <div className="text-center py-16 text-muted-foreground">
+                  <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Không tìm thấy ảnh</p>
+                </div>
+              );
+              return (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 py-2">
+                  {filteredMedia.map(file => {
+                    const isSelected = mediaSelected.has(file.url);
+                    return (
+                      <div key={file.filename}
+                        className={`relative rounded-lg border overflow-hidden cursor-pointer transition-all hover:shadow-md ${
+                          isSelected ? "ring-2 ring-primary border-primary" : "border-border hover:border-primary/40"
+                        }`}
+                        onClick={() => toggleMediaSelect(file.url)}>
+                        <div className="absolute top-1 left-1 z-10">
+                          {isSelected
+                            ? <CheckSquare className="w-4 h-4 text-primary drop-shadow" />
+                            : <Square className="w-4 h-4 text-white/70 drop-shadow" />}
+                        </div>
+                        <div className="aspect-square bg-muted/50 overflow-hidden relative">
+                          {file.type === 'video' ? (
+                            <>
+                              <video src={file.url} className="w-full h-full object-cover" muted preload="metadata" />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                <div className="w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow">
+                                  <Play className="w-3 h-3 text-gray-800 ml-0.5" />
+                                </div>
+                              </div>
+                              <div className="absolute top-0.5 right-0.5">
+                                <span className="text-[7px] font-bold text-white bg-blue-600 px-1 py-0.5 rounded">VIDEO</span>
+                              </div>
+                            </>
+                          ) : (
+                            <img src={file.url} alt={file.filename} loading="lazy"
+                              className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                        <div className="p-1.5 bg-background">
+                          <p className="text-[10px] font-medium truncate" title={file.filename}>{file.filename}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMediaPickerOpen(false)}>Hủy</Button>
+            <Button onClick={confirmMediaPicker} disabled={mediaSelected.size === 0} className="gap-1.5">
+              <Plus className="w-3.5 h-3.5" />
+              {mediaPickerMode === "replace"
+                ? "Thay ảnh"
+                : `Thêm ${mediaSelected.size} ảnh`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User, Mail, Phone, MapPin, Lock, Eye, EyeOff, Camera, Save,
-  Package, Heart, Shield, LogOut, ChevronRight, Pencil, Check, X
+  Package, Heart, Shield, LogOut, ChevronRight, Pencil, Check, X, Loader2
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,7 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { apiGet, apiPut } from "@/lib/api";
+import { apiGet, apiPut, API_BASE } from "@/lib/api";
 
 type Tab = "profile" | "password";
 
@@ -28,6 +28,8 @@ const Account = () => {
   const [address, setAddress] = useState("");
   const [avatar, setAvatar] = useState("");
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Password fields ────────────────────────────────────────────────
   const [currentPassword, setCurrentPassword] = useState("");
@@ -107,11 +109,52 @@ const Account = () => {
     }
   };
 
-  // ── Avatar change (URL prompt) ─────────────────────────────────────
+  // ── Avatar change (file upload) ────────────────────────────────────
   const handleAvatarChange = () => {
-    const url = prompt("Nhập URL ảnh đại diện mới:", avatar);
-    if (url !== null) {
-      setAvatar(url);
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn file ảnh');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ảnh không được vượt quá 5MB');
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/auth/avatar`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Lỗi upload' }));
+        throw new Error(err.message);
+      }
+
+      const data = await res.json();
+      setAvatar(data.avatar);
+      if (data.user) updateUser(data.user);
+      toast.success('Cập nhật ảnh đại diện thành công!');
+    } catch (err: any) {
+      toast.error(err.message || 'Upload ảnh thất bại');
+    } finally {
+      setAvatarUploading(false);
+      // Reset file input so same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -141,18 +184,31 @@ const Account = () => {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
                 <div className="relative w-20 h-20 mx-auto mb-3 group">
                   {avatar ? (
-                    <img src={avatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-red-100" />
+                    <img src={avatar.startsWith('/') ? `${API_BASE.replace('/api', '')}${avatar}` : avatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-red-100" />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white text-2xl font-bold border-2 border-red-100">
                       {getInitials()}
                     </div>
                   )}
+                  {avatarUploading && (
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    </div>
+                  )}
                   <button
                     onClick={handleAvatarChange}
-                    className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-white border-2 border-gray-100 shadow-md flex items-center justify-center text-gray-500 hover:text-red-600 hover:border-red-200 transition-all group-hover:scale-110"
+                    disabled={avatarUploading}
+                    className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-white border-2 border-gray-100 shadow-md flex items-center justify-center text-gray-500 hover:text-red-600 hover:border-red-200 transition-all group-hover:scale-110 disabled:opacity-50"
                   >
                     <Camera className="w-3.5 h-3.5" />
                   </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleAvatarFileSelect}
+                    className="hidden"
+                  />
                 </div>
                 <h2 className="font-bold text-gray-900 text-lg">{name || "Khách hàng"}</h2>
                 <p className="text-xs text-gray-400 mt-0.5">{email}</p>
@@ -280,17 +336,30 @@ const Account = () => {
                       placeholder="Nhập địa chỉ giao hàng"
                       isTextarea
                     />
-                    {/* Avatar URL */}
-                    <ProfileField
-                      icon={<Camera className="w-4 h-4" />}
-                      label="Ảnh đại diện (URL)"
-                      value={avatar}
-                      onChange={setAvatar}
-                      editing={editingField === "avatar"}
-                      onEdit={() => setEditingField("avatar")}
-                      onCancel={() => setEditingField(null)}
-                      placeholder="https://example.com/avatar.jpg"
-                    />
+                    {/* Avatar Upload */}
+                    <div className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50 hover:border-gray-200 transition-all">
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                        <Camera className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-400 font-medium mb-1">Ảnh đại diện</p>
+                        {avatar ? (
+                          <div className="flex items-center gap-2">
+                            <img src={avatar.startsWith('/') ? `${API_BASE.replace('/api', '')}${avatar}` : avatar} alt="" className="w-8 h-8 rounded-full object-cover border" />
+                            <span className="text-sm font-semibold text-gray-700">Đã cập nhật</span>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-300 font-normal">Chưa cập nhật</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={handleAvatarChange}
+                        disabled={avatarUploading}
+                        className="mt-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+                      >
+                        {avatarUploading ? 'Đang tải...' : 'Chọn ảnh'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (

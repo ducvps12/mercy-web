@@ -434,7 +434,8 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                 {/* Terms - Scrollable Box */}
                 <div className="mt-3">
                   <p className="text-[11px] font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
-                    📋 Điều khoản giao dịch & Chính sách dịch vụ
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                    Điều khoản giao dịch & Chính sách dịch vụ
                     {!termsScrolledToBottom && <span className="text-[10px] text-orange-500 font-medium">(Vui lòng cuộn đọc hết)</span>}
                     {termsScrolledToBottom && !agreeTerms && <span className="text-[10px] text-blue-500 font-medium">✓ Đã đọc xong</span>}
                     {agreeTerms && <span className="text-[10px] text-green-600 font-medium">✓ Đã đồng ý</span>}

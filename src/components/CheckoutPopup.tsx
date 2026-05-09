@@ -25,6 +25,8 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
   const [selectedPayment, setSelectedPayment] = useState<PaymentOption>("deposit");
   const [submitting, setSubmitting] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [termsScrolledToBottom, setTermsScrolledToBottom] = useState(false);
+  const termsBoxRef = useRef<HTMLDivElement>(null);
   const [expandDepositInfo, setExpandDepositInfo] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -197,7 +199,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
       {/* Modal */}
       <div className="relative bg-gray-50 rounded-2xl shadow-2xl w-full max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-red-600 text-white px-5 py-3.5 flex items-center justify-between shrink-0">
+        <div className="bg-blue-600 text-white px-5 py-3.5 flex items-center justify-between shrink-0">
           <h2 className="font-bold text-lg">
             {step === 1 && "Chọn phương thức thanh toán"}
             {step === 2 && "Chuyển khoản thanh toán"}
@@ -213,16 +215,16 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
           {stepLabels.map((s, idx) => (
             <div key={s.num} className="flex items-center flex-1">
               <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step >= s.num ? "bg-red-600 text-white" : "bg-gray-200 text-gray-400"
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step >= s.num ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"
                   }`}>
                   {step > s.num ? <Check className="w-3.5 h-3.5" /> : s.num}
                 </div>
-                <span className={`text-xs font-medium hidden sm:inline ${step >= s.num ? "text-red-600" : "text-gray-400"}`}>
+                <span className={`text-xs font-medium hidden sm:inline ${step >= s.num ? "text-blue-600" : "text-gray-400"}`}>
                   {s.label}
                 </span>
               </div>
               {idx < 2 && (
-                <div className={`flex-1 h-0.5 mx-2 ${step > s.num ? "bg-red-600" : "bg-gray-200"}`} />
+                <div className={`flex-1 h-0.5 mx-2 ${step > s.num ? "bg-blue-600" : "bg-gray-200"}`} />
               )}
             </div>
           ))}
@@ -247,13 +249,13 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   <button
                     onClick={() => setSelectedPayment("deposit")}
                     className={`w-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden ${selectedPayment === "deposit"
-                        ? "border-red-500 shadow-lg shadow-red-500/10"
-                        : "border-gray-200 hover:border-red-300"
+                        ? "border-blue-500 shadow-lg shadow-blue-500/10"
+                        : "border-gray-200 hover:border-blue-300"
                       }`}
                   >
-                    <div className={`p-4 ${selectedPayment === "deposit" ? "bg-red-50" : "bg-white"}`}>
+                    <div className={`p-4 ${selectedPayment === "deposit" ? "bg-blue-50" : "bg-white"}`}>
                       <div className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${selectedPayment === "deposit" ? "border-red-500 bg-red-500" : "border-gray-300"
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${selectedPayment === "deposit" ? "border-blue-500 bg-blue-500" : "border-gray-300"
                           }`}>
                           {selectedPayment === "deposit" && <Check className="w-3 h-3 text-white" />}
                         </div>
@@ -263,12 +265,12 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                             <span className="text-[10px] font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">PHỔ BIẾN</span>
                           </div>
                           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                            Cọc <span className="font-bold text-red-600">10%</span> giá trị đơn hàng · Thanh toán phần còn lại khi nhận hàng
+                            Cọc <span className="font-bold text-blue-600">10%</span> giá trị đơn hàng · Thanh toán phần còn lại khi nhận hàng
                           </p>
-                          <div className="mt-3 bg-white rounded-xl p-3 border border-red-100">
+                          <div className="mt-3 bg-white rounded-xl p-3 border border-blue-100">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-500">Số tiền cọc (10%)</span>
-                              <span className="text-lg font-extrabold text-red-600">{formatPrice(depositAmount)}</span>
+                              <span className="text-lg font-extrabold text-blue-600">{formatPrice(depositAmount)}</span>
                             </div>
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-xs text-gray-400">Còn lại khi nhận hàng</span>
@@ -288,7 +290,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                       </div>
                     </div>
                     {expandDepositInfo && selectedPayment === "deposit" && (
-                      <div className="px-4 pb-4 bg-red-50 border-t border-red-100" onClick={(e) => e.stopPropagation()}>
+                      <div className="px-4 pb-4 bg-blue-50 border-t border-blue-100" onClick={(e) => e.stopPropagation()}>
                         <div className="bg-white rounded-xl p-3 mt-2 space-y-2">
                           <div className="flex items-start gap-2">
                             <Shield className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
@@ -317,13 +319,13 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   <button
                     onClick={() => setSelectedPayment("full")}
                     className={`w-full text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden ${selectedPayment === "full"
-                        ? "border-red-500 shadow-lg shadow-red-500/10"
-                        : "border-gray-200 hover:border-red-300"
+                        ? "border-blue-500 shadow-lg shadow-blue-500/10"
+                        : "border-gray-200 hover:border-blue-300"
                       }`}
                   >
-                    <div className={`p-4 ${selectedPayment === "full" ? "bg-red-50" : "bg-white"}`}>
+                    <div className={`p-4 ${selectedPayment === "full" ? "bg-blue-50" : "bg-white"}`}>
                       <div className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${selectedPayment === "full" ? "border-red-500 bg-red-500" : "border-gray-300"
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${selectedPayment === "full" ? "border-blue-500 bg-blue-500" : "border-gray-300"
                           }`}>
                           {selectedPayment === "full" && <Check className="w-3 h-3 text-white" />}
                         </div>
@@ -335,12 +337,12 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                             </span>
                           </div>
                           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                            Chuyển khoản <span className="font-bold text-red-600">100%</span> giá trị đơn hàng · <span className="font-semibold text-green-600"> Hỗ trợ 100K phí vận chuyển toàn cầu</span>
+                            Chuyển khoản <span className="font-bold text-blue-600">100%</span> giá trị đơn hàng · <span className="font-semibold text-green-600"> Hỗ trợ 100K phí vận chuyển toàn cầu</span>
                           </p>
                           <div className="mt-3 bg-white rounded-xl p-3 border border-green-100">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-500">Tổng thanh toán</span>
-                              <span className="text-lg font-extrabold text-red-600">{formatPrice(displayTotal)}</span>
+                              <span className="text-lg font-extrabold text-blue-600">{formatPrice(displayTotal)}</span>
                             </div>
                             <div className="flex items-center gap-1.5 mt-1.5">
                               <Truck className="w-3 h-3 text-green-600" />
@@ -388,7 +390,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                     <>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Cọc đảm bảo (10%)</span>
-                        <span className="font-bold text-red-600">{formatPrice(depositAmount)}</span>
+                        <span className="font-bold text-blue-600">{formatPrice(depositAmount)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Trả khi nhận hàng</span>
@@ -417,7 +419,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                         <span className="text-sm font-bold text-gray-800">Cần thanh toán</span>
                         <p className="text-[10px] text-gray-400 mt-0.5">Chuyển khoản ngay</p>
                       </div>
-                      <span className="text-xl font-extrabold text-red-600">{formatPrice(transferAmount)}</span>
+                      <span className="text-xl font-extrabold text-blue-600">{formatPrice(transferAmount)}</span>
                     </div>
                   </div>
                 </div>
@@ -429,25 +431,74 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   </p>
                 </div>
 
-                {/* Terms */}
-                <label className="flex items-start gap-2 mt-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={agreeTerms}
-                    onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500 accent-red-600"
-                  />
-                  <span className="text-[11px] text-gray-500 leading-relaxed">
-                    Bằng việc đặt hàng, bạn đồng ý với{" "}
-                    <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsPopup(true); }} className="text-blue-600 hover:underline">Điều khoản dịch vụ</button> và{" "}
-                    <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsPopup(true); }} className="text-blue-600 hover:underline">Chính sách bảo mật</button> của Mercy.
-                  </span>
-                </label>
+                {/* Terms - Scrollable Box */}
+                <div className="mt-3">
+                  <p className="text-[11px] font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
+                    📋 Điều khoản giao dịch & Chính sách dịch vụ
+                    {!termsScrolledToBottom && <span className="text-[10px] text-orange-500 font-medium">(Vui lòng cuộn đọc hết)</span>}
+                    {termsScrolledToBottom && !agreeTerms && <span className="text-[10px] text-blue-500 font-medium">✓ Đã đọc xong</span>}
+                    {agreeTerms && <span className="text-[10px] text-green-600 font-medium">✓ Đã đồng ý</span>}
+                  </p>
+                  <div
+                    ref={termsBoxRef}
+                    onScroll={(e) => {
+                      const el = e.currentTarget;
+                      if (el.scrollHeight - el.scrollTop - el.clientHeight < 10) {
+                        setTermsScrolledToBottom(true);
+                      }
+                    }}
+                    className={`h-[130px] overflow-y-auto rounded-xl border-2 px-3 py-2.5 text-[11px] text-gray-600 leading-relaxed bg-gray-50 transition-colors custom-scrollbar ${
+                      agreeTerms ? 'border-green-300 bg-green-50/50' : termsScrolledToBottom ? 'border-blue-300' : 'border-gray-200'
+                    }`}
+                  >
+                    <p className="font-bold text-gray-900 text-xs mb-2">ĐIỀU KHOẢN GIAO DỊCH VÀ CHÍNH SÁCH DỊCH VỤ CỦA MERCY</p>
+                    <p className="mb-2">Chào mừng quý khách đến với Kính thông minh Mercy. Để đảm bảo quyền lợi, vui lòng đọc kỹ các điều khoản dưới đây trước khi hoàn tất đặt hàng.</p>
+                    
+                    <p className="font-bold text-gray-800 mb-1">1. Chính sách bảo mật dữ liệu (Tuân thủ Nghị định 13/2023/NĐ-CP)</p>
+                    <p className="mb-1">Mercy cam kết bảo mật tuyệt đối thông tin cá nhân của bạn (họ tên, số điện thoại, địa chỉ, thông tin thanh toán).</p>
+                    <p className="mb-1">Dữ liệu chỉ được thu thập và sử dụng cho mục đích: xử lý đơn hàng, giao nhận, hỗ trợ kỹ thuật và thực hiện nghĩa vụ bảo hành.</p>
+                    <p className="mb-2">Chúng tôi không bán, chia sẻ hoặc cung cấp dữ liệu của bạn cho bất kỳ bên thứ ba nào vì mục đích thương mại nếu không có sự đồng ý của bạn.</p>
+                    
+                    <p className="font-bold text-gray-800 mb-1">2. Chính sách Bảo hành</p>
+                    <p className="mb-1">Sản phẩm Kính thông minh Mercy được bảo hành chính hãng 12 tháng kể từ ngày nhận hàng đối với các lỗi kỹ thuật phát sinh từ nhà sản xuất.</p>
+                    <p className="mb-1">Từ chối bảo hành: Các trường hợp sản phẩm bị rơi vỡ, móp méo, vào nước (vượt quá tiêu chuẩn chống nước công bố), chập cháy do sử dụng sai nguồn điện, hoặc đã bị can thiệp/sửa chữa bởi bên thứ ba sẽ không được áp dụng bảo hành miễn phí.</p>
+                    <p className="mb-2">Khách hàng cần cung cấp số điện thoại đặt hàng hoặc hóa đơn để được hỗ trợ bảo hành.</p>
+                    
+                    <p className="font-bold text-gray-800 mb-1">3. Chính sách Thanh toán & Trả góp</p>
+                    <p className="mb-1">Thanh toán & Đặt cọc: Đối với đơn hàng có yêu cầu cọc, số tiền cọc sẽ được trừ trực tiếp vào tổng giá trị thanh toán. Khoản cọc sẽ được hoàn trả 100% nếu giao dịch không thành công do lỗi hệ thống hoặc hết hàng từ phía Mercy.</p>
+                    <p className="mb-2">Mua trả góp: Khách hàng tham gia chương trình trả góp cần đáp ứng các điều kiện phê duyệt từ đối tác tài chính (Ngân hàng/Công ty tài chính). Các quy định về kỳ hạn, lãi suất, phí chuyển đổi (nếu có) sẽ áp dụng theo chính sách của đối tác cung cấp dịch vụ trả góp. Mercy không trực tiếp can thiệp vào quyết định duyệt hồ sơ tín dụng.</p>
+                    
+                    <p className="font-bold text-gray-800 mb-1">4. Đổi trả & Hoàn tiền</p>
+                    <p className="mb-2">Hỗ trợ 1 đổi 1 trong vòng 07 ngày đầu tiên nếu sản phẩm có lỗi phần cứng từ nhà sản xuất, với điều kiện sản phẩm còn nguyên vẹn, không trầy xước và đầy đủ hộp, phụ kiện đi kèm.</p>
+                    
+                    <p className="font-semibold text-blue-700 bg-blue-50 p-2 rounded-lg border border-blue-100 mt-2">
+                      Bằng việc cuộn đến cuối văn bản này và xác nhận Đặt hàng, bạn xác nhận đã đọc, hiểu rõ và đồng ý toàn bộ với các Chính sách bảo mật, Bảo hành và Thanh toán của Mercy.
+                    </p>
+                  </div>
+                  
+                  {/* Agree button - only visible after scrolling to bottom */}
+                  {termsScrolledToBottom && !agreeTerms && (
+                    <button
+                      type="button"
+                      onClick={() => setAgreeTerms(true)}
+                      className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-xs active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      Tôi đã đọc và đồng ý với điều khoản
+                    </button>
+                  )}
+                  {agreeTerms && (
+                    <div className="flex items-center gap-1.5 mt-2 text-green-600">
+                      <Check className="w-3.5 h-3.5" />
+                      <span className="text-[11px] font-semibold">Đã đồng ý điều khoản dịch vụ</span>
+                    </div>
+                  )}
+                </div>
 
                 <button
                   onClick={handlePlaceOrder}
                   disabled={submitting || !agreeTerms}
-                  className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl text-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-600/20 flex items-center justify-center gap-2"
+                  className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   {submitting
@@ -472,11 +523,11 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                   }`}>
                   {selectedPayment === "deposit" ? (
                     <p className="text-sm font-semibold text-amber-800">
-                      🔒 Chuyển khoản cọc đảm bảo — <span className="text-red-600">{formatPrice(depositAmount)}</span>
+                      🔒 Chuyển khoản cọc đảm bảo — <span className="text-blue-600">{formatPrice(depositAmount)}</span>
                     </p>
                   ) : (
                     <p className="text-sm font-semibold text-green-800">
-                      ✅ Chuyển khoản toàn bộ — <span className="text-red-600">{formatPrice(displayTotal)}</span>
+                      ✅ Chuyển khoản toàn bộ — <span className="text-blue-600">{formatPrice(displayTotal)}</span>
                     </p>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
@@ -491,7 +542,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                       <img
                         src={qrUrl}
                         alt="QR Code chuyển khoản"
-                        className="w-48 h-48 object-contain"
+                        className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";
                           const placeholder = document.getElementById("qr-fallback-v2");
@@ -519,7 +570,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                         <div key={row.key} className="flex justify-between items-center px-3.5 py-2.5 group">
                           <span className="text-xs text-gray-500">{row.label}</span>
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-sm text-right ${row.highlight ? "font-extrabold text-red-600 text-base" :
+                            <span className={`text-sm text-right ${row.highlight ? "font-extrabold text-blue-600 text-base" :
                                 row.mono ? "font-semibold text-gray-800 font-mono tracking-wider" :
                                   "font-semibold text-gray-800"
                               }`}>
@@ -528,7 +579,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                             {(row.key === "account" || row.key === "content") && (
                               <button
                                 onClick={() => handleCopy(row.key === "account" ? bankAccount : transferContent, row.key)}
-                                className="text-gray-300 hover:text-red-500 transition-colors p-0.5"
+                                className="text-gray-300 hover:text-blue-500 transition-colors p-0.5"
                                 title="Sao chép"
                               >
                                 {copied === row.key ? <CheckCheck className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -603,11 +654,11 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                     {!infoSubmitted ? (
                       <form onSubmit={handleSubmitInfo} className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 mb-1">
-                          <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center">
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
                             <MapPin className="w-3 h-3 text-white" />
                           </div>
                           <h4 className="text-sm font-bold text-gray-900">Thông tin giao hàng</h4>
-                          <span className="text-[10px] bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full">Bắt buộc</span>
+                          <span className="text-[10px] bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full">Bắt buộc</span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -622,7 +673,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                               onChange={(e) => setName(e.target.value)}
                               placeholder="Nguyễn Văn A"
                               required
-                              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400 focus:bg-white transition-all"
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 focus:bg-white transition-all"
                             />
                           </div>
                           <div>
@@ -637,7 +688,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                               placeholder="0912 345 678"
                               required
                               minLength={9}
-                              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400 focus:bg-white transition-all"
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 focus:bg-white transition-all"
                             />
                           </div>
                         </div>
@@ -653,14 +704,14 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                             onChange={(e) => setAddress(e.target.value)}
                             placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
                             required
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400 focus:bg-white transition-all"
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 focus:bg-white transition-all"
                           />
                         </div>
 
                         <button
                           type="submit"
                           disabled={infoSubmitting || !name.trim() || !phone.trim() || !address.trim()}
-                          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-600/20 flex items-center justify-center gap-2"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
                         >
                           {infoSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                           {infoSubmitting ? "Đang gửi..." : "Xác nhận thông tin giao hàng"}
@@ -713,7 +764,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                             onClose();
                             navigate("/orders");
                           }}
-                          className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                           📦 Vào Kho Hàng xác nhận đơn
                         </button>
@@ -768,7 +819,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                         <div className="border-t border-gray-100 pt-1.5">
                           <div className="flex justify-between text-sm">
                             <span className="font-bold text-gray-800">Tổng đơn</span>
-                            <span className="font-extrabold text-red-600">{formatPrice(displayTotal)}</span>
+                            <span className="font-extrabold text-blue-600">{formatPrice(displayTotal)}</span>
                           </div>
                         </div>
                       </div>
@@ -890,7 +941,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
                 <li>Thông tin (SĐT, địa chỉ, tên) chỉ được sử dụng cho mục đích giao hàng, thực hiện các chương trình hậu mãi và hỗ trợ kỹ thuật sau bán hàng.</li>
                 <li>Chúng tôi tuyệt đối không cung cấp, chia sẻ thông tin khách hàng cho bất kỳ bên thứ ba nào vì mục đích thương mại mà không có sự đồng ý của Quý khách.</li>
               </ul>
-              <p className="font-medium text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
+              <p className="font-medium text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-100">
                 Mọi thắc mắc hoặc yêu cầu hỗ trợ, Quý khách vui lòng liên hệ Hotline 0898 273 899 để được giải quyết nhanh nhất.
               </p>
             </div>
@@ -898,7 +949,7 @@ const CheckoutPopup = ({ total, onClose }: CheckoutPopupProps) => {
             <div className="p-4 border-t border-gray-100 flex justify-end">
               <button 
                 onClick={() => setShowTermsPopup(false)}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors active:scale-95 shadow-md"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors active:scale-95 shadow-md"
               >
                 Tôi đã hiểu & Đồng ý
               </button>

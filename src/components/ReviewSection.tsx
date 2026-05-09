@@ -58,6 +58,24 @@ const tiktokReviews = [
  */
 const TikTokVideoCard = ({ item }: { item: any }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [liveThumbnail, setLiveThumbnail] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Dynamically fetch the live thumbnail to bypass expiring CDN URLs
+    const fetchThumbnail = async () => {
+      try {
+        const res = await fetch(`https://www.tiktok.com/oembed?url=https://www.tiktok.com/@tiktok/video/${item.videoId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.thumbnail_url) {
+          setLiveThumbnail(data.thumbnail_url);
+        }
+      } catch (err) {
+        // Silently fail and fallback to hardcoded or product image
+      }
+    };
+    fetchThumbnail();
+  }, [item.videoId]);
 
   return (
     <div
@@ -90,9 +108,9 @@ const TikTokVideoCard = ({ item }: { item: any }) => {
               />
             )}
             {/* TikTok thumbnail on top (may expire, product image stays as fallback) */}
-            {item.thumbnail && (
+            {(liveThumbnail || item.thumbnail) && (
               <img
-                src={item.thumbnail}
+                src={liveThumbnail || item.thumbnail}
                 alt={item.title}
                 className="absolute inset-0 w-full h-full object-cover group-hover/play:scale-105 transition-transform duration-500"
                 loading="lazy"

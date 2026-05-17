@@ -15,6 +15,8 @@ import contactRoutes from './routes/contact';
 import settingsRoutes from './routes/settings';
 import bannerRoutes from './routes/banners';
 import mediaRoutes from './routes/media';
+import { publicRouter as flashSalePublicRouter, adminRouter as flashSaleAdminRouter } from './routes/flashSale';
+import tiktokRoutes from './routes/tiktok';
 import { startAcbCronJob } from './cron/acbJob';
 import { FRONTEND_URL, SERVER_PORT } from './config';
 
@@ -67,6 +69,9 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api/flash-sale', flashSalePublicRouter);
+app.use('/api/admin/flash-sale', flashSaleAdminRouter);
+app.use('/api/tiktok', tiktokRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

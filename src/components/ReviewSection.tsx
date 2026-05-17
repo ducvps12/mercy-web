@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { formatPrice } from "@/data/products";
 import { Link } from "react-router-dom";
+import { API_BASE } from "@/lib/api";
 
 // TikTok review videos from @mr.manhdora.macginhi
 const tiktokReviews = [
@@ -58,23 +59,29 @@ const tiktokReviews = [
  */
 const TikTokVideoCard = ({ item }: { item: any }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [liveThumbnail, setLiveThumbnail] = useState<string | null>(null);
+  const [liveThumbnail, setLiveThumbnail] = useState<string | null>(() => {
+    try { return localStorage.getItem(`tiktok_thumb_${item.videoId}`); } catch { return null; }
+  });
 
   useEffect(() => {
-    // Dynamically fetch the live thumbnail to bypass expiring CDN URLs
+    // Fetch the live thumbnail through our backend proxy (avoids CORS).
+    // Falls back gracefully to product image if both fail.
+    let cancelled = false;
     const fetchThumbnail = async () => {
       try {
-        const res = await fetch(`https://www.tiktok.com/oembed?url=https://www.tiktok.com/@tiktok/video/${item.videoId}`);
+        const res = await fetch(`${API_BASE}/tiktok/oembed/${item.videoId}`);
         if (!res.ok) return;
         const data = await res.json();
-        if (data.thumbnail_url) {
+        if (!cancelled && data?.thumbnail_url) {
           setLiveThumbnail(data.thumbnail_url);
+          try { localStorage.setItem(`tiktok_thumb_${item.videoId}`, data.thumbnail_url); } catch {}
         }
-      } catch (err) {
-        // Silently fail and fallback to hardcoded or product image
+      } catch {
+        // Silently fall back to cached/hardcoded/product image
       }
     };
     fetchThumbnail();
+    return () => { cancelled = true; };
   }, [item.videoId]);
 
   return (
@@ -114,7 +121,11 @@ const TikTokVideoCard = ({ item }: { item: any }) => {
                 alt={item.title}
                 className="absolute inset-0 w-full h-full object-cover group-hover/play:scale-105 transition-transform duration-500"
                 loading="lazy"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                onError={(e) => {
+                  // Cached thumbnail expired — clear it so next render falls back to product image
+                  try { localStorage.removeItem(`tiktok_thumb_${item.videoId}`); } catch {}
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
               />
             )}
             {/* Dark overlay for readability */}

@@ -9,6 +9,7 @@ import SEOHead from "@/components/SEOHead";
 import CheckoutPopup from "@/components/CheckoutPopup";
 import { useShop } from "@/context/ShopContext";
 import { formatPrice } from "@/data/products";
+import { useProductFlashSale } from "@/hooks/useFlashSale";
 import { Heart, RefreshCw, ChevronRight, ChevronLeft, Truck, ShieldCheck, RotateCcw, Star, Phone, Headphones, Check, X, Loader2, Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getReviewSummary, type Review } from "@/data/reviews";
@@ -44,6 +45,9 @@ const ProductDetail = () => {
   const [allReviews, setAllReviews] = useState<any[]>([]);
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Flash sale lookup — must be called unconditionally per hook rules
+  const flashSale = useProductFlashSale(product?.productId || product?.sku || product?.id);
 
   // Fetch product data
   useEffect(() => {
@@ -117,11 +121,17 @@ const ProductDetail = () => {
 
   const relatedProducts = products.filter((p) => p.id !== product.id).slice(0, 4);
   const upsellProducts = products.filter((p) => p.id !== product.id && p.price < product.price).slice(0, 3);
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+
+  // Apply running flash-sale price if the product is part of a live campaign
+  const effectivePrice = flashSale?.salePrice ?? product.price;
+  const effectiveOriginal = product.originalPrice && product.originalPrice > effectivePrice
+    ? product.originalPrice
+    : (flashSale ? product.price : null);
+  const discount = effectiveOriginal
+    ? Math.round(((effectiveOriginal - effectivePrice) / effectiveOriginal) * 100)
     : 0;
 
-  const totalPrice = product.price * quantity + (selectedWarranty !== null ? warrantyPackages[selectedWarranty].price : 0);
+  const totalPrice = effectivePrice * quantity + (selectedWarranty !== null ? warrantyPackages[selectedWarranty].price : 0);
 
   // Review summaries
   const parsedReviews: Review[] = allReviews.map(r => ({
@@ -167,7 +177,11 @@ const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
-    addToCartWithQuantity(product, quantity);
+    // Apply flash-sale price when adding to cart so the cart total matches what the user sees
+    const productForCart = flashSale
+      ? { ...product, price: effectivePrice, originalPrice: product.originalPrice ?? product.price }
+      : product;
+    addToCartWithQuantity(productForCart, quantity);
     if (selectedWarranty !== null) {
       const wp = warrantyPackages[selectedWarranty];
       addToCartWithQuantity({
@@ -221,9 +235,9 @@ const ProductDetail = () => {
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <span className="text-lg font-bold text-red-600">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
-              <span className="text-sm text-gray-400 line-through hidden sm:inline">{formatPrice(product.originalPrice)}</span>
+            <span className="text-lg font-bold text-red-600">{formatPrice(effectivePrice)}</span>
+            {effectiveOriginal && (
+              <span className="text-sm text-gray-400 line-through hidden sm:inline">{formatPrice(effectiveOriginal)}</span>
             )}
             <button
               onClick={handleBuyNow}
@@ -322,15 +336,29 @@ const ProductDetail = () => {
 
               {/* Price Block */}
               <div className="mt-4 pt-4 border-t border-gray-100">
+                {flashSale && (
+                  <div className="mb-2 inline-flex items-center gap-1.5 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-pulse" />
+                    FLASH SALE • {flashSale.campaign.name.replace(/^\[SEED\]\s*/i, "")}
+                    <span className="ml-1">
+                      Còn {String(flashSale.timing.hours).padStart(2, "0")}:{String(flashSale.timing.minutes).padStart(2, "0")}:{String(flashSale.timing.seconds).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-end gap-3">
-                  <span className="text-2xl md:text-3xl font-extrabold text-gray-900">{formatPrice(product.price)}</span>
-                  {product.originalPrice && (
+                  <span className="text-2xl md:text-3xl font-extrabold text-red-600">{formatPrice(effectivePrice)}</span>
+                  {effectiveOriginal && (
                     <>
-                      <span className="text-base text-gray-400 line-through">{formatPrice(product.originalPrice)}</span>
+                      <span className="text-base text-gray-400 line-through">{formatPrice(effectiveOriginal)}</span>
                       <span className="text-sm text-red-600 font-bold">-{discount}%</span>
                     </>
                   )}
                 </div>
+                {flashSale?.stockLeft !== null && flashSale?.stockLeft !== undefined && flashSale.stockLeft > 0 && (
+                  <p className="text-xs text-orange-600 mt-2 font-medium">
+                    🔥 Chỉ còn {flashSale.stockLeft} suất ưu đãi với giá flash sale
+                  </p>
+                )}
               </div>
             </div>
 
@@ -421,7 +449,7 @@ const ProductDetail = () => {
               <div className="bg-gray-50 rounded-xl p-3 space-y-1.5">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Sản phẩm ({quantity}x)</span>
-                  <span className="font-semibold text-gray-800">{formatPrice(product.price * quantity)}</span>
+                  <span className="font-semibold text-gray-800">{formatPrice(effectivePrice * quantity)}</span>
                 </div>
                 {selectedWarranty !== null && (
                   <div className="flex justify-between text-sm">
@@ -431,7 +459,7 @@ const ProductDetail = () => {
                 )}
                 <div className="border-t border-gray-200 pt-1.5 flex justify-between">
                   <span className="text-sm font-bold text-gray-800">Tạm tính</span>
-                  <span className="text-lg font-extrabold text-red-600">{formatPrice(product.price * quantity + (selectedWarranty !== null ? warrantyPackages[selectedWarranty].price : 0))}</span>
+                  <span className="text-lg font-extrabold text-red-600">{formatPrice(effectivePrice * quantity + (selectedWarranty !== null ? warrantyPackages[selectedWarranty].price : 0))}</span>
                 </div>
               </div>
             </div>

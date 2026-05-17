@@ -4,7 +4,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiDelete } from "@/lib/api";
 import { formatPrice } from "@/data/products";
@@ -77,6 +77,23 @@ export default function AdminProducts() {
   return (
     <AdminLayout title="Sản phẩm">
       <div className="space-y-4">
+        {/* ═══ Quick link to Flash Sale management ═══ */}
+        <button
+          onClick={() => navigate("/admin/flash-sale")}
+          className="w-full text-left rounded-xl border border-red-200 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 hover:shadow-md hover:-translate-y-0.5 transition-all p-4 flex items-center gap-3 group"
+        >
+          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-sm shrink-0">
+            <Zap className="h-5 w-5 text-white fill-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Quản lý Flash Sale</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Tạo chiến dịch theo khung giờ, đếm ngược thực, % giảm và sản phẩm tham gia tại trang Flash Sale
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-red-600 group-hover:translate-x-1 transition-transform shrink-0" />
+        </button>
+
         <div className="flex flex-col sm:flex-row gap-3 justify-between">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

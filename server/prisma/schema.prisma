@@ -74,12 +74,12 @@ model orders {
   payment_method   orders_payment_method? @default(cod)
   status           orders_status?         @default(pending)
   notes            String?                @db.Text
-  ip_address       String?                @db.VarChar(50)
-  payment_status   String?                @default("pending") @db.VarChar(20)
-  payment_ref      String?                @db.VarChar(255)
-  payment_amount   BigInt?                @default(0)
   created_at       DateTime               @default(now()) @db.Timestamp(0)
   updated_at       DateTime               @default(now()) @db.Timestamp(0)
+  ip_address       String?                @db.VarChar(50)
+  payment_amount   BigInt?                @default(0)
+  payment_ref      String?                @db.VarChar(255)
+  payment_status   String?                @default("pending") @db.VarChar(20)
   order_items      order_items[]
   users            users?                 @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "orders_ibfk_1")
 
@@ -169,11 +169,11 @@ model users {
   avatar        String?     @db.VarChar(255)
   role          users_role? @default(customer)
   is_active     Boolean?    @default(true)
-  register_ip   String?     @db.VarChar(50)
-  last_login_at DateTime?   @db.Timestamp(0)
-  user_agent    String?     @db.VarChar(500)
   created_at    DateTime    @default(now()) @db.Timestamp(0)
   updated_at    DateTime    @default(now()) @db.Timestamp(0)
+  last_login_at DateTime?   @db.Timestamp(0)
+  register_ip   String?     @db.VarChar(50)
+  user_agent    String?     @db.VarChar(500)
   cart          cart[]
   orders        orders[]
 
@@ -209,25 +209,6 @@ model product_reviews {
   @@index([product_id], map: "idx_product_id")
 }
 
-enum users_role {
-  customer
-  admin
-}
-
-enum orders_payment_method {
-  cod
-  bank_transfer
-  ewallet
-}
-
-enum orders_status {
-  pending
-  confirmed
-  shipping
-  delivered
-  cancelled
-}
-
 model settings {
   id         Int      @id @default(autoincrement())
   key        String   @unique @db.VarChar(100)
@@ -258,4 +239,77 @@ model contact_requests {
   notes      String?  @db.Text
   created_at DateTime @default(now()) @db.Timestamp(0)
   updated_at DateTime @default(now()) @db.Timestamp(0)
+}
+
+model flash_sale_campaigns {
+  id          Int                   @id @default(autoincrement())
+  name        String                @db.VarChar(200)
+  description String?               @db.Text
+  start_at    DateTime              @db.DateTime(0)
+  end_at      DateTime              @db.DateTime(0)
+  is_active   Boolean               @default(true)
+  sort_order  Int                   @default(0)
+  banner_url  String?               @db.VarChar(500)
+  created_at  DateTime              @default(now()) @db.Timestamp(0)
+  updated_at  DateTime              @default(now()) @db.Timestamp(0)
+  products    flash_sale_products[]
+
+  @@index([is_active], map: "idx_active")
+  @@index([start_at], map: "idx_start")
+  @@index([end_at], map: "idx_end")
+}
+
+model flash_sale_products {
+  id               Int                  @id @default(autoincrement())
+  campaign_id      Int
+  product_id       String               @db.VarChar(50)
+  sale_price       BigInt               @default(0)
+  discount_percent Int                  @default(0)
+  stock_limit      Int                  @default(0)
+  sold_count       Int                  @default(0)
+  sort_order       Int                  @default(0)
+  created_at       DateTime             @default(now()) @db.Timestamp(0)
+  campaign         flash_sale_campaigns @relation(fields: [campaign_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fs_campaign_fk")
+
+  @@unique([campaign_id, product_id], map: "unique_campaign_product")
+  @@index([campaign_id], map: "idx_campaign")
+  @@index([product_id], map: "idx_product")
+}
+
+model articles {
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique(map: "uniq_slug") @db.VarChar(160)
+  title        String   @db.VarChar(255)
+  excerpt      String?  @db.Text
+  content      String?  @db.MediumText
+  image        String?  @db.VarChar(500)
+  date         String?  @db.VarChar(20)
+  category     String?  @default("Tin Tức") @db.VarChar(80)
+  author       String?  @default("Mercy") @db.VarChar(120)
+  views        Int      @default(0)
+  is_published Boolean  @default(true)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([created_at], map: "idx_created")
+  @@index([is_published], map: "idx_published")
+}
+
+enum users_role {
+  customer
+  admin
+}
+
+enum orders_payment_method {
+  cod
+  bank_transfer
+  ewallet
+}
+
+enum orders_status {
+  pending
+  confirmed
+  shipping
+  delivered
+  cancelled
 }

@@ -43,6 +43,7 @@ import Recruitment from "./pages/Recruitment.tsx";
 import Contact from "./pages/Contact.tsx";
 import FAQ from "./pages/FAQ.tsx";
 import NewsDetail from "./pages/NewsDetail.tsx";
+import News from "./pages/News.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import OrderWarehouse from "./pages/OrderWarehouse.tsx";
 import Policy from "./pages/Policy.tsx";
@@ -67,6 +68,7 @@ import AdminMedia from "./pages/admin/AdminMedia.tsx";
 import AdminCategories from "./pages/admin/AdminCategories.tsx";
 import AdminTransactions from "./pages/admin/AdminTransactions.tsx";
 import AdminContacts from "./pages/admin/AdminContacts.tsx";
+import AdminFlashSale from "./pages/admin/AdminFlashSale.tsx";
 import AdminGuard from "./components/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -101,6 +103,7 @@ const App = () => (
                 <Route path="/tuyen-dung" element={<Recruitment />} />
                 <Route path="/lien-he" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />
+                <Route path="/news" element={<News />} />
                 <Route path="/news/:slug" element={<NewsDetail />} />
                 <Route path="/flash-sale" element={<FlashSale />} />
                 <Route path="/chinh-sach/:slug" element={<Policy />} />
@@ -122,6 +125,7 @@ const App = () => (
                 <Route path="/admin/bank-history" element={<AdminGuard><AdminBankHistory /></AdminGuard>} />
                 <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
                 <Route path="/admin/transactions" element={<AdminGuard><AdminTransactions /></AdminGuard>} />
+                <Route path="/admin/flash-sale" element={<AdminGuard><AdminFlashSale /></AdminGuard>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

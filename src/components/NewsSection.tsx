@@ -112,7 +112,7 @@ const NewsSection = () => {
             <h2 className="text-lg md:text-xl font-bold text-gray-900">
               Tin tức & Cộng đồng
             </h2>
-            <Link to="/shop" className="text-sm font-semibold text-red-600 hover:underline">
+            <Link to="/news" className="text-sm font-semibold text-red-600 hover:underline">
               Xem tất cả →
             </Link>
           </div>

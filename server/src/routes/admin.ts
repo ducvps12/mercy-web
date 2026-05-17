@@ -1719,4 +1719,156 @@ router.get('/transactions', async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════
+// ARTICLES (BLOG) CRUD
+// ═══════════════════════════════════
+
+function slugify(s: string) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .substring(0, 150);
+}
+
+// GET all articles (admin sees drafts too)
+router.get('/articles', async (_req, res) => {
+  try {
+    const list = await prisma.articles.findMany({ orderBy: { created_at: 'desc' } });
+    res.json(list.map((a: any) => ({
+      id: a.id,
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt || '',
+      content: a.content || '',
+      image: a.image || '',
+      date: a.date,
+      category: a.category,
+      author: a.author,
+      views: a.views,
+      isPublished: !!a.is_published,
+      createdAt: a.created_at,
+      updatedAt: a.updated_at,
+    })));
+  } catch (e: any) {
+    console.error('Admin articles list error:', e);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// GET single
+router.get('/articles/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const a: any = await prisma.articles.findUnique({ where: { id } });
+    if (!a) return res.status(404).json({ message: 'Not found' });
+    res.json({
+      id: a.id,
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt || '',
+      content: a.content || '',
+      image: a.image || '',
+      date: a.date,
+      category: a.category,
+      author: a.author,
+      views: a.views,
+      isPublished: !!a.is_published,
+    });
+  } catch (e: any) {
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
+// POST create
+router.post('/articles', async (req, res) => {
+  try {
+    const { title, excerpt, content, image, category, author, isPublished, slug, date } = req.body;
+    if (!title) return res.status(400).json({ message: 'Thiếu tiêu đề' });
+    let finalSlug: string = slug && String(slug).trim() ? String(slug).trim() : slugify(title);
+    // Ensure uniqueness
+    const existing = await prisma.articles.findUnique({ where: { slug: finalSlug } });
+    if (existing) finalSlug = `${finalSlug}-${Date.now().toString().slice(-5)}`;
+    const created = await prisma.articles.create({
+      data: {
+        slug: finalSlug,
+        title,
+        excerpt: excerpt || null,
+        content: content || null,
+        image: image || null,
+        date: date || new Date().toLocaleDateString('vi-VN'),
+        category: category || 'Tin Tức',
+        author: author || 'Mercy',
+        is_published: isPublished !== false,
+      },
+    });
+    res.json(created);
+  } catch (e: any) {
+    console.error('Create article error:', e);
+    res.status(500).json({ message: e.message || 'Lỗi tạo' });
+  }
+});
+
+// PUT update
+router.put('/articles/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { title, excerpt, content, image, category, author, isPublished, slug, date } = req.body;
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (excerpt !== undefined) data.excerpt = excerpt;
+    if (content !== undefined) data.content = content;
+    if (image !== undefined) data.image = image;
+    if (category !== undefined) data.category = category;
+    if (author !== undefined) data.author = author;
+    if (date !== undefined) data.date = date;
+    if (isPublished !== undefined) data.is_published = !!isPublished;
+    if (slug !== undefined && slug.trim()) {
+      const newSlug = String(slug).trim();
+      // Avoid collision with another article
+      const collide = await prisma.articles.findFirst({ where: { slug: newSlug, NOT: { id } } });
+      if (collide) return res.status(400).json({ message: 'Slug đã tồn tại' });
+      data.slug = newSlug;
+    }
+    const updated = await prisma.articles.update({ where: { id }, data });
+    res.json(updated);
+  } catch (e: any) {
+    console.error('Update article error:', e);
+    res.status(500).json({ message: e.message || 'Lỗi cập nhật' });
+  }
+});
+
+// DELETE
+router.delete('/articles/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await prisma.articles.delete({ where: { id } });
+    res.json({ message: 'Đã xóa' });
+  } catch (e: any) {
+    console.error('Delete article error:', e);
+    res.status(500).json({ message: e.message || 'Lỗi xóa' });
+  }
+});
+
+// PATCH toggle publish
+router.patch('/articles/:id/toggle', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const a: any = await prisma.articles.findUnique({ where: { id } });
+    if (!a) return res.status(404).json({ message: 'Not found' });
+    const updated = await prisma.articles.update({
+      where: { id },
+      data: { is_published: !a.is_published },
+    });
+    res.json(updated);
+  } catch (e: any) {
+    res.status(500).json({ message: 'Lỗi' });
+  }
+});
+
 export default router;

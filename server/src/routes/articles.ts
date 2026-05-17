@@ -11,6 +11,7 @@ router.get('/', async (req, res) => {
     const limit = limitParam ? parseInt(String(limitParam), 10) : undefined;
 
     const articles = await prisma.articles.findMany({
+      where: { is_published: true },
       orderBy: { created_at: 'desc' },
       ...(limit && !isNaN(limit) ? { take: limit } : {}),
     });
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
       image: a.image || "",
       date: a.date,
       month: "",
-      views: 0,
+      views: a.views || 0,
       comments: 0,
       category: a.category || "Tin Tức",
       author: a.author || "Admin",

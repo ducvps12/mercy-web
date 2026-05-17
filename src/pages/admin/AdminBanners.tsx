@@ -11,9 +11,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2, Sparkles, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { apiPost } from "@/lib/api";
+import { getBranding, saveBranding, defaultBranding, resolveBranding, type BrandingSettings } from "@/lib/branding";
 
 /* ═══════════════════════════════════════════
    Types & storage helpers
@@ -81,13 +82,22 @@ function savePromoBanners(banners: BannerItem[]) {
 const ImageUploader = ({
   currentImage,
   onImageChange,
+  previewFallback,
+  fallbackLabel,
 }: {
   currentImage: string;
   onImageChange: (url: string) => void;
+  /** When `currentImage` is empty, show this image in the preview instead */
+  previewFallback?: string;
+  /** Optional label to show next to preview when fallback is in effect */
+  fallbackLabel?: string;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  const previewSrc = currentImage || previewFallback || "";
+  const usingFallback = !currentImage && !!previewFallback;
 
   const handleUpload = async (file: File) => {
     if (!file) return;
@@ -132,16 +142,21 @@ const ImageUploader = ({
   return (
     <div className="space-y-3">
       {/* Preview */}
-      {currentImage && (
-        <div className="rounded-lg overflow-hidden border border-border bg-gray-50">
+      {previewSrc && (
+        <div className="rounded-lg overflow-hidden border border-border bg-gray-50 relative">
           <img
-            src={currentImage}
+            src={previewSrc}
             alt="Preview"
             className="w-full h-40 object-contain"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/placeholder.svg";
             }}
           />
+          {usingFallback && (
+            <span className="absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wider bg-black/60 text-white px-2 py-0.5 rounded">
+              {fallbackLabel || "Mặc định"}
+            </span>
+          )}
         </div>
       )}
 
@@ -189,7 +204,7 @@ const ImageUploader = ({
         <Input
           value={currentImage}
           onChange={(e) => onImageChange(e.target.value)}
-          placeholder="/banners/banner/1.png hoặc https://..."
+          placeholder="Để trống = dùng logo mặc định, hoặc nhập /banners/banner/1.png hay https://..."
           className="mt-1"
         />
       </div>
@@ -206,6 +221,9 @@ const AdminBanners = () => {
   const [heroDialogOpen, setHeroDialogOpen] = useState(false);
   const [heroForm, setHeroForm] = useState({ image: "", imageMobile: "", alt: "", link: "" });
 
+  // Branding (logo) state
+  const [branding, setBranding] = useState<BrandingSettings>(defaultBranding);
+
   // Promo banners state
   const [promos, setPromos] = useState<BannerItem[]>([]);
   const [promoDialogOpen, setPromoDialogOpen] = useState(false);
@@ -216,7 +234,21 @@ const AdminBanners = () => {
   useEffect(() => {
     setHero(getHeroBanner());
     setPromos(getPromoBanners());
+    setBranding(getBranding());
   }, []);
+
+  /* ── Branding (logo) handlers ── */
+  const updateBranding = (patch: Partial<BrandingSettings>) => {
+    const next = { ...branding, ...patch };
+    setBranding(next);
+    saveBranding(next);
+  };
+
+  const resetBranding = () => {
+    setBranding(defaultBranding);
+    saveBranding(defaultBranding);
+    toast.success("Đã khôi phục logo mặc định");
+  };
 
   /* ── Hero banner handlers ── */
   const openEditHero = () => {
@@ -297,6 +329,213 @@ const AdminBanners = () => {
             Quản lý banner đầu trang và các banner khuyến mãi trên trang chủ. Tải ảnh mới hoặc nhập URL.
           </p>
         </div>
+
+        {/* ═══ Section 0: Logo Settings ═══ */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-sm">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Logo thương hiệu</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Tùy chỉnh logo hiển thị trên header desktop & mobile, kèm chiều cao riêng cho từng layout
+                  </p>
+                </div>
+              </div>
+              <Button onClick={resetBranding} variant="outline" size="sm" className="gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Khôi phục mặc định
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Live preview */}
+            {(() => {
+              const resolved = resolveBranding(branding);
+              return (
+                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="rounded-xl overflow-hidden border border-border bg-[#cb1c22] p-4 flex flex-col items-start gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Xem trước Desktop</span>
+                    <img
+                      src={resolved.logoLight}
+                      alt="logo desktop"
+                      style={{ height: branding.logoHeightDesktop }}
+                      className="w-auto object-contain"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+                    />
+                  </div>
+                  <div className="rounded-xl overflow-hidden border border-border bg-[#cb1c22] p-4 flex flex-col items-start gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Xem trước Mobile</span>
+                    <img
+                      src={resolved.logoLightMobile}
+                      alt="logo mobile"
+                      style={{ height: branding.logoHeightMobile }}
+                      className="w-auto object-contain"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Logo light (on red header) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-border">
+              <div>
+                <Label className="font-semibold">Logo Desktop (nền đỏ — header sáng)</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-2">Dùng cho header chính, theme sáng</p>
+                <ImageUploader
+                  currentImage={branding.logoLight}
+                  onImageChange={(url) => updateBranding({ logoLight: url })}
+                  previewFallback={resolveBranding(branding).logoLight}
+                  fallbackLabel="Đang dùng logo mặc định"
+                />
+              </div>
+              <div>
+                <Label className="font-semibold text-blue-600">Logo Mobile (tùy chọn)</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-2">Để trống sẽ dùng logo desktop</p>
+                <ImageUploader
+                  currentImage={branding.logoLightMobile}
+                  onImageChange={(url) => updateBranding({ logoLightMobile: url })}
+                  previewFallback={resolveBranding(branding).logoLightMobile}
+                  fallbackLabel="Kế thừa từ desktop"
+                />
+              </div>
+            </div>
+
+            {/* Logo dark (theme tối) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-b border-border">
+              <div>
+                <Label className="font-semibold">Logo Desktop (theme tối)</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-2">Hiển thị khi user dùng dark mode</p>
+                <ImageUploader
+                  currentImage={branding.logoDark}
+                  onImageChange={(url) => updateBranding({ logoDark: url })}
+                  previewFallback={resolveBranding(branding).logoDark}
+                  fallbackLabel="Đang dùng logo mặc định"
+                />
+              </div>
+              <div>
+                <Label className="font-semibold text-blue-600">Logo Mobile (theme tối, tùy chọn)</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-2">Để trống sẽ dùng logo dark desktop</p>
+                <ImageUploader
+                  currentImage={branding.logoDarkMobile}
+                  onImageChange={(url) => updateBranding({ logoDarkMobile: url })}
+                  previewFallback={resolveBranding(branding).logoDarkMobile}
+                  fallbackLabel="Kế thừa từ desktop"
+                />
+              </div>
+            </div>
+
+            {/* Sizing */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+              <div>
+                <Label>Chiều cao logo Desktop (px)</Label>
+                <Input
+                  type="number"
+                  min={20}
+                  max={140}
+                  value={branding.logoHeightDesktop}
+                  onChange={(e) => updateBranding({ logoHeightDesktop: Number(e.target.value) || defaultBranding.logoHeightDesktop })}
+                  className="mt-1.5"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Mặc định 80px</p>
+              </div>
+              <div>
+                <Label>Chiều cao logo Mobile header (px)</Label>
+                <Input
+                  type="number"
+                  min={20}
+                  max={120}
+                  value={branding.logoHeightMobile}
+                  onChange={(e) => updateBranding({ logoHeightMobile: Number(e.target.value) || defaultBranding.logoHeightMobile })}
+                  className="mt-1.5"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Mặc định 64px — tăng lên nếu logo mobile bị nhỏ</p>
+              </div>
+              <div>
+                <Label>Chiều cao logo Mobile sidebar (px)</Label>
+                <Input
+                  type="number"
+                  min={20}
+                  max={160}
+                  value={branding.logoHeightSidebar}
+                  onChange={(e) => updateBranding({ logoHeightSidebar: Number(e.target.value) || defaultBranding.logoHeightSidebar })}
+                  className="mt-1.5"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Mặc định 80px</p>
+              </div>
+            </div>
+
+            {/* Header bar height (controls how big the red top bar is) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border mt-6">
+              <div>
+                <Label>Chiều cao thanh header Desktop (px)</Label>
+                <Input
+                  type="number"
+                  min={56}
+                  max={160}
+                  value={branding.headerHeightDesktop}
+                  onChange={(e) => updateBranding({ headerHeightDesktop: Number(e.target.value) || defaultBranding.headerHeightDesktop })}
+                  className="mt-1.5"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Mặc định 88px — thanh đỏ trên cùng PC</p>
+              </div>
+              <div>
+                <Label>Chiều cao thanh header Mobile (px)</Label>
+                <Input
+                  type="number"
+                  min={48}
+                  max={140}
+                  value={branding.headerHeightMobile}
+                  onChange={(e) => updateBranding({ headerHeightMobile: Number(e.target.value) || defaultBranding.headerHeightMobile })}
+                  className="mt-1.5"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Mặc định 68px — tăng nếu muốn logo header to hơn nữa</p>
+              </div>
+            </div>
+
+            {/* Sidebar style */}
+            <div className="mt-6 pt-6 border-t border-border">
+              <Label className="text-sm font-semibold">Kiểu header sidebar Mobile</Label>
+              <p className="text-xs text-muted-foreground mt-1 mb-3">Chọn nền sáng (logo đen, nổi bật & to) hoặc nền đỏ thương hiệu (logo trắng).</p>
+              <div className="grid grid-cols-2 gap-3 max-w-md">
+                <button
+                  type="button"
+                  onClick={() => updateBranding({ sidebarHeaderStyle: "white" })}
+                  className={`rounded-xl p-4 border-2 transition-all ${
+                    branding.sidebarHeaderStyle === "white"
+                      ? "border-red-500 ring-2 ring-red-100"
+                      : "border-border hover:border-red-300"
+                  }`}
+                >
+                  <div className="bg-white border border-gray-100 rounded-lg p-2 mb-2 flex items-center justify-center h-12">
+                    <img src={resolveBranding(branding).logoDark} alt="" className="h-8 w-auto object-contain" />
+                  </div>
+                  <p className="text-xs font-semibold">Nền trắng + logo đen</p>
+                  <p className="text-[10px] text-muted-foreground">Sạch, hiện đại</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateBranding({ sidebarHeaderStyle: "red" })}
+                  className={`rounded-xl p-4 border-2 transition-all ${
+                    branding.sidebarHeaderStyle === "red"
+                      ? "border-red-500 ring-2 ring-red-100"
+                      : "border-border hover:border-red-300"
+                  }`}
+                >
+                  <div className="bg-[#be0117] rounded-lg p-2 mb-2 flex items-center justify-center h-12">
+                    <img src={resolveBranding(branding).logoLight} alt="" className="h-8 w-auto object-contain" />
+                  </div>
+                  <p className="text-xs font-semibold">Nền đỏ + logo trắng</p>
+                  <p className="text-[10px] text-muted-foreground">Thương hiệu mạnh</p>
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* ═══ Section 1: Hero Banner ═══ */}
         <Card>

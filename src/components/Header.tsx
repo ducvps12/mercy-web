@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Menu, Search, ShoppingCart, User, X, ChevronDown, ChevronRight, Zap, Shield, Smartphone, Gift, Store, Package, Heart, Settings, LogOut, Phone, Mail } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X, ChevronDown, ChevronRight, Zap, Shield, Smartphone, Gift, Store, Package, Heart, Settings, LogOut, Phone, Mail, Newspaper } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -7,12 +7,12 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { apiGet } from "@/lib/api";
 import type { ProductData } from "@/data/products";
 import { categories, productDropdown } from "@/data/navigation";
-import logoWhite from "@/assets/logo/logowhite.png";
-import logoBlack from "@/assets/logo/logoBlack.png";
+import { getBranding, BRANDING_UPDATED_EVENT, resolveBranding, type BrandingSettings } from "@/lib/branding";
 
 const mainMenu = [
   { name: "Trang chủ", hasSubmenu: false, href: "/" },
   { name: "Sản phẩm", hasSubmenu: false, href: "/shop" },
+  { name: "Tin tức", hasSubmenu: false, href: "/news" },
   { name: "Giới thiệu", hasSubmenu: false, href: "/about" },
 ];
 
@@ -30,6 +30,8 @@ import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const [allProducts, setAllProducts] = useState<ProductData[]>([]);
+  const [rawBranding, setRawBranding] = useState<BrandingSettings>(() => getBranding());
+  const branding = useMemo(() => resolveBranding(rawBranding), [rawBranding]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,6 +94,35 @@ const Header = () => {
     return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
 
+  // Live-refresh logo when admin updates branding (same-tab via custom event, cross-tab via storage)
+  useEffect(() => {
+    const refresh = () => setRawBranding(getBranding());
+    window.addEventListener(BRANDING_UPDATED_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(BRANDING_UPDATED_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
+  // Track responsive breakpoint to apply correct header height (Tailwind doesn't support
+  // arbitrary `h-[var(--x)]` reliably, so we resolve the value in JS).
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(min-width: 768px)").matches : true
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const headerHeight = isDesktop ? branding.headerHeightDesktop : branding.headerHeightMobile;
+
+  const logoLightMobile = branding.logoLightMobile;
+  const logoDarkMobile = branding.logoDarkMobile;
+
   const openContactMail = (subject: string) => {
     const body = "Tên khách hàng: \n\nSố điện thoại: ";
     window.location.href = `mailto:mercyglobalstore@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -103,7 +134,10 @@ const Header = () => {
       <div className="fpt-header-gradient">
        */}
       <div className="bg-[#cb1c22]">
-        <div className="container relative flex items-center gap-2 md:gap-5 h-[56px] md:h-[88px]">
+        <div
+          className="container relative flex items-center gap-2 md:gap-5"
+          style={{ height: `${headerHeight}px` }}
+        >
           {/* Mobile hamburger */}
           <button
             id="mobile-menu-toggle"
@@ -116,9 +150,33 @@ const Header = () => {
 
           {/* Logo — centered on mobile, left-aligned on desktop */}
           <a href="/" className="absolute left-1/2 -translate-x-1/2 md:relative md:left-auto md:translate-x-0 flex items-center justify-center shrink-0 group mr-1 md:mr-4 h-full min-w-[120px] md:min-w-[120px]">
-            <span className="flex items-center justify-center h-[48px] md:h-20">
-              <img src={logoWhite} alt="MERCY" className="h-full w-auto object-contain dark:hidden" />
-              <img src={logoBlack} alt="MERCY" className="h-full w-auto object-contain hidden dark:block" />
+            <span className="flex items-center justify-center">
+              {/* Mobile logo */}
+              <img
+                src={logoLightMobile}
+                alt="MERCY"
+                style={{ height: branding.logoHeightMobile }}
+                className="md:hidden w-auto object-contain dark:hidden"
+              />
+              <img
+                src={logoDarkMobile}
+                alt="MERCY"
+                style={{ height: branding.logoHeightMobile }}
+                className="md:hidden w-auto object-contain hidden dark:block"
+              />
+              {/* Desktop logo */}
+              <img
+                src={branding.logoLight}
+                alt="MERCY"
+                style={{ height: branding.logoHeightDesktop }}
+                className="hidden md:block w-auto object-contain dark:hidden"
+              />
+              <img
+                src={branding.logoDark}
+                alt="MERCY"
+                style={{ height: branding.logoHeightDesktop }}
+                className="hidden md:dark:block w-auto object-contain"
+              />
             </span>
             <span className="absolute -bottom-0.5 md:bottom-2 text-[6px] md:text-[8px] text-white/90 tracking-[0.15em] font-semibold whitespace-nowrap">
               SMART VISION • SMART LIFE
@@ -215,6 +273,24 @@ const Header = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 ml-auto shrink-0">
+            {/* Hotline Quick-Contact Button — visible on all sizes */}
+            <a
+              id="header-hotline-button"
+              href="tel:0898273899"
+              aria-label="Liên hệ ngay 0898 273 899"
+              className="group relative flex items-center gap-1.5 md:gap-2 bg-yellow-400 hover:bg-yellow-300 text-[#cb1c22] px-2.5 md:px-3 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-sm"
+            >
+              <span className="relative flex items-center justify-center">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-yellow-300 opacity-70 animate-ping"></span>
+                <Phone className="w-5 h-5 relative" />
+              </span>
+              <span className="hidden md:flex flex-col leading-tight items-start">
+                <span className="text-[10px] font-semibold opacity-80">Liên hệ ngay</span>
+                <span className="text-[13px] font-extrabold">0898 273 899</span>
+              </span>
+              <span className="md:hidden text-[12px] font-extrabold">Liên hệ</span>
+            </a>
+
             {/* User icon / dropdown */}
             <div className="relative hidden md:block">
               {isAuthenticated ? (
@@ -349,6 +425,14 @@ const Header = () => {
 
           {/* Right links */}
           <div className="flex-1 basis-0 flex justify-end items-center gap-3 shrink-0">
+            <a
+              href="/news"
+              className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold text-gray-700 hover:text-red-600 transition-colors"
+            >
+              <Newspaper className="w-4 h-4 text-red-600" />
+              <span>Tin tức</span>
+            </a>
+            <span className="text-gray-300">|</span>
             <button 
               onClick={() => setStoreModalOpen(true)} 
               className="flex items-center gap-1.5 text-xs lg:text-sm font-semibold text-gray-700 hover:text-red-600 transition-colors"
@@ -371,17 +455,49 @@ const Header = () => {
         className={`md:hidden fixed top-0 left-0 z-[70] h-full w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         {/* Mobile header */}
-        <div className="flex items-center justify-between p-4 bg-[#be0117]">
-          <img src={logoWhite} alt="MERCY" className="h-12 object-contain dark:hidden" />
-          <img src={logoBlack} alt="MERCY" className="h-12 object-contain hidden dark:block" />
-          <button
-            id="mobile-menu-close"
-            onClick={() => setMenuOpen(false)}
-            className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition active:scale-90"
-            aria-label="Đóng menu"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <div className={`flex items-center justify-between p-4 border-b ${branding.sidebarHeaderStyle === "white" ? "bg-white border-gray-100" : "bg-[#be0117] border-transparent"}`}>
+          {branding.sidebarHeaderStyle === "white" ? (
+            <>
+              {/* Use the dark logo on white background so it's readable */}
+              <img
+                src={branding.logoDarkMobile}
+                alt="MERCY"
+                style={{ height: branding.logoHeightSidebar }}
+                className="object-contain"
+              />
+              <button
+                id="mobile-menu-close"
+                onClick={() => setMenuOpen(false)}
+                className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition active:scale-90"
+                aria-label="Đóng menu"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              <img
+                src={logoLightMobile}
+                alt="MERCY"
+                style={{ height: branding.logoHeightSidebar }}
+                className="object-contain dark:hidden"
+              />
+              <img
+                src={logoDarkMobile}
+                alt="MERCY"
+                style={{ height: branding.logoHeightSidebar }}
+                className="object-contain hidden dark:block"
+              />
+              <button
+                id="mobile-menu-close"
+                onClick={() => setMenuOpen(false)}
+                className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition active:scale-90"
+                aria-label="Đóng menu"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto pb-24">
@@ -434,7 +550,25 @@ const Header = () => {
               </a>
             ))}
             
-            {/* Mobile User Menu */}
+            {/* Danh mục sản phẩm — moved up above Tài khoản */}
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Danh mục sản phẩm</h3>
+            {categories.map((cat, i) => (
+              <button key={i} onClick={() => { setMenuOpen(false); navigate(cat.href); }} className="flex items-center justify-between w-full py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 last:border-0 text-left">
+                <span>{cat.name}</span>
+                {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-gray-300" />}
+              </button>
+            ))}
+
+            {/* Promo links in mobile — only show flash sale, hide Bảo hành / Trả góp / Quà tặng */}
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Ưu đãi</h3>
+            {promoLinks.slice(0, 1).map((link, i) => (
+              <a key={i} href={link.href} className="flex items-center gap-3 py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 last:border-0">
+                <link.icon className={`w-5 h-5 ${link.color}`} />
+                <span>{link.text}</span>
+              </a>
+            ))}
+
+            {/* Mobile User Menu — moved down below Danh mục sản phẩm */}
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Tài khoản</h3>
             {isAuthenticated ? (
               <>
@@ -465,23 +599,6 @@ const Header = () => {
                 <User className="w-5 h-5 text-gray-400" /> Đăng nhập / Đăng ký
               </button>
             )}
-
-            {/* Promo links in mobile — only show flash sale, hide Bảo hành / Trả góp / Quà tặng */}
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Ưu đãi</h3>
-            {promoLinks.slice(0, 1).map((link, i) => (
-              <a key={i} href={link.href} className="flex items-center gap-3 py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 last:border-0">
-                <link.icon className={`w-5 h-5 ${link.color}`} />
-                <span>{link.text}</span>
-              </a>
-            ))}
-
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Danh mục sản phẩm</h3>
-            {categories.map((cat, i) => (
-              <button key={i} onClick={() => { setMenuOpen(false); navigate(cat.href); }} className="flex items-center justify-between w-full py-3 text-[15px] text-gray-700 hover:text-red-600 border-b border-gray-100 last:border-0 text-left">
-                <span>{cat.name}</span>
-                {cat.hasSubmenu && <ChevronRight className="w-4 h-4 text-gray-300" />}
-              </button>
-            ))}
 
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-6">Liên hệ nhanh</h3>
             <div className="grid grid-cols-2 gap-2">

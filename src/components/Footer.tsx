@@ -3,6 +3,7 @@ import { useState } from "react";
 
 const aboutLinks = [
   { name: "Giới thiệu về Mercy", href: "/about" },
+  { name: "Tin tức & Bài viết", href: "/news" },
   { name: "Tin tức khuyến mại", href: "/flash-sale" },
   { name: "Thông tin tuyển dụng", href: "/tuyen-dung" },
   { name: "Liên hệ hợp tác", href: "/lien-he" },

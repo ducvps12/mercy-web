@@ -1,4 +1,4 @@
-import { Headphones, Camera, Languages, Bot, Glasses } from "lucide-react";
+import { Glasses as GlassesIcon, Camera, Languages, Bot, Package } from "lucide-react";
 
 export interface CategorySEO {
   title: string;
@@ -8,7 +8,13 @@ export interface CategorySEO {
   shortDesc: string;
   url: string;
   icon: any;
+  /** Solid Tailwind background utility, e.g. "bg-red-50" */
+  iconBg: string;
+  /** Solid Tailwind text utility, e.g. "text-red-600" */
+  iconColor: string;
+  /** @deprecated kept for backward compatibility, prefer iconBg + iconColor */
   gradient: string;
+  /** @deprecated kept for backward compatibility */
   lightBg: string;
   image: string;
   keywords: string;
@@ -22,7 +28,9 @@ export const categorySEO: Record<string, CategorySEO> = {
     metaDescription: "Mua kính thông minh AI chính hãng tại Mercy. Nghe nhạc bluetooth, gọi điện rảnh tay, trợ lý AI. Bảo hành 12 tháng, trả góp 0%. Giá tốt nhất thị trường.",
     shortDesc: "Nghe nhạc, gọi điện, trợ lý AI thông minh",
     url: "/danh-muc/kinh-thong-minh-ai",
-    icon: Headphones,
+    icon: GlassesIcon,
+    iconBg: "bg-red-50",
+    iconColor: "text-red-600",
     gradient: "from-red-500 via-rose-500 to-pink-500",
     lightBg: "from-red-50 via-rose-50 to-pink-50",
     image: "/products/MCK5.0D-0.jpg",
@@ -36,6 +44,8 @@ export const categorySEO: Record<string, CategorySEO> = {
     shortDesc: "Quay POV 2K, chụp ảnh 32MP sắc nét",
     url: "/danh-muc/kinh-camera",
     icon: Camera,
+    iconBg: "bg-slate-50",
+    iconColor: "text-slate-700",
     gradient: "from-blue-500 via-indigo-500 to-violet-500",
     lightBg: "from-blue-50 via-indigo-50 to-violet-50",
     image: "/products/POV5.0D-0.jpg",
@@ -49,6 +59,8 @@ export const categorySEO: Record<string, CategorySEO> = {
     shortDesc: "Dịch thuật realtime 40+ ngôn ngữ",
     url: "/danh-muc/kinh-dich-thuat",
     icon: Languages,
+    iconBg: "bg-emerald-50",
+    iconColor: "text-emerald-700",
     gradient: "from-emerald-500 via-teal-500 to-cyan-500",
     lightBg: "from-emerald-50 via-teal-50 to-cyan-50",
     image: "/products/KDT5.0D-0.jpg",
@@ -62,6 +74,8 @@ export const categorySEO: Record<string, CategorySEO> = {
     shortDesc: "Gia sư AI, mắt LED biểu cảm",
     url: "/danh-muc/robot-ai",
     icon: Bot,
+    iconBg: "bg-indigo-50",
+    iconColor: "text-indigo-700",
     gradient: "from-purple-500 via-violet-500 to-fuchsia-500",
     lightBg: "from-purple-50 via-violet-50 to-fuchsia-50",
     image: "/products/RBnu-capy-0.jpg",
@@ -74,7 +88,9 @@ export const categorySEO: Record<string, CategorySEO> = {
     metaDescription: "Mua phụ kiện thông minh chính hãng tại Mercy. Balo đèn LED, bao da cao cấp. Ưu đãi lớn, giao hàng nhanh toàn quốc.",
     shortDesc: "Balo LED, bao da cao cấp, quà tặng",
     url: "/danh-muc/phu-kien",
-    icon: Glasses,
+    icon: Package,
+    iconBg: "bg-amber-50",
+    iconColor: "text-amber-700",
     gradient: "from-amber-500 via-orange-500 to-red-500",
     lightBg: "from-amber-50 via-orange-50 to-red-50",
     image: "/products/Bao-da-0.jpg",

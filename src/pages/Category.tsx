@@ -197,8 +197,8 @@ const Category = () => {
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center shadow-sm`}>
-                  <CatIcon className="w-5 h-5 text-white" />
+                <div className={`w-11 h-11 rounded-xl ${category.iconBg} ring-1 ring-inset ring-gray-200/70 flex items-center justify-center shadow-sm`}>
+                  <CatIcon className={`w-5 h-5 ${category.iconColor}`} strokeWidth={1.75} />
                 </div>
                 <div>
                   <h1 className="text-xl md:text-2xl font-extrabold text-gray-900">{category.title}</h1>
@@ -383,8 +383,8 @@ const Category = () => {
                     to={cat.url}
                     className="group flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-red-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                   >
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cat.gradient} flex items-center justify-center shrink-0`}>
-                      <OtherIcon className="w-5 h-5 text-white" />
+                    <div className={`w-10 h-10 rounded-lg ${cat.iconBg} ring-1 ring-inset ring-gray-200/70 flex items-center justify-center shrink-0`}>
+                      <OtherIcon className={`w-5 h-5 ${cat.iconColor}`} strokeWidth={1.75} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-800 group-hover:text-red-600 transition-colors truncate">{cat.title}</p>

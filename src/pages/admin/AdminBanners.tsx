@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2, Sparkles, RotateCcw } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2, Sparkles, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { apiPost } from "@/lib/api";
 import { getBranding, saveBranding, defaultBranding, resolveBranding, type BrandingSettings } from "@/lib/branding";
@@ -223,6 +223,7 @@ const AdminBanners = () => {
 
   // Branding (logo) state
   const [branding, setBranding] = useState<BrandingSettings>(defaultBranding);
+  const [savedBranding, setSavedBranding] = useState<BrandingSettings>(defaultBranding);
 
   // Promo banners state
   const [promos, setPromos] = useState<BannerItem[]>([]);
@@ -234,21 +235,33 @@ const AdminBanners = () => {
   useEffect(() => {
     setHero(getHeroBanner());
     setPromos(getPromoBanners());
-    setBranding(getBranding());
+    const b = getBranding();
+    setBranding(b);
+    setSavedBranding(b);
   }, []);
 
-  /* ── Branding (logo) handlers ── */
+  /* ── Branding (logo) handlers — auto-saves on every change ── */
   const updateBranding = (patch: Partial<BrandingSettings>) => {
     const next = { ...branding, ...patch };
     setBranding(next);
     saveBranding(next);
+    setSavedBranding(next);
   };
 
   const resetBranding = () => {
     setBranding(defaultBranding);
     saveBranding(defaultBranding);
-    toast.success("Đã khôi phục logo mặc định");
+    setSavedBranding(defaultBranding);
+    toast.success("Đã khôi phục cấu hình logo mặc định");
   };
+
+  const saveBrandingNow = () => {
+    saveBranding(branding);
+    setSavedBranding(branding);
+    toast.success("Đã lưu thay đổi logo & header");
+  };
+
+  const isDirty = JSON.stringify(branding) !== JSON.stringify(savedBranding);
 
   /* ── Hero banner handlers ── */
   const openEditHero = () => {
@@ -345,10 +358,21 @@ const AdminBanners = () => {
                   </p>
                 </div>
               </div>
-              <Button onClick={resetBranding} variant="outline" size="sm" className="gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Khôi phục mặc định
-              </Button>
+              <div className="flex items-center gap-2">
+                {isDirty && (
+                  <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-full">
+                    Có thay đổi chưa lưu
+                  </span>
+                )}
+                <Button onClick={saveBrandingNow} size="sm" className="gap-2 bg-red-600 hover:bg-red-700 text-white">
+                  <Save className="h-4 w-4" />
+                  Lưu thay đổi
+                </Button>
+                <Button onClick={resetBranding} variant="outline" size="sm" className="gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  Khôi phục mặc định
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -470,7 +494,17 @@ const AdminBanners = () => {
             </div>
 
             {/* Header bar height (controls how big the red top bar is) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border mt-6">
+              <div>
+                <Label>Tagline dưới logo</Label>
+                <Input
+                  value={branding.tagline}
+                  onChange={(e) => updateBranding({ tagline: e.target.value })}
+                  placeholder="VD: SMART VISION • SMART LIFE (để trống để ẩn)"
+                  className="mt-1.5"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Dòng chữ nhỏ dưới logo. Để trống = ẩn hoàn toàn.</p>
+              </div>
               <div>
                 <Label>Chiều cao thanh header Desktop (px)</Label>
                 <Input
@@ -532,6 +566,25 @@ const AdminBanners = () => {
                   <p className="text-xs font-semibold">Nền đỏ + logo trắng</p>
                   <p className="text-[10px] text-muted-foreground">Thương hiệu mạnh</p>
                 </button>
+              </div>
+            </div>
+
+            {/* Sticky bottom action bar */}
+            <div className="mt-6 pt-4 border-t border-border flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs text-muted-foreground">
+                {isDirty
+                  ? "Đang có thay đổi chưa lưu — bấm Lưu để áp dụng cho website."
+                  : "Mọi thay đổi đã được lưu và áp dụng."}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button onClick={resetBranding} variant="outline" className="gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  Khôi phục mặc định
+                </Button>
+                <Button onClick={saveBrandingNow} className="gap-2 bg-red-600 hover:bg-red-700 text-white">
+                  <Save className="h-4 w-4" />
+                  Lưu thay đổi
+                </Button>
               </div>
             </div>
           </CardContent>

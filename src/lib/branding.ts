@@ -27,6 +27,8 @@ export interface BrandingSettings {
   logoLightMobile: string;
   /** Optional override for mobile header — empty falls back to logoDark (or bundled default) */
   logoDarkMobile: string;
+  /** Optional tagline shown under the logo in header (empty = hide) */
+  tagline: string;
   /** Logo height in px on desktop header */
   logoHeightDesktop: number;
   /** Logo height in px on mobile header (top red bar) */
@@ -46,9 +48,10 @@ export const defaultBranding: BrandingSettings = {
   logoDark: "",
   logoLightMobile: "",
   logoDarkMobile: "",
+  tagline: "SMART VISION • SMART LIFE",
   logoHeightDesktop: 80,
   logoHeightMobile: 64,
-  logoHeightSidebar: 80,
+  logoHeightSidebar: 64,
   sidebarHeaderStyle: "white",
   headerHeightMobile: 68,
   headerHeightDesktop: 88,
@@ -66,9 +69,9 @@ export function getBranding(): BrandingSettings {
       if (isViteAssetPath(parsed.logoDark)) parsed.logoDark = "";
       if (isViteAssetPath(parsed.logoLightMobile)) parsed.logoLightMobile = "";
       if (isViteAssetPath(parsed.logoDarkMobile)) parsed.logoDarkMobile = "";
-      // Migrate old defaults (56px) → new defaults (64px) so existing users get the bigger mobile logo
+      // Migrate old defaults so existing users get the bigger / synced sizes
       if (parsed.logoHeightMobile === 56) parsed.logoHeightMobile = defaultBranding.logoHeightMobile;
-      if (parsed.logoHeightSidebar === 56) parsed.logoHeightSidebar = defaultBranding.logoHeightSidebar;
+      if (parsed.logoHeightSidebar === 56 || parsed.logoHeightSidebar === 80) parsed.logoHeightSidebar = defaultBranding.logoHeightSidebar;
       return { ...defaultBranding, ...parsed };
     }
   } catch {}

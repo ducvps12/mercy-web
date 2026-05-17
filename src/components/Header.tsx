@@ -178,9 +178,11 @@ const Header = () => {
                 className="hidden md:dark:block w-auto object-contain"
               />
             </span>
-            <span className="absolute -bottom-0.5 md:bottom-2 text-[6px] md:text-[8px] text-white/90 tracking-[0.15em] font-semibold whitespace-nowrap">
-              SMART VISION • SMART LIFE
-            </span>
+            {branding.tagline && (
+              <span className="absolute -bottom-0.5 md:bottom-2 text-[6px] md:text-[8px] text-white/90 tracking-[0.15em] font-semibold whitespace-nowrap">
+                {branding.tagline}
+              </span>
+            )}
           </a>
 
           {/* Category Button (desktop) */}
@@ -454,8 +456,11 @@ const Header = () => {
       <div
         className={`md:hidden fixed top-0 left-0 z-[70] h-full w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
-        {/* Mobile header */}
-        <div className={`flex items-center justify-between p-4 border-b ${branding.sidebarHeaderStyle === "white" ? "bg-white border-gray-100" : "bg-[#be0117] border-transparent"}`}>
+        {/* Mobile header — height matches the main red header bar so logos line up */}
+        <div
+          className={`flex items-center justify-between px-4 border-b ${branding.sidebarHeaderStyle === "white" ? "bg-white border-gray-100" : "bg-[#be0117] border-transparent"}`}
+          style={{ height: branding.headerHeightMobile }}
+        >
           {branding.sidebarHeaderStyle === "white" ? (
             <>
               {/* Use the dark logo on white background so it's readable */}

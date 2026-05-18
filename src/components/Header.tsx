@@ -367,23 +367,6 @@ const Header = () => {
             </button>
           </div>
         </div>
-
-        {/* Trending keywords inside red area (FPT style) */}
-        {/*
-        <div className={`transition-all duration-300 overflow-hidden ${scrolled ? 'max-h-0' : 'max-h-10'}`}>
-          <div className="container hidden md:flex items-center gap-4 h-8 overflow-x-auto">
-            {trendingKeywords.map((kw, i) => (
-              <button
-                key={i}
-                onClick={() => navigate(`/shop?search=${encodeURIComponent(kw)}`)}
-                className="text-xs text-white/70 hover:text-white whitespace-nowrap transition-colors font-medium"
-              >
-                {kw}
-              </button>
-            ))}
-          </div>
-        </div>
-        */}
       </div>
 
       {/* ═══ Promo Strip + Navigation (white bar, FPT style) ═══ */}

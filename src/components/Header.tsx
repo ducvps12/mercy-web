@@ -60,7 +60,7 @@ const Header = () => {
     const q = searchQuery.toLowerCase();
     return allProducts.filter(p => 
       p.name?.toLowerCase().includes(q) || 
-      p.shortName?.toLowerCase().includes(q) || 
+      (p as any).shortName?.toLowerCase().includes(q) || 
       p.sku?.toLowerCase().includes(q)
     ).slice(0, 6);
   }, [searchQuery, allProducts]);

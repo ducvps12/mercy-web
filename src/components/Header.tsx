@@ -275,24 +275,6 @@ const Header = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 ml-auto shrink-0">
-            {/* Hotline Quick-Contact Button — visible on all sizes */}
-            <a
-              id="header-hotline-button"
-              href="tel:0898273899"
-              aria-label="Liên hệ ngay 0898 273 899"
-              className="group relative flex items-center gap-1.5 md:gap-2 bg-yellow-400 hover:bg-yellow-300 text-[#cb1c22] px-2.5 md:px-3 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-sm"
-            >
-              <span className="relative flex items-center justify-center">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-yellow-300 opacity-70 animate-ping"></span>
-                <Phone className="w-5 h-5 relative" />
-              </span>
-              <span className="hidden md:flex flex-col leading-tight items-start">
-                <span className="text-[10px] font-semibold opacity-80">Liên hệ ngay</span>
-                <span className="text-[13px] font-extrabold">0898 273 899</span>
-              </span>
-              <span className="md:hidden text-[12px] font-extrabold">Liên hệ</span>
-            </a>
-
             {/* User icon / dropdown */}
             <div className="relative hidden md:block">
               {isAuthenticated ? (

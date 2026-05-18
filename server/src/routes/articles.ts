@@ -35,7 +35,8 @@ router.get('/', async (req, res) => {
     res.json(mapped);
   } catch (error) {
     console.error('Fetch articles error:', error);
-    res.status(500).json([]);
+    // Gracefully return empty if table doesn't exist
+    res.json([]);
   }
 });
 

@@ -123,6 +123,9 @@ publicRouter.get('/', async (_req, res) => {
     res.json(result);
   } catch (err: any) {
     console.error('Public flash sale list error:', err);
+    if (err?.code === 'P2021' || err?.message?.includes("doesn't exist")) {
+      return res.json([]);
+    }
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
@@ -163,6 +166,10 @@ adminRouter.get('/', async (_req, res) => {
     res.json(result);
   } catch (err: any) {
     console.error('Admin flash sale list error:', err);
+    // If table doesn't exist yet, return empty gracefully
+    if (err?.code === 'P2021' || err?.message?.includes("doesn't exist")) {
+      return res.json([]);
+    }
     res.status(500).json({ message: 'Lỗi server' });
   }
 });

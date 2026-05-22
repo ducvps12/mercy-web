@@ -579,7 +579,7 @@ router.post('/products', async (req, res) => {
         name,
         short_name: shortName || null,
         category_name: categoryName || null,
-        category_id: categoryId ? parseInt(categoryId) : null,
+        categories: categoryId ? { connect: { id: parseInt(categoryId) } } : undefined,
         price: BigInt(price || 0),
         original_price: BigInt(originalPrice || 0),
         discount: discount || 0,
@@ -670,7 +670,14 @@ router.put('/products/:id', async (req, res) => {
     if (productData.shortName !== undefined) updateData.short_name = productData.shortName || null;
     if (productData.sku !== undefined) updateData.sku = productData.sku;
     if (productData.categoryName !== undefined) updateData.category_name = productData.categoryName || null;
-    if (productData.categoryId !== undefined) updateData.category_id = productData.categoryId ? parseInt(productData.categoryId) : null;
+    if (productData.categoryId !== undefined) {
+      const catId = productData.categoryId ? parseInt(productData.categoryId) : null;
+      if (catId) {
+        updateData.categories = { connect: { id: catId } };
+      } else {
+        updateData.categories = { disconnect: true };
+      }
+    }
     if (productData.price !== undefined) updateData.price = toBigInt(productData.price);
     if (productData.originalPrice !== undefined) updateData.original_price = toBigInt(productData.originalPrice);
     if (productData.discount !== undefined) updateData.discount = Number(productData.discount) || 0;

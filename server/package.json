@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "predev": "node -e \"const major=Number(process.versions.node.split('.')[0]);if(major<18){console.error('Backend requires Node.js >= 18.18.0. Current: '+process.version);process.exit(1)}\"",
+    "predev": "npx prisma generate && node -e \"const major=Number(process.versions.node.split('.')[0]);if(major<18){console.error('Backend requires Node.js >= 18.18.0. Current: '+process.version);process.exit(1)}\"",
     "dev": "tsx watch src/index.ts",
-    "prestart": "node -e \"const major=Number(process.versions.node.split('.')[0]);if(major<18){console.error('Backend requires Node.js >= 18.18.0. Current: '+process.version);process.exit(1)}\"",
+    "prestart": "npx prisma generate && node -e \"const major=Number(process.versions.node.split('.')[0]);if(major<18){console.error('Backend requires Node.js >= 18.18.0. Current: '+process.version);process.exit(1)}\"",
     "start": "tsx src/index.ts",
+    "postinstall": "npx prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

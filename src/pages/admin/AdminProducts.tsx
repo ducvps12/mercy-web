@@ -3,14 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight, ImageIcon, CheckCircle2, AlertCircle, XCircle, Layers } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight, ImageIcon, CheckCircle2, AlertCircle, XCircle, Layers, DollarSign, CheckSquare, Square } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiDelete, apiPost } from "@/lib/api";
 import { formatPrice } from "@/data/products";
+import { getFeaturedCategories, saveFeaturedCategories } from "@/components/HeroSection";
 
 interface Product {
   id: number;
@@ -39,6 +41,14 @@ export default function AdminProducts() {
   const [newestFirst, setNewestFirst] = useState(false);
   const [catSyncLoading, setCatSyncLoading] = useState(false);
 
+  // Selection & bulk edit
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState<"fixed" | "percent">("percent");
+  const [bulkField, setBulkField] = useState<"price" | "originalPrice" | "both">("price");
+  const [bulkValue, setBulkValue] = useState<number>(0);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const loadProducts = async () => {
     setLoading(true);
     try {
@@ -48,31 +58,22 @@ export default function AdminProducts() {
     } catch (err: any) {
       toast.error(err.message || "Không thể tải danh sách sản phẩm");
       setProducts([]);
-      setUseApi(false);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  useEffect(() => { loadProducts(); }, []);
 
-  const filteredProducts = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Delete
   const deleteProduct = async (e: React.MouseEvent, id: number, name: string) => {
-    e.preventDefault();
     e.stopPropagation();
-    if (!useApi) {
-      toast.error("Cần kết nối server MySQL để xóa sản phẩm");
-      return;
-    }
-    if (!confirm(`Xác nhận xóa "${name}"?`)) return;
+    if (!confirm(`Xóa "${name}"?`)) return;
     try {
       await apiDelete(`/admin/products/${id}`);
       toast.success("Đã xóa sản phẩm");
@@ -102,20 +103,76 @@ export default function AdminProducts() {
     }
   };
 
-  // Sync categories
+  // Sync categories — update localStorage featured categories with real product images
   const handleSyncCategories = async () => {
     setCatSyncLoading(true);
     try {
       const data = await apiPost<any>("/admin/sync-categories");
-      if (data.fixed > 0) {
-        toast.success(`Đã đồng bộ ${data.fixed} danh mục`);
+      // data.results has { name, slug, image } for each category
+      // Update localStorage featured categories
+      const cats = getFeaturedCategories();
+      let updated = 0;
+      const newCats = cats.map(cat => {
+        const linkSlug = cat.link.replace(/^\/danh-muc\//, '');
+        const matched = data.results?.find((r: any) =>
+          r.slug === linkSlug || r.name.toLowerCase() === cat.name.toLowerCase()
+        );
+        if (matched?.image && cat.image !== matched.image) {
+          updated++;
+          return { ...cat, image: matched.image };
+        }
+        return cat;
+      });
+      if (updated > 0) {
+        saveFeaturedCategories(newCats);
+        toast.success(`Đã cập nhật ảnh cho ${updated} danh mục`);
       } else {
-        toast.info("Danh mục đã đúng, không cần thay đổi");
+        toast.info("Ảnh danh mục đã đúng");
       }
     } catch (err: any) {
       toast.error(err.message || "Lỗi đồng bộ danh mục");
     } finally {
       setCatSyncLoading(false);
+    }
+  };
+
+  // Selection helpers
+  const toggleSelect = (id: number) => {
+    const s = new Set(selected);
+    if (s.has(id)) s.delete(id); else s.add(id);
+    setSelected(s);
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === filteredProducts.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filteredProducts.map(p => p.id)));
+    }
+  };
+
+  const isAllSelected = filteredProducts.length > 0 && selected.size === filteredProducts.length;
+
+  // Bulk price update
+  const handleBulkPrice = async () => {
+    if (selected.size === 0) { toast.error("Chưa chọn sản phẩm"); return; }
+    if (bulkValue <= 0) { toast.error("Vui lòng nhập giá trị > 0"); return; }
+    setBulkLoading(true);
+    try {
+      const data = await apiPost<any>("/admin/bulk-update-prices", {
+        productIds: Array.from(selected),
+        mode: bulkMode,
+        field: bulkField,
+        value: bulkValue,
+      });
+      toast.success(data.message);
+      setBulkPriceOpen(false);
+      setSelected(new Set());
+      loadProducts();
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi cập nhật giá");
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -167,6 +224,21 @@ export default function AdminProducts() {
           </div>
         </div>
 
+        {/* ═══ Bulk action bar ═══ */}
+        {selected.size > 0 && (
+          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-xl p-3 animate-in fade-in">
+            <span className="text-sm font-medium text-primary">
+              {selected.size} sản phẩm đã chọn
+            </span>
+            <Button size="sm" variant="outline" onClick={() => { setBulkValue(0); setBulkPriceOpen(true); }} className="gap-1.5">
+              <DollarSign className="w-3.5 h-3.5" /> Chỉnh giá hàng loạt
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())} className="text-xs text-muted-foreground">
+              Bỏ chọn
+            </Button>
+          </div>
+        )}
+
         <Card className="border-border">
           <CardContent className="p-0">
             {loading ? (
@@ -178,6 +250,11 @@ export default function AdminProducts() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
+                      <th className="p-4 w-10">
+                        <button onClick={toggleSelectAll} className="flex items-center justify-center" title="Chọn tất cả">
+                          {isAllSelected ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4 text-muted-foreground" />}
+                        </button>
+                      </th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Sản phẩm</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Danh mục</th>
                       <th className="text-left p-4 font-medium text-muted-foreground">Giá bán</th>
@@ -190,14 +267,21 @@ export default function AdminProducts() {
                     {filteredProducts.map((product) => (
                       <tr
                         key={product.id}
-                        className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
+                        className={`border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer ${selected.has(product.id) ? 'bg-primary/5' : ''}`}
                         onClick={(e) => {
-                          // Only navigate if click didn't originate from action buttons
                           const target = e.target as HTMLElement;
-                          if (target.closest('[data-actions]')) return;
+                          if (target.closest('[data-actions]') || target.closest('[data-checkbox]')) return;
                           useApi && navigate(`/admin/products/${product.id}`);
                         }}
                       >
+                        <td className="p-4" data-checkbox>
+                          <button onClick={(e) => { e.stopPropagation(); toggleSelect(product.id); }}>
+                            {selected.has(product.id)
+                              ? <CheckSquare className="w-4 h-4 text-primary" />
+                              : <Square className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+                            }
+                          </button>
+                        </td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden shrink-0">
@@ -279,29 +363,23 @@ export default function AdminProducts() {
                   <thead>
                     <tr className="bg-muted/50 border-b">
                       <th className="text-left p-2 font-medium">SKU</th>
-                      <th className="text-left p-2 font-medium">Sản phẩm</th>
-                      <th className="text-center p-2 font-medium">Trạng thái</th>
-                      <th className="text-center p-2 font-medium">Số ảnh</th>
+                      <th className="text-left p-2 font-medium">Tên</th>
+                      <th className="p-2 font-medium text-center">Trạng thái</th>
+                      <th className="p-2 font-medium text-center">Số ảnh</th>
                     </tr>
                   </thead>
                   <tbody>
                     {syncResult.results?.map((r: any, i: number) => (
-                      <tr key={i} className={`border-b last:border-0 ${
-                        r.status === 'fixed' ? 'bg-green-50/50' : r.status === 'no_files' ? 'bg-yellow-50/50' : ''
-                      }`}>
-                        <td className="p-2 font-mono text-[11px]">{r.sku}</td>
-                        <td className="p-2 truncate max-w-[180px]" title={r.name}>{r.name?.split(' ').slice(0, 4).join(' ')}...</td>
+                      <tr key={i} className="border-b border-border/30 hover:bg-muted/10">
+                        <td className="p-2 font-mono">{r.sku}</td>
+                        <td className="p-2 text-muted-foreground truncate max-w-[150px]">{r.name}</td>
                         <td className="p-2 text-center">
-                          {r.status === 'fixed' && <span className="inline-flex items-center gap-1 text-green-600"><CheckCircle2 className="w-3.5 h-3.5" /> Đã sửa</span>}
-                          {r.status === 'ok' && <span className="inline-flex items-center gap-1 text-blue-600"><CheckCircle2 className="w-3.5 h-3.5" /> OK</span>}
-                          {r.status === 'no_files' && <span className="inline-flex items-center gap-1 text-yellow-600"><AlertCircle className="w-3.5 h-3.5" /> Không có ảnh</span>}
+                          {r.status === 'fixed' && <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />}
+                          {r.status === 'ok' && <AlertCircle className="w-4 h-4 text-blue-500 mx-auto" />}
+                          {r.status === 'no_files' && <XCircle className="w-4 h-4 text-gray-400 mx-auto" />}
                         </td>
-                        <td className="p-2 text-center">
-                          {r.status === 'fixed' ? (
-                            <span>{r.oldCount} → <span className="font-semibold text-green-600">{r.newCount}</span></span>
-                          ) : r.status === 'ok' ? (
-                            <span className="text-muted-foreground">{r.newCount}</span>
-                          ) : '—'}
+                        <td className="p-2 text-center text-muted-foreground">
+                          {r.status === 'no_files' ? '—' : `${r.oldCount} → ${r.newCount}`}
                         </td>
                       </tr>
                     ))}
@@ -330,6 +408,123 @@ export default function AdminProducts() {
               </Button>
               <Button variant="outline" onClick={() => setSyncDialogOpen(false)}>Đóng</Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══ Bulk Price Editor Dialog ═══ */}
+      <Dialog open={bulkPriceOpen} onOpenChange={setBulkPriceOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-primary" /> Chỉnh giá hàng loạt
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Áp dụng cho <strong className="text-foreground">{selected.size}</strong> sản phẩm đã chọn
+          </p>
+          <div className="space-y-4">
+            {/* Mode */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Cách điều chỉnh</Label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setBulkMode("percent")}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                    bulkMode === "percent" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Giảm theo %
+                </button>
+                <button
+                  onClick={() => setBulkMode("fixed")}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                    bulkMode === "fixed" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Giá cố định
+                </button>
+              </div>
+            </div>
+
+            {/* Field */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Áp dụng cho</Label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setBulkField("price")}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
+                    bulkField === "price" ? "border-red-400 bg-red-50 text-red-600" : "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Giá bán
+                </button>
+                <button
+                  onClick={() => setBulkField("originalPrice")}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
+                    bulkField === "originalPrice" ? "border-blue-400 bg-blue-50 text-blue-600" : "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Giá gốc
+                </button>
+                <button
+                  onClick={() => setBulkField("both")}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
+                    bulkField === "both" ? "border-purple-400 bg-purple-50 text-purple-600" : "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Cả hai
+                </button>
+              </div>
+            </div>
+
+            {/* Value */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">
+                {bulkMode === "percent" ? "Phần trăm giảm (%)" : "Giá mới (VND)"}
+              </Label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  value={bulkValue || ""}
+                  onChange={(e) => setBulkValue(Number(e.target.value))}
+                  placeholder={bulkMode === "percent" ? "Ví dụ: 18" : "Ví dụ: 4091800"}
+                  className="pr-10"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {bulkMode === "percent" ? "%" : "₫"}
+                </span>
+              </div>
+              {bulkMode === "percent" && (
+                <p className="text-[10px] text-muted-foreground">
+                  Giá bán = Giá gốc × (1 - {bulkValue || 0}%) → giảm {bulkValue || 0}% từ giá gốc
+                </p>
+              )}
+            </div>
+
+            {/* Quick percent buttons */}
+            {bulkMode === "percent" && (
+              <div className="flex gap-1.5 flex-wrap">
+                {[10, 15, 18, 20, 25, 30, 50].map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setBulkValue(p)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      bulkValue === p ? "border-primary bg-primary text-white" : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    -{p}%
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkPriceOpen(false)}>Hủy</Button>
+            <Button onClick={handleBulkPrice} disabled={bulkLoading || bulkValue <= 0} className="gap-1.5">
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <DollarSign className="w-3.5 h-3.5" />}
+              Áp dụng cho {selected.size} sản phẩm
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

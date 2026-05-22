@@ -700,7 +700,7 @@ router.put('/products/:id', async (req, res) => {
         await prisma.product_images.createMany({
           data: images.map((img: any, idx: number) => ({
             product_id: existing.product_id,
-            image_url: img.url,
+            image_url: typeof img === 'string' ? img : (img.url || ''),
             sort_order: idx,
           })),
         });
@@ -916,13 +916,13 @@ router.post('/sync-images', async (req, res) => {
 // ═══════════════════════════════════
 router.post('/sync-categories', async (req, res) => {
   try {
-    // Get all categories with product count
+    // Featured categories use localStorage on frontend, not DB.
+    // This endpoint returns product images for each DB category so the frontend can update.
     const categories = await prisma.categories.findMany({
       include: { _count: { select: { products: true } } }
     });
 
-    const results: { name: string; status: string; image?: string }[] = [];
-    let fixed = 0;
+    const results: { id: number; name: string; slug: string; status: string; image?: string; productCount: number }[] = [];
 
     for (const cat of categories) {
       // Find first product in this category with an image
@@ -932,7 +932,7 @@ router.post('/sync-categories', async (req, res) => {
       });
 
       if (!product) {
-        results.push({ name: cat.name, status: 'no_products' });
+        results.push({ id: cat.id, name: cat.name, slug: cat.slug, status: 'no_products', productCount: cat._count.products });
         continue;
       }
 
@@ -943,29 +943,85 @@ router.post('/sync-categories', async (req, res) => {
       });
 
       if (!img) {
-        results.push({ name: cat.name, status: 'no_images' });
+        results.push({ id: cat.id, name: cat.name, slug: cat.slug, status: 'no_images', productCount: cat._count.products });
         continue;
       }
 
-      // Update category image
-      await prisma.categories.update({
-        where: { id: cat.id },
-        data: { image: img.image_url }
-      });
-
-      results.push({ name: cat.name, status: 'fixed', image: img.image_url });
-      fixed++;
+      results.push({ id: cat.id, name: cat.name, slug: cat.slug, status: 'ok', image: img.image_url, productCount: cat._count.products });
     }
 
     res.json({
-      message: `Đã đồng bộ ${fixed} danh mục`,
-      fixed,
+      message: `Đã quét ${categories.length} danh mục`,
       total: categories.length,
       results
     });
   } catch (error) {
     console.error('Sync categories error:', error);
     res.status(500).json({ message: 'Lỗi đồng bộ danh mục' });
+  }
+});
+
+// ═══════════════════════════════════
+// BULK UPDATE PRICES
+// ═══════════════════════════════════
+router.post('/bulk-update-prices', async (req, res) => {
+  try {
+    const { productIds, mode, field, value } = req.body;
+    // productIds: number[] - list of product IDs to update
+    // mode: 'fixed' | 'percent' 
+    // field: 'price' | 'originalPrice' | 'both'
+    // value: number (amount in VND for fixed, percentage for percent)
+
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ message: 'Chưa chọn sản phẩm' });
+    }
+
+    const products = await prisma.products.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, product_id: true, name: true, price: true, original_price: true }
+    });
+
+    let updated = 0;
+    for (const p of products) {
+      const updateData: any = {};
+
+      if (field === 'price' || field === 'both') {
+        if (mode === 'fixed') {
+          updateData.price = BigInt(value);
+        } else if (mode === 'percent') {
+          // Decrease by percentage
+          const newPrice = Math.round(Number(p.original_price) * (1 - value / 100));
+          updateData.price = BigInt(newPrice);
+        }
+      }
+
+      if (field === 'originalPrice' || field === 'both') {
+        if (mode === 'fixed') {
+          updateData.original_price = BigInt(value);
+        } else if (mode === 'percent') {
+          // Increase by percentage from current price
+          const newOriginal = Math.round(Number(p.price) * (1 + value / 100));
+          updateData.original_price = BigInt(newOriginal);
+        }
+      }
+
+      // Auto-calc discount
+      const finalPrice = updateData.price !== undefined ? Number(updateData.price) : Number(p.price);
+      const finalOriginal = updateData.original_price !== undefined ? Number(updateData.original_price) : Number(p.original_price);
+      if (finalOriginal > 0 && finalOriginal > finalPrice) {
+        updateData.discount = Math.round(((finalOriginal - finalPrice) / finalOriginal) * 100);
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.products.update({ where: { id: p.id }, data: updateData });
+        updated++;
+      }
+    }
+
+    res.json({ message: `Đã cập nhật giá ${updated} sản phẩm`, updated });
+  } catch (error) {
+    console.error('Bulk update prices error:', error);
+    res.status(500).json({ message: 'Lỗi cập nhật giá hàng loạt' });
   }
 });
 

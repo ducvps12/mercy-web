@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import {
   CategoryItem, defaultCategories, getFeaturedCategories, saveFeaturedCategories,
 } from "@/components/HeroSection";
-import { API_BASE, apiGet } from "@/lib/api";
+import { API_BASE, apiPost } from "@/lib/api";
 
 const gradientOptions = [
   { label: "Đỏ - Hồng", value: "from-red-500 via-rose-500 to-pink-500", lightBg: "from-red-50 via-rose-50 to-pink-50", border: "hover:border-red-300" },
@@ -77,29 +77,17 @@ export default function AdminCategories() {
   const syncCategoryImages = async () => {
     setSyncingImages(true);
     try {
-      // Fetch all products from admin API
-      const products = await apiGet<any[]>("/admin/products");
+      const data = await apiPost<any>("/admin/sync-categories");
+      // data.results has { id, name, slug, image } for each DB category
       let updated = 0;
       const newCategories = categories.map(cat => {
-        // Match by link path (e.g. /danh-muc/kinh-camera -> category_name contains keyword)
         const linkSlug = cat.link.replace(/^\/danh-muc\//, '');
-        // Find a product whose category matches this category
-        const matchedProduct = products.find(p => {
-          if (!p.category) return false;
-          // Generate a slug-like string from the category name
-          const catSlug = p.category
-            .toLowerCase()
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .replace(/đ/g, 'd').replace(/Đ/g, 'D')
-            .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-          return catSlug === linkSlug || p.category.toLowerCase() === cat.name.toLowerCase();
-        });
-
-        if (matchedProduct && matchedProduct.image) {
-          if (cat.image !== matchedProduct.image) {
-            updated++;
-            return { ...cat, image: matchedProduct.image };
-          }
+        const matched = data.results?.find((r: any) =>
+          r.slug === linkSlug || r.name.toLowerCase() === cat.name.toLowerCase()
+        );
+        if (matched?.image && cat.image !== matched.image) {
+          updated++;
+          return { ...cat, image: matched.image };
         }
         return cat;
       });

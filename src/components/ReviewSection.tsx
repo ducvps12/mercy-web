@@ -6,7 +6,15 @@ import { Link } from "react-router-dom";
 import { API_BASE } from "@/lib/api";
 
 // TikTok review videos from @mr.manhdora.macginhi
-const tiktokReviews = [
+export interface ReviewVideo {
+  id: number;
+  videoId: string;
+  title: string;
+  productIndex: number;
+  thumbnail: string;
+}
+
+export const defaultReviews: ReviewVideo[] = [
   {
     id: 1,
     videoId: "7616957685631683861",
@@ -50,6 +58,23 @@ const tiktokReviews = [
     thumbnail: "https://p16-sign-sg.tiktokcdn.com/tos-alisg-p-0037/o0hfAABD2E3xQIEqeN9bAAgfIj7gKDnAfNBiCi~tplv-dmt-logom:tos-alisg-i-0000/42d75d68bad7404cb18fc8b3aa36dcee.image?lk3s=b59d6b55&nonce=16693&refresh_token=f1f3a7a04a82cbb4f4ddf8e1d2bce45a&x-expires=1747310400&x-signature=v5N1hBXdOa4vJU5zYmTLgx6fJJk%3D&shp=b59d6b55&shcp=fdd36af4",
   }
 ];
+
+const REVIEW_STORAGE_KEY = "mercy_review_videos";
+
+export function getReviewVideos(): ReviewVideo[] {
+  try {
+    const saved = localStorage.getItem(REVIEW_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return defaultReviews;
+}
+
+export function saveReviewVideos(reviews: ReviewVideo[]) {
+  localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(reviews));
+}
 
 /**
  * Lazy-loaded TikTok video card.
@@ -188,7 +213,8 @@ const ReviewSection = () => {
 
   const reviewItems = useMemo(() => {
     if (!products.length) return [];
-    return tiktokReviews.map((r) => {
+    const reviews = getReviewVideos();
+    return reviews.map((r) => {
       const p = products[r.productIndex] || products[0];
       return {
         ...r,

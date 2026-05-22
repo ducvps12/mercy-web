@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight, ImageIcon, CheckCircle2, AlertCircle, XCircle, Layers, DollarSign, CheckSquare, Square } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight, ImageIcon, CheckCircle2, AlertCircle, XCircle, Layers, DollarSign, CheckSquare, Square, Star } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiDelete, apiPost } from "@/lib/api";
 import { formatPrice } from "@/data/products";
@@ -48,6 +48,7 @@ export default function AdminProducts() {
   const [bulkField, setBulkField] = useState<"price" | "originalPrice" | "both">("price");
   const [bulkValue, setBulkValue] = useState<number>(0);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [lastAsMainLoading, setLastAsMainLoading] = useState(false);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -136,6 +137,25 @@ export default function AdminProducts() {
     }
   };
 
+  // Sync last image as main for ALL products
+  const handleLastAsMain = async () => {
+    if (!confirm("Đặt ảnh CUỐI của mỗi sản phẩm làm ảnh đại diện?\nThao tác này áp dụng cho tất cả sản phẩm.")) return;
+    setLastAsMainLoading(true);
+    try {
+      const data = await apiPost<any>("/admin/sync-last-as-main");
+      if (data.fixed > 0) {
+        toast.success(data.message);
+        loadProducts();
+      } else {
+        toast.info("Tất cả sản phẩm đã có ảnh cuối là ảnh chính");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi đồng bộ ảnh cuối");
+    } finally {
+      setLastAsMainLoading(false);
+    }
+  };
+
   // Selection helpers
   const toggleSelect = (id: number) => {
     const s = new Set(selected);
@@ -214,6 +234,10 @@ export default function AdminProducts() {
             <Button variant="outline" onClick={handleSyncImages} disabled={syncLoading || loading} className="gap-2" title="Đồng bộ ảnh kho với sản phẩm theo SKU">
               {syncLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
               <span className="hidden sm:inline">ĐB Ảnh</span>
+            </Button>
+            <Button variant="outline" onClick={handleLastAsMain} disabled={lastAsMainLoading || loading} className="gap-2" title="Ảnh cuối của mỗi sản phẩm → làm ảnh đại diện">
+              {lastAsMainLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4" />}
+              <span className="hidden sm:inline">Ảnh cuối → Chính</span>
             </Button>
             <Button variant="outline" onClick={loadProducts} disabled={loading} className="gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />

@@ -658,49 +658,58 @@ router.put('/products/:id', async (req, res) => {
 
     const { images, specs, variants, ...productData } = req.body;
 
+    // Safe BigInt helper
+    const toBigInt = (v: any): bigint => {
+      if (v === null || v === undefined || v === '') return BigInt(0);
+      return BigInt(Math.round(Number(v)));
+    };
+
     // Update product fields
     const updateData: any = {};
     if (productData.name !== undefined) updateData.name = productData.name;
-    if (productData.shortName !== undefined) updateData.short_name = productData.shortName;
+    if (productData.shortName !== undefined) updateData.short_name = productData.shortName || null;
     if (productData.sku !== undefined) updateData.sku = productData.sku;
-    if (productData.categoryName !== undefined) updateData.category_name = productData.categoryName;
-    if (productData.categoryId !== undefined) updateData.category_id = productData.categoryId;
-    if (productData.price !== undefined) updateData.price = BigInt(productData.price);
-    if (productData.originalPrice !== undefined) updateData.original_price = BigInt(productData.originalPrice);
-    if (productData.discount !== undefined) updateData.discount = productData.discount;
+    if (productData.categoryName !== undefined) updateData.category_name = productData.categoryName || null;
+    if (productData.categoryId !== undefined) updateData.category_id = productData.categoryId ? parseInt(productData.categoryId) : null;
+    if (productData.price !== undefined) updateData.price = toBigInt(productData.price);
+    if (productData.originalPrice !== undefined) updateData.original_price = toBigInt(productData.originalPrice);
+    if (productData.discount !== undefined) updateData.discount = Number(productData.discount) || 0;
     if (productData.badge !== undefined) updateData.badge = productData.badge || null;
-    if (productData.rating !== undefined) updateData.rating = productData.rating;
-    if (productData.sold !== undefined) updateData.sold = productData.sold;
-    if (productData.stock !== undefined) updateData.stock = productData.stock;
-    if (productData.brand !== undefined) updateData.brand = productData.brand;
-    if (productData.description !== undefined) updateData.description = productData.description;
-    if (productData.seoTags !== undefined) updateData.seo_tags = productData.seoTags;
+    if (productData.rating !== undefined) updateData.rating = Number(productData.rating) || 0;
+    if (productData.sold !== undefined) updateData.sold = Number(productData.sold) || 0;
+    if (productData.stock !== undefined) updateData.stock = Number(productData.stock) || 0;
+    if (productData.brand !== undefined) updateData.brand = productData.brand || 'Mercy Tech Global';
+    if (productData.description !== undefined) updateData.description = productData.description || '';
+    if (productData.seoTags !== undefined) updateData.seo_tags = productData.seoTags || null;
     if (productData.shopeeUrl !== undefined) updateData.shopee_url = productData.shopeeUrl || null;
     if (productData.tiktokUrl !== undefined) updateData.tiktok_url = productData.tiktokUrl || null;
     if (productData.youtubeUrl !== undefined) updateData.youtube_url = productData.youtubeUrl || null;
-    if (productData.isFlashSale !== undefined) updateData.is_flash_sale = productData.isFlashSale;
-    if (productData.flashSalePercent !== undefined) updateData.flash_sale_percent = productData.flashSalePercent;
-    if (productData.isActive !== undefined) updateData.is_active = productData.isActive;
-    if (productData.featuresVn !== undefined) updateData.features_vn = productData.featuresVn;
-    if (productData.featuresEn !== undefined) updateData.features_en = productData.featuresEn;
-    if (productData.footerInfo !== undefined) updateData.footer_info = productData.footerInfo;
+    if (productData.isFlashSale !== undefined) updateData.is_flash_sale = !!productData.isFlashSale;
+    if (productData.flashSalePercent !== undefined) updateData.flash_sale_percent = Number(productData.flashSalePercent) || 0;
+    if (productData.isActive !== undefined) updateData.is_active = productData.isActive !== false;
+    if (productData.featuresVn !== undefined) updateData.features_vn = productData.featuresVn || null;
+    if (productData.featuresEn !== undefined) updateData.features_en = productData.featuresEn || null;
+    if (productData.footerInfo !== undefined) updateData.footer_info = productData.footerInfo || null;
     if (productData.productionYear !== undefined) updateData.production_year = productData.productionYear ? parseInt(productData.productionYear) : null;
-    if (productData.clearancePrice !== undefined) updateData.clearance_price = BigInt(productData.clearancePrice);
-    if (productData.dailySalePrice !== undefined) updateData.daily_sale_price = BigInt(productData.dailySalePrice);
-    if (productData.campaignPrice !== undefined) updateData.campaign_price = BigInt(productData.campaignPrice);
-    if (productData.offPlatformPrice !== undefined) updateData.off_platform_price = BigInt(productData.offPlatformPrice);
-    if (productData.warrantyData !== undefined) updateData.warranty_data = productData.warrantyData;
+    if (productData.clearancePrice !== undefined) updateData.clearance_price = toBigInt(productData.clearancePrice);
+    if (productData.dailySalePrice !== undefined) updateData.daily_sale_price = toBigInt(productData.dailySalePrice);
+    if (productData.campaignPrice !== undefined) updateData.campaign_price = toBigInt(productData.campaignPrice);
+    if (productData.offPlatformPrice !== undefined) updateData.off_platform_price = toBigInt(productData.offPlatformPrice);
+    if (productData.warrantyData !== undefined) updateData.warranty_data = typeof productData.warrantyData === 'string' ? productData.warrantyData : JSON.stringify(productData.warrantyData || null);
 
-    const product = await prisma.products.update({ where: { id }, data: updateData });
+    await prisma.products.update({ where: { id }, data: updateData });
 
     // Update images if provided (replace all)
     if (images !== undefined) {
       await prisma.product_images.deleteMany({ where: { product_id: existing.product_id } });
-      if (images.length > 0) {
+      const validImages = (Array.isArray(images) ? images : [])
+        .map((img: any) => typeof img === 'string' ? img : (img?.url || ''))
+        .filter((url: string) => url.length > 0);
+      if (validImages.length > 0) {
         await prisma.product_images.createMany({
-          data: images.map((img: any, idx: number) => ({
+          data: validImages.map((url: string, idx: number) => ({
             product_id: existing.product_id,
-            image_url: typeof img === 'string' ? img : (img.url || ''),
+            image_url: url,
             sort_order: idx,
           })),
         });
@@ -710,12 +719,13 @@ router.put('/products/:id', async (req, res) => {
     // Update specs if provided (replace all)
     if (specs !== undefined) {
       await prisma.product_specs.deleteMany({ where: { product_id: existing.product_id } });
-      if (specs.length > 0) {
+      const validSpecs = (Array.isArray(specs) ? specs : []).filter((s: any) => s?.name);
+      if (validSpecs.length > 0) {
         await prisma.product_specs.createMany({
-          data: specs.map((s: any, idx: number) => ({
+          data: validSpecs.map((s: any, idx: number) => ({
             product_id: existing.product_id,
-            spec_name: s.name,
-            spec_value: s.value,
+            spec_name: s.name || '',
+            spec_value: s.value || '',
             sort_order: idx,
           })),
         });
@@ -725,11 +735,12 @@ router.put('/products/:id', async (req, res) => {
     // Update variants if provided (replace all)
     if (variants !== undefined) {
       await prisma.product_variants.deleteMany({ where: { product_id: existing.product_id } });
-      if (variants.length > 0) {
+      const validVariants = (Array.isArray(variants) ? variants : []).filter((v: any) => v?.name);
+      if (validVariants.length > 0) {
         await prisma.product_variants.createMany({
-          data: variants.map((v: any) => ({
+          data: validVariants.map((v: any) => ({
             product_id: existing.product_id,
-            variant_name: v.name,
+            variant_name: v.name || '',
             is_active: v.isActive !== false,
           })),
         });
@@ -739,19 +750,19 @@ router.put('/products/:id', async (req, res) => {
     // Update reviews if provided (replace all)
     if (req.body.reviews !== undefined) {
       await prisma.product_reviews.deleteMany({ where: { product_id: existing.product_id } });
-      const reviews = req.body.reviews;
+      const reviews = Array.isArray(req.body.reviews) ? req.body.reviews : [];
       if (reviews.length > 0) {
         await prisma.product_reviews.createMany({
           data: reviews.map((r: any, idx: number) => ({
             product_id: existing.product_id,
-            reviewer_name: r.name,
+            reviewer_name: r.name || 'Ẩn danh',
             avatar_letter: r.avatarLetter || r.name?.charAt(0)?.toUpperCase() || '?',
             avatar_color: r.avatarColor || 'bg-red-500',
-            rating: r.rating || 5,
-            review_date: r.date,
-            is_verified: r.verified || false,
-            review_text: r.text,
-            helpful_count: r.helpful || 0,
+            rating: Number(r.rating) || 5,
+            review_date: r.date || '',
+            is_verified: !!r.verified,
+            review_text: r.text || '',
+            helpful_count: Number(r.helpful) || 0,
             image_url: r.imageUrl || '',
             is_active: r.isActive !== false,
             sort_order: idx,
@@ -760,10 +771,10 @@ router.put('/products/:id', async (req, res) => {
       }
     }
 
-    res.json({ message: 'Cập nhật thành công', id: product.id });
-  } catch (error) {
+    res.json({ message: 'Cập nhật thành công', id });
+  } catch (error: any) {
     console.error('Update product error:', error);
-    res.status(500).json({ message: 'Lỗi cập nhật sản phẩm' });
+    res.status(500).json({ message: `Lỗi cập nhật: ${error?.message || 'Unknown error'}` });
   }
 });
 
@@ -908,6 +919,85 @@ router.post('/sync-images', async (req, res) => {
   } catch (error) {
     console.error('Sync images error:', error);
     res.status(500).json({ message: 'Lỗi đồng bộ ảnh' });
+  }
+});
+
+// ═══════════════════════════════════
+// SYNC LAST IMAGE AS MAIN — set each product's last image as the thumbnail
+// ═══════════════════════════════════
+router.post('/sync-last-as-main', async (req, res) => {
+  try {
+    const products = await prisma.products.findMany({
+      select: { id: true, product_id: true, name: true, sku: true }
+    });
+
+    let fixed = 0;
+    let skipped = 0;
+    const results: { sku: string; name: string; status: string; mainImage?: string; totalImages: number }[] = [];
+
+    for (const product of products) {
+      const images = await prisma.product_images.findMany({
+        where: { product_id: product.product_id },
+        orderBy: { sort_order: 'asc' }
+      });
+
+      if (images.length <= 1) {
+        results.push({
+          sku: product.sku || product.product_id,
+          name: product.name,
+          status: images.length === 0 ? 'no_images' : 'single',
+          mainImage: images[0]?.image_url,
+          totalImages: images.length
+        });
+        skipped++;
+        continue;
+      }
+
+      // Check if last image is already the first
+      const lastImage = images[images.length - 1];
+      if (images[0].id === lastImage.id) {
+        results.push({
+          sku: product.sku || product.product_id,
+          name: product.name,
+          status: 'ok',
+          mainImage: lastImage.image_url,
+          totalImages: images.length
+        });
+        skipped++;
+        continue;
+      }
+
+      // Move last image to first position: [1,2,3,4,LAST] → [LAST,1,2,3,4]
+      const reordered = [lastImage, ...images.filter(img => img.id !== lastImage.id)];
+
+      // Update sort_order for all images
+      for (let i = 0; i < reordered.length; i++) {
+        await prisma.product_images.update({
+          where: { id: reordered[i].id },
+          data: { sort_order: i }
+        });
+      }
+
+      results.push({
+        sku: product.sku || product.product_id,
+        name: product.name,
+        status: 'fixed',
+        mainImage: lastImage.image_url,
+        totalImages: images.length
+      });
+      fixed++;
+    }
+
+    res.json({
+      message: `Đã đặt ảnh cuối làm ảnh chính cho ${fixed} sản phẩm, ${skipped} không cần thay đổi`,
+      fixed,
+      skipped,
+      total: products.length,
+      results
+    });
+  } catch (error) {
+    console.error('Sync last as main error:', error);
+    res.status(500).json({ message: 'Lỗi đồng bộ ảnh cuối' });
   }
 });
 

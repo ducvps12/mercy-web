@@ -70,6 +70,7 @@ import AdminTransactions from "./pages/admin/AdminTransactions.tsx";
 import AdminContacts from "./pages/admin/AdminContacts.tsx";
 import AdminFlashSale from "./pages/admin/AdminFlashSale.tsx";
 import AdminReviews from "./pages/admin/AdminReviews.tsx";
+import AdminLivestream from "./pages/admin/AdminLivestream.tsx";
 import AdminGuard from "./components/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -128,6 +129,7 @@ const App = () => (
                 <Route path="/admin/transactions" element={<AdminGuard><AdminTransactions /></AdminGuard>} />
                 <Route path="/admin/flash-sale" element={<AdminGuard><AdminFlashSale /></AdminGuard>} />
                 <Route path="/admin/reviews" element={<AdminGuard><AdminReviews /></AdminGuard>} />
+                <Route path="/admin/livestream" element={<AdminGuard><AdminLivestream /></AdminGuard>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

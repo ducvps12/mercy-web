@@ -810,14 +810,33 @@ router.post('/sync-images', async (req, res) => {
     // Read all image files
     const allFiles = fs.default.readdirSync(PRODUCTS_DIR).filter(f => IMAGE_EXTS.test(f)).sort();
 
-    // Group files by SKU prefix: "MCK5.0Đôi-0.jpg" → "MCK5.0Đôi"
+    // Group files by SKU prefix. Supports TWO naming patterns:
+    //   Dash pattern:  "MCK5.0Đôi-0.jpg"  → group "MCK5.0Đôi"
+    //   Dot pattern:   "MCK5.0D.2.png"    → group "MCK5.0D"  (legacy production files)
+    //   Plain:         "MCK5.0D.png"       → group "MCK5.0D"
     const fileGroups: Record<string, string[]> = {};
     for (const f of allFiles) {
-      const nameWithoutExt = f.replace(/\.[^/.]+$/, '');
-      const match = nameWithoutExt.match(/^(.+)-\d+$/);
-      const group = match ? match[1] : nameWithoutExt;
-      if (!fileGroups[group]) fileGroups[group] = [];
-      fileGroups[group].push(f);
+      const nameWithoutExt = f.replace(/\.[^/.]+$/, ''); // strip extension
+      // Try dash pattern first: "SKU-0", "SKU-1", "SKU-10"
+      const dashMatch = nameWithoutExt.match(/^(.+)-\d+$/);
+      if (dashMatch) {
+        const group = dashMatch[1];
+        if (!fileGroups[group]) fileGroups[group] = [];
+        fileGroups[group].push(f);
+        continue;
+      }
+      // Try dot pattern: "SKU.2", "SKU.10" (but NOT "MCK5.0D" which has dot in SKU)
+      // Only match trailing .number if the part before it looks like an existing SKU
+      const dotMatch = nameWithoutExt.match(/^(.+)\.(\d+)$/);
+      if (dotMatch) {
+        const group = dotMatch[1];
+        if (!fileGroups[group]) fileGroups[group] = [];
+        fileGroups[group].push(f);
+        continue;
+      }
+      // No number suffix — this IS the base file (e.g. "MCK5.0D.png" → group "MCK5.0D")
+      if (!fileGroups[nameWithoutExt]) fileGroups[nameWithoutExt] = [];
+      fileGroups[nameWithoutExt].push(f);
     }
 
     // Get all products

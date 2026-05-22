@@ -36,12 +36,19 @@ const isAdmin = (req: any, res: any, next: any) => {
 router.use(isAdmin);
 
 // Helper: extract group/SKU prefix from filename
-// e.g. "MCK5.0D-0.jpg" → "MCK5.0D", "RBnu-capy-2.jpg" → "RBnu-capy", "Bao-da-1.jpg" → "Bao-da"
+// Supports both naming patterns:
+//   "MCK5.0D-0.jpg"  → "MCK5.0D"  (dash pattern)
+//   "MCK5.0D.2.png"  → "MCK5.0D"  (dot pattern, legacy production)
+//   "MCK5.0D.png"    → "MCK5.0D"  (plain, no number suffix)
 function extractGroup(filename: string): string {
   const nameWithoutExt = filename.replace(/\.[^/.]+$/, ''); // strip extension
-  // Match pattern: everything before the last dash followed by only digits
-  const match = nameWithoutExt.match(/^(.+)-\d+$/);
-  if (match) return match[1];
+  // Dash pattern: "SKU-0" → "SKU"
+  const dashMatch = nameWithoutExt.match(/^(.+)-\d+$/);
+  if (dashMatch) return dashMatch[1];
+  // Dot pattern: "SKU.2" → "SKU"
+  const dotMatch = nameWithoutExt.match(/^(.+)\.\d+$/);
+  if (dotMatch) return dotMatch[1];
+  // No number suffix
   return nameWithoutExt;
 }
 

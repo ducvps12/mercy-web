@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2, Sparkles, RotateCcw, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2, Sparkles, RotateCcw, Save, FolderOpen, Search } from "lucide-react";
 import { toast } from "sonner";
-import { apiPost } from "@/lib/api";
+import { apiPost, API_BASE } from "@/lib/api";
 import { getBranding, saveBranding, saveBrandingToServer, defaultBranding, resolveBranding, type BrandingSettings } from "@/lib/branding";
 
 /* ═══════════════════════════════════════════
@@ -77,20 +77,21 @@ function savePromoBanners(banners: BannerItem[]) {
 }
 
 /* ═══════════════════════════════════════════
-   Image Upload Component
+   Image Upload Component (with media picker)
    ═══════════════════════════════════════════ */
 const ImageUploader = ({
   currentImage,
   onImageChange,
   previewFallback,
   fallbackLabel,
+  onPickFromMedia,
 }: {
   currentImage: string;
   onImageChange: (url: string) => void;
-  /** When `currentImage` is empty, show this image in the preview instead */
   previewFallback?: string;
-  /** Optional label to show next to preview when fallback is in effect */
   fallbackLabel?: string;
+  /** Callback to open the shared media picker */
+  onPickFromMedia?: () => void;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -198,15 +199,24 @@ const ImageUploader = ({
         )}
       </div>
 
-      {/* URL input fallback */}
-      <div>
-        <Label className="text-xs text-gray-500">Hoặc nhập URL ảnh</Label>
-        <Input
-          value={currentImage}
-          onChange={(e) => onImageChange(e.target.value)}
-          placeholder="Để trống = dùng logo mặc định, hoặc nhập /banners/banner/1.png hay https://..."
-          className="mt-1"
-        />
+      {/* Pick from media + URL input */}
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <Label className="text-xs text-gray-500">Hoặc nhập URL ảnh</Label>
+          <Input
+            value={currentImage}
+            onChange={(e) => onImageChange(e.target.value)}
+            placeholder="/banners/banner/1.png hoặc https://..."
+            className="mt-1"
+          />
+        </div>
+        {onPickFromMedia && (
+          <div className="flex items-end">
+            <Button variant="outline" size="sm" onClick={onPickFromMedia} className="gap-1.5 h-9">
+              <FolderOpen className="w-3.5 h-3.5" /> Kho ảnh
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -231,6 +241,15 @@ const AdminBanners = () => {
   const [editingPromo, setEditingPromo] = useState<BannerItem | null>(null);
   const [promoForm, setPromoForm] = useState({ image: "", imageMobile: "", alt: "", link: "/shop" });
   const [deletePromoId, setDeletePromoId] = useState<number | null>(null);
+
+  // Media picker state (shared across all ImageUploader fields)
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<string>(""); // which field triggered picker
+  const [mediaFiles, setMediaFiles] = useState<{ filename: string; url: string; group: string }[]>([]);
+  const [mediaGroups, setMediaGroups] = useState<string[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaSearch, setMediaSearch] = useState("");
+  const [mediaFilter, setMediaFilter] = useState("all");
 
   useEffect(() => {
     setHero(getHeroBanner());
@@ -335,6 +354,44 @@ const AdminBanners = () => {
     setPromos(updated);
     savePromoBanners(updated);
   };
+
+  // ── Media picker helpers ──
+  const loadMedia = useCallback(async () => {
+    setMediaLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const h: Record<string, string> = {};
+      if (token) h["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(`${API_BASE}/media/list`, { headers: h });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setMediaFiles(data.files || []);
+      setMediaGroups(data.groups || []);
+    } catch { toast.error("Lỗi tải kho ảnh"); }
+    finally { setMediaLoading(false); }
+  }, []);
+
+  const openMediaPicker = (target: string) => {
+    setMediaPickerTarget(target);
+    setMediaSearch(""); setMediaFilter("all");
+    setMediaPickerOpen(true);
+    if (mediaFiles.length === 0) loadMedia();
+  };
+
+  const pickMediaImage = (url: string) => {
+    // Route picked URL to the correct form field
+    if (mediaPickerTarget === "hero_desktop") setHeroForm({ ...heroForm, image: url });
+    else if (mediaPickerTarget === "hero_mobile") setHeroForm({ ...heroForm, imageMobile: url });
+    else if (mediaPickerTarget === "promo_desktop") setPromoForm({ ...promoForm, image: url });
+    else if (mediaPickerTarget === "promo_mobile") setPromoForm({ ...promoForm, imageMobile: url });
+    setMediaPickerOpen(false);
+  };
+
+  const filteredMedia = mediaFiles.filter(f => {
+    if (mediaFilter !== "all" && f.group !== mediaFilter) return false;
+    if (mediaSearch && !f.filename.toLowerCase().includes(mediaSearch.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <AdminLayout>
@@ -743,6 +800,7 @@ const AdminBanners = () => {
                     <ImageUploader
                       currentImage={heroForm.image}
                       onImageChange={(url) => setHeroForm({ ...heroForm, image: url })}
+                      onPickFromMedia={() => openMediaPicker("hero_desktop")}
                     />
                   </div>
                 </div>
@@ -752,6 +810,7 @@ const AdminBanners = () => {
                     <ImageUploader
                       currentImage={heroForm.imageMobile}
                       onImageChange={(url) => setHeroForm({ ...heroForm, imageMobile: url })}
+                      onPickFromMedia={() => openMediaPicker("hero_mobile")}
                     />
                   </div>
                 </div>
@@ -798,6 +857,7 @@ const AdminBanners = () => {
                     <ImageUploader
                       currentImage={promoForm.image}
                       onImageChange={(url) => setPromoForm({ ...promoForm, image: url })}
+                      onPickFromMedia={() => openMediaPicker("promo_desktop")}
                     />
                   </div>
                 </div>
@@ -807,6 +867,7 @@ const AdminBanners = () => {
                     <ImageUploader
                       currentImage={promoForm.imageMobile}
                       onImageChange={(url) => setPromoForm({ ...promoForm, imageMobile: url })}
+                      onPickFromMedia={() => openMediaPicker("promo_mobile")}
                     />
                   </div>
                 </div>
@@ -860,6 +921,48 @@ const AdminBanners = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* ═══ Media Picker Dialog (shared) ═══ */}
+      <Dialog open={mediaPickerOpen} onOpenChange={setMediaPickerOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-primary" /> Chọn ảnh từ kho
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input value={mediaSearch} onChange={e => setMediaSearch(e.target.value)}
+                placeholder="Tìm ảnh..." className="pl-8 h-8 text-xs" />
+            </div>
+            <select value={mediaFilter} onChange={e => setMediaFilter(e.target.value)}
+              className="h-8 rounded-md border border-input bg-background px-2 text-xs">
+              <option value="all">Tất cả</option>
+              {mediaGroups.map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {mediaLoading ? (
+              <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+            ) : filteredMedia.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground"><p className="text-sm">Không tìm thấy ảnh</p></div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 py-2">
+                {filteredMedia.map(f => (
+                  <button key={f.filename} onClick={() => pickMediaImage(f.url)}
+                    className="rounded-lg border border-border overflow-hidden hover:border-primary hover:shadow-md transition-all text-left">
+                    <div className="aspect-square bg-muted overflow-hidden">
+                      <img src={f.url} alt={f.filename} loading="lazy" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="p-1.5"><p className="text-[10px] font-medium truncate">{f.filename}</p></div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

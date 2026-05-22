@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ScrollToTop from "@/components/ScrollToTop";
 import FloatingContact from "@/components/FloatingContact";
+import LivestreamBanner from "@/components/LivestreamBanner";
 import SEOHead from "@/components/SEOHead";
 import { SITE_URL, makeSiteUrl } from "@/lib/config";
 
@@ -51,6 +52,7 @@ const Index = () => {
       </main>
       <Footer />
       <FloatingContact />
+      <LivestreamBanner />
       <BottomNav />
       <ScrollToTop />
     </div>

@@ -490,7 +490,7 @@ const ProductDetail = () => {
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-sm"
                     >
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 2.5C15.5 1.12 16.62 0 18 0s2.5 1.12 2.5 2.5c0 .53-.16 1.02-.44 1.42l.02.02-3.96 4.57c-.14.16-.41.08-.44-.13-.18-1.38-.98-2.59-2.16-3.3l.06-.07C14.42 4.04 15.5 3.39 15.5 2.5zM21 8.5c-.83 0-1.5.67-1.5 1.5v4c0 3.31-2.69 6-6 6s-6-2.69-6-6V8l-.5-.5H4.5c-.83 0-1.5.67-1.5 1.5v5c0 4.97 4.03 9 9 9s9-4.03 9-9V10c0-.83-.67-1.5-1.5-1.5h.5zM2 4.5C2 3.12 3.12 2 4.5 2S7 3.12 7 4.5c0 .52-.16 1.01-.43 1.41-.28-.39-.74-.66-1.28-.66S4.22 5.52 3.93 5.91c-.27-.4-.43-.89-.43-1.41z"/></svg>
+                      <svg className="w-4 h-4" viewBox="0 0 48 48" fill="currentColor"><path d="M24.2 10.2c-3.1 0-5.6-2.5-5.6-5.6h-2.3c0 4.3 3.5 7.9 7.9 7.9s7.9-3.5 7.9-7.9h-2.3c0 3.1-2.5 5.6-5.6 5.6zM38.4 14.2H10c-1.4 0-2.5 1.2-2.4 2.6l2.2 27c.1 1.3 1.2 2.2 2.4 2.2h24c1.3 0 2.3-1 2.4-2.2l2.2-27c.1-1.4-1-2.6-2.4-2.6z"/></svg>
                       Xem trên Shopee
                     </a>
                   )}

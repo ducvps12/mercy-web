@@ -95,11 +95,11 @@ const CategorySuggestions = () => {
                   onClick={() => navigate(`/product/${product.id}`)}
                 >
                   {/* Image */}
-                  <div className="relative p-2 bg-gray-50">
+                  <div className="relative bg-gray-50 aspect-square overflow-hidden">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-28 md:h-32 object-contain group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
                     />
                     {discount > 0 && (

@@ -216,11 +216,11 @@ function CampaignProducts({
             className="bg-white border border-gray-100 rounded-xl overflow-hidden group cursor-pointer card-lift hover:border-red-200"
             onClick={() => navigate(`/product/${p.id}`)}
           >
-            <div className="relative p-3 bg-gray-50">
+            <div className="relative bg-gray-50 aspect-square overflow-hidden">
               <img
                 src={p.image || "/placeholder.svg"}
                 alt={p.name}
-                className="w-full h-32 md:h-40 object-contain group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
               />
               {discount > 0 && (

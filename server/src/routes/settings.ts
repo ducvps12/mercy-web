@@ -20,6 +20,21 @@ router.get('/branding', async (req, res) => {
   }
 });
 
+// ── Public endpoint: anyone can read livestream settings ──
+router.get('/livestream', async (req, res) => {
+  try {
+    const setting = await prisma.settings.findUnique({ where: { key: 'livestream' } });
+    if (setting?.value) {
+      res.json({ value: JSON.parse(setting.value) });
+    } else {
+      res.json({ value: null });
+    }
+  } catch (error) {
+    console.error('Get livestream error:', error);
+    res.json({ value: null });
+  }
+});
+
 // All remaining settings routes require admin authentication
 router.use(isAdmin);
 

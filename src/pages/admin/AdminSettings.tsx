@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, CreditCard, Globe, Phone, MapPin, Save, AlertCircle } from "lucide-react";
+import { Mail, CreditCard, Globe, Phone, MapPin, Save, AlertCircle, Radio } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -60,6 +61,12 @@ export default function AdminSettings() {
     zaloNotification: true,
   });
 
+  // Livestream Settings
+  const [livestreamSettings, setLivestreamSettings] = useState({
+    tiktokUrl: "",
+    shopeeUrl: "",
+  });
+
   // Load settings from API
   useEffect(() => {
     const loadSettings = async () => {
@@ -99,6 +106,17 @@ export default function AdminSettings() {
         if (data.emailOnLowStock !== undefined) setNotifications(prev => ({...prev, emailOnLowStock: data.emailOnLowStock === 'true'}));
         if (data.weeklyReport !== undefined) setNotifications(prev => ({...prev, weeklyReport: data.weeklyReport === 'true'}));
         if (data.zaloNotification !== undefined) setNotifications(prev => ({...prev, zaloNotification: data.zaloNotification === 'true'}));
+
+        // Load livestream settings (stored as JSON in a single key)
+        if (data.livestream) {
+          try {
+            const ls = JSON.parse(data.livestream);
+            setLivestreamSettings({
+              tiktokUrl: ls.tiktokUrl || '',
+              shopeeUrl: ls.shopeeUrl || '',
+            });
+          } catch {}
+        }
       } catch (error) {
         console.error('Load settings error:', error);
       } finally {
@@ -155,6 +173,13 @@ export default function AdminSettings() {
           weeklyReport: String(notifications.weeklyReport),
           zaloNotification: String(notifications.zaloNotification),
         };
+      } else if (section === 'livestream') {
+        dataToSave = {
+          livestream: JSON.stringify({
+            tiktokUrl: livestreamSettings.tiktokUrl.trim(),
+            shopeeUrl: livestreamSettings.shopeeUrl.trim(),
+          }),
+        };
       }
       
       const response = await fetch('/api/settings', {
@@ -179,7 +204,7 @@ export default function AdminSettings() {
     <AdminLayout title="Cài đặt">
       <div className="max-w-5xl">
         <Tabs defaultValue="site" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto">
             <TabsTrigger value="site" className="gap-2">
               <Globe className="w-4 h-4" />
               <span className="hidden sm:inline">Website</span>
@@ -195,6 +220,10 @@ export default function AdminSettings() {
             <TabsTrigger value="social" className="gap-2">
               <Phone className="w-4 h-4" />
               <span className="hidden sm:inline">Mạng xã hội</span>
+            </TabsTrigger>
+            <TabsTrigger value="livestream" className="gap-2">
+              <Radio className="w-4 h-4" />
+              <span className="hidden sm:inline">Livestream</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <AlertCircle className="w-4 h-4" />
@@ -503,6 +532,91 @@ export default function AdminSettings() {
                 <Button onClick={() => handleSave("mạng xã hội")} disabled={saving} className="gap-2">
                   <Save className="w-4 h-4" />
                   Lưu liên kết mạng xã hội
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Livestream Settings */}
+          <TabsContent value="livestream" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Radio className="w-5 h-5 text-red-500" />
+                  Quản lý Livestream
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-red-800">
+                    <strong>Hướng dẫn:</strong> Khi lên live, paste link phòng live vào đây rồi bấm <strong>Lưu</strong>. Nút "Săn Deal trên Live" sẽ tự động hiện trên trang chủ. Khi xuống live, xóa link và bấm Lưu — nút sẽ ẩn đi.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 48 48" fill="#ee4d2d">
+                        <path d="M24.2 10.2c-3.1 0-5.6-2.5-5.6-5.6h-2.3c0 4.3 3.5 7.9 7.9 7.9s7.9-3.5 7.9-7.9h-2.3c0 3.1-2.5 5.6-5.6 5.6zM38.4 14.2H10c-1.4 0-2.5 1.2-2.4 2.6l2.2 27c.1 1.3 1.2 2.2 2.4 2.2h24c1.3 0 2.3-1 2.4-2.2l2.2-27c.1-1.4-1-2.6-2.4-2.6z" />
+                      </svg>
+                      Link Shopee Live
+                    </Label>
+                    <Input
+                      value={livestreamSettings.shopeeUrl}
+                      onChange={(e) => setLivestreamSettings({...livestreamSettings, shopeeUrl: e.target.value})}
+                      placeholder="https://shopee.vn/... (để trống nếu không live Shopee)"
+                    />
+                    {livestreamSettings.shopeeUrl && (
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                        </span>
+                        <span className="text-xs text-green-600 font-medium">Đang hiện trên trang chủ</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#000">
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.86a8.28 8.28 0 0 0 4.76 1.5V6.83a4.83 4.83 0 0 1-1-.14z" />
+                      </svg>
+                      Link TikTok Live
+                    </Label>
+                    <Input
+                      value={livestreamSettings.tiktokUrl}
+                      onChange={(e) => setLivestreamSettings({...livestreamSettings, tiktokUrl: e.target.value})}
+                      placeholder="https://www.tiktok.com/@.../live (để trống nếu không live TikTok)"
+                    />
+                    {livestreamSettings.tiktokUrl && (
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                        </span>
+                        <span className="text-xs text-green-600 font-medium">Đang hiện trên trang chủ</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-3">
+                  <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                    <div>
+                      <p className="font-medium text-sm">Trạng thái hiện tại</p>
+                      <p className="text-xs text-muted-foreground">
+                        {livestreamSettings.shopeeUrl || livestreamSettings.tiktokUrl
+                          ? "🟢 Nút 'Săn Deal trên Live' đang hiện trên trang chủ"
+                          : "⚪ Chưa có link nào — nút ẩn trên trang chủ"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button onClick={() => handleSave("livestream")} disabled={saving} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  {livestreamSettings.shopeeUrl || livestreamSettings.tiktokUrl ? 'Lưu & Hiện nút Live' : 'Lưu & Ẩn nút Live'}
                 </Button>
               </CardContent>
             </Card>

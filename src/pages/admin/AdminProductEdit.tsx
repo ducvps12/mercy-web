@@ -666,15 +666,20 @@ export default function AdminProductEdit() {
               ) : (
                 <div className="space-y-2">
                   {product.images.map((img, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-2 rounded-lg border border-border/50 hover:border-border transition-colors group">
+                    <div key={idx} className={`flex items-center gap-3 p-2 rounded-lg border transition-colors group ${
+                      idx === 0 ? 'border-primary/30 bg-primary/5' : 'border-border/50 hover:border-border'
+                    }`}>
                       <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-                      <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden shrink-0 border border-border">
+                      <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden shrink-0 border border-border relative">
                         {img.url ? (
                           <img src={img.url} alt="" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "")} />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                             <ImageIcon className="w-5 h-5" />
                           </div>
+                        )}
+                        {idx === 0 && (
+                          <div className="absolute top-0.5 left-0.5 bg-primary text-white text-[8px] font-bold px-1 rounded">★</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -686,6 +691,21 @@ export default function AdminProductEdit() {
                         />
                         {idx === 0 && <span className="text-[10px] text-primary font-medium">Ảnh chính</span>}
                       </div>
+                      {/* Set as main image */}
+                      {idx !== 0 && (
+                        <button
+                          onClick={() => {
+                            const imgs = [...product.images];
+                            const [moved] = imgs.splice(idx, 1);
+                            imgs.unshift(moved);
+                            setProduct({ ...product, images: imgs });
+                          }}
+                          className="p-1.5 rounded hover:bg-amber-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Đặt làm ảnh chính"
+                        >
+                          <Star className="w-4 h-4 text-amber-500" />
+                        </button>
+                      )}
                       <button onClick={() => openMediaPicker("replace", idx)} className="p-1.5 rounded hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" title="Chọn từ kho">
                         <FolderOpen className="w-4 h-4 text-primary" />
                       </button>

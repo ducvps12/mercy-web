@@ -10,13 +10,13 @@ import {
 import {
   Layers, Plus, Pencil, Trash2, GripVertical, Save, RotateCcw,
   FolderOpen, Search, CheckSquare, Square, Loader2, Eye,
-  Image as ImageIcon,
+  Image as ImageIcon, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   CategoryItem, defaultCategories, getFeaturedCategories, saveFeaturedCategories,
 } from "@/components/HeroSection";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiGet } from "@/lib/api";
 
 const gradientOptions = [
   { label: "Đỏ - Hồng", value: "from-red-500 via-rose-500 to-pink-500", lightBg: "from-red-50 via-rose-50 to-pink-50", border: "hover:border-red-300" },
@@ -47,6 +47,7 @@ export default function AdminCategories() {
   });
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [syncingImages, setSyncingImages] = useState(false);
 
   // Media picker
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -70,6 +71,52 @@ export default function AdminCategories() {
     setCategories([...defaultCategories]);
     setHasChanges(true);
     toast.info("Đã khôi phục mặc định (nhấn Lưu để áp dụng)");
+  };
+
+  // Sync category images from products API
+  const syncCategoryImages = async () => {
+    setSyncingImages(true);
+    try {
+      // Fetch all products from admin API
+      const products = await apiGet<any[]>("/admin/products");
+      let updated = 0;
+      const newCategories = categories.map(cat => {
+        // Match by link path (e.g. /danh-muc/kinh-camera -> category_name contains keyword)
+        const linkSlug = cat.link.replace(/^\/danh-muc\//, '');
+        // Find a product whose category matches this category
+        const matchedProduct = products.find(p => {
+          if (!p.category) return false;
+          // Generate a slug-like string from the category name
+          const catSlug = p.category
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+            .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          return catSlug === linkSlug || p.category.toLowerCase() === cat.name.toLowerCase();
+        });
+
+        if (matchedProduct && matchedProduct.image) {
+          if (cat.image !== matchedProduct.image) {
+            updated++;
+            return { ...cat, image: matchedProduct.image };
+          }
+        }
+        return cat;
+      });
+
+      setCategories(newCategories);
+      if (updated > 0) {
+        setHasChanges(true);
+        toast.success(`Đã cập nhật ảnh cho ${updated} danh mục (nhấn Lưu để áp dụng)`);
+      } else {
+        toast.info("Ảnh danh mục đã đúng, không cần thay đổi");
+      }
+    } catch (err) {
+      console.error('Sync category images error:', err);
+      toast.error("Lỗi đồng bộ ảnh danh mục");
+    } finally {
+      setSyncingImages(false);
+    }
   };
 
   // Edit / Add
@@ -178,6 +225,9 @@ export default function AdminCategories() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={syncCategoryImages} disabled={syncingImages} className="gap-1.5">
+              {syncingImages ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} ĐB Ảnh
+            </Button>
             <Button variant="outline" size="sm" onClick={resetDefaults} className="gap-1.5">
               <RotateCcw className="w-3.5 h-3.5" /> Mặc định
             </Button>

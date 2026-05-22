@@ -802,6 +802,7 @@ router.post('/sync-images', async (req, res) => {
     const path = await import('path');
     const PRODUCTS_DIR = path.default.resolve(__dirname, '../../../public/products');
     const IMAGE_EXTS = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+    const newestFirst = req.body?.newestFirst === true;
 
     if (!fs.default.existsSync(PRODUCTS_DIR)) {
       return res.json({ message: 'Thư mục products không tồn tại', fixed: 0, skipped: 0, results: [] });
@@ -846,16 +847,21 @@ router.post('/sync-images', async (req, res) => {
 
     let fixed = 0;
     let skipped = 0;
-    const results: { sku: string; name: string; status: string; oldCount: number; newCount: number }[] = [];
+    const results: { sku: string; name: string; status: string; oldCount: number; newCount: number; mainImage?: string }[] = [];
 
     for (const product of products) {
       const sku = product.sku || product.product_id;
-      const matchingFiles = fileGroups[sku];
+      let matchingFiles = fileGroups[sku];
 
       if (!matchingFiles || matchingFiles.length === 0) {
         results.push({ sku, name: product.name, status: 'no_files', oldCount: 0, newCount: 0 });
         skipped++;
         continue;
+      }
+
+      // If newestFirst, reverse so highest-numbered file becomes index 0 (main image)
+      if (newestFirst) {
+        matchingFiles = [...matchingFiles].reverse();
       }
 
       // Get current images
@@ -866,9 +872,11 @@ router.post('/sync-images', async (req, res) => {
       const currentPaths = currentImages.map(img => img.image_url).sort();
       const correctPaths = matchingFiles.map(f => `/products/${f}`).sort();
 
-      // Compare
-      if (JSON.stringify(currentPaths) === JSON.stringify(correctPaths)) {
-        results.push({ sku, name: product.name, status: 'ok', oldCount: currentImages.length, newCount: correctPaths.length });
+      // Compare (also check order if newestFirst changes the ordering)
+      const currentOrdered = currentImages.map(img => img.image_url);
+      const newOrdered = matchingFiles.map(f => `/products/${f}`);
+      if (JSON.stringify(currentOrdered) === JSON.stringify(newOrdered)) {
+        results.push({ sku, name: product.name, status: 'ok', oldCount: currentImages.length, newCount: correctPaths.length, mainImage: newOrdered[0] });
         skipped++;
         continue;
       }
@@ -883,7 +891,7 @@ router.post('/sync-images', async (req, res) => {
         }))
       });
 
-      results.push({ sku, name: product.name, status: 'fixed', oldCount: currentImages.length, newCount: correctPaths.length });
+      results.push({ sku, name: product.name, status: 'fixed', oldCount: currentImages.length, newCount: correctPaths.length, mainImage: `/products/${matchingFiles[0]}` });
       fixed++;
     }
 
@@ -894,11 +902,70 @@ router.post('/sync-images', async (req, res) => {
       total: products.length,
       diskFiles: allFiles.length,
       diskGroups: Object.keys(fileGroups).length,
+      newestFirst,
       results
     });
   } catch (error) {
     console.error('Sync images error:', error);
     res.status(500).json({ message: 'Lỗi đồng bộ ảnh' });
+  }
+});
+
+// ═══════════════════════════════════
+// SYNC CATEGORIES — fix category cover images from product images
+// ═══════════════════════════════════
+router.post('/sync-categories', async (req, res) => {
+  try {
+    // Get all categories with product count
+    const categories = await prisma.categories.findMany({
+      include: { _count: { select: { products: true } } }
+    });
+
+    const results: { name: string; status: string; image?: string }[] = [];
+    let fixed = 0;
+
+    for (const cat of categories) {
+      // Find first product in this category with an image
+      const product = await prisma.products.findFirst({
+        where: { category_id: cat.id },
+        orderBy: { id: 'asc' }
+      });
+
+      if (!product) {
+        results.push({ name: cat.name, status: 'no_products' });
+        continue;
+      }
+
+      // Get first image of this product
+      const img = await prisma.product_images.findFirst({
+        where: { product_id: product.product_id },
+        orderBy: { sort_order: 'asc' }
+      });
+
+      if (!img) {
+        results.push({ name: cat.name, status: 'no_images' });
+        continue;
+      }
+
+      // Update category image
+      await prisma.categories.update({
+        where: { id: cat.id },
+        data: { image: img.image_url }
+      });
+
+      results.push({ name: cat.name, status: 'fixed', image: img.image_url });
+      fixed++;
+    }
+
+    res.json({
+      message: `Đã đồng bộ ${fixed} danh mục`,
+      fixed,
+      total: categories.length,
+      results
+    });
+  } catch (error) {
+    console.error('Sync categories error:', error);
+    res.status(500).json({ message: 'Lỗi đồng bộ danh mục' });
   }
 });
 

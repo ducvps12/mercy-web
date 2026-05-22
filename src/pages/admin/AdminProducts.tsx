@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight, ImageIcon, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight, ImageIcon, CheckCircle2, AlertCircle, XCircle, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { apiGet, apiDelete, apiPost } from "@/lib/api";
 import { formatPrice } from "@/data/products";
@@ -36,6 +36,8 @@ export default function AdminProducts() {
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncResult, setSyncResult] = useState<any>(null);
   const [syncDialogOpen, setSyncDialogOpen] = useState(false);
+  const [newestFirst, setNewestFirst] = useState(false);
+  const [catSyncLoading, setCatSyncLoading] = useState(false);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -84,12 +86,12 @@ export default function AdminProducts() {
   const handleSyncImages = async () => {
     setSyncLoading(true);
     try {
-      const data = await apiPost<any>("/admin/sync-images");
+      const data = await apiPost<any>("/admin/sync-images", { newestFirst });
       setSyncResult(data);
       setSyncDialogOpen(true);
       if (data.fixed > 0) {
         toast.success(`Đã đồng bộ ${data.fixed} sản phẩm`);
-        loadProducts(); // refresh product list to show new thumbnails
+        loadProducts();
       } else {
         toast.info("Tất cả ảnh đã đúng, không cần thay đổi");
       }
@@ -97,6 +99,23 @@ export default function AdminProducts() {
       toast.error(err.message || "Lỗi đồng bộ ảnh");
     } finally {
       setSyncLoading(false);
+    }
+  };
+
+  // Sync categories
+  const handleSyncCategories = async () => {
+    setCatSyncLoading(true);
+    try {
+      const data = await apiPost<any>("/admin/sync-categories");
+      if (data.fixed > 0) {
+        toast.success(`Đã đồng bộ ${data.fixed} danh mục`);
+      } else {
+        toast.info("Danh mục đã đúng, không cần thay đổi");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi đồng bộ danh mục");
+    } finally {
+      setCatSyncLoading(false);
     }
   };
 
@@ -130,10 +149,14 @@ export default function AdminProducts() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" onClick={handleSyncCategories} disabled={catSyncLoading || loading} className="gap-2" title="Đồng bộ ảnh bìa danh mục từ sản phẩm">
+              {catSyncLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
+              <span className="hidden sm:inline">ĐB Danh mục</span>
+            </Button>
             <Button variant="outline" onClick={handleSyncImages} disabled={syncLoading || loading} className="gap-2" title="Đồng bộ ảnh kho với sản phẩm theo SKU">
               {syncLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
-              <span className="hidden sm:inline">Đồng bộ ảnh</span>
+              <span className="hidden sm:inline">ĐB Ảnh</span>
             </Button>
             <Button variant="outline" onClick={loadProducts} disabled={loading} className="gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -287,8 +310,26 @@ export default function AdminProducts() {
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSyncDialogOpen(false)}>Đóng</Button>
+          <DialogFooter className="flex-col sm:flex-row gap-3">
+            <div className="flex items-center gap-2 flex-1">
+              <input
+                type="checkbox"
+                id="newestFirst"
+                checked={newestFirst}
+                onChange={(e) => setNewestFirst(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="newestFirst" className="text-xs text-muted-foreground cursor-pointer">
+                Ảnh mới nhất làm ảnh chính
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleSyncImages} disabled={syncLoading} className="gap-1.5">
+                {syncLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                Đồng bộ lại
+              </Button>
+              <Button variant="outline" onClick={() => setSyncDialogOpen(false)}>Đóng</Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

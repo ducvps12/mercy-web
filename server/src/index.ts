@@ -36,10 +36,10 @@ app.use(helmet({
 // CORS
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 
-// Global rate limiter: 200 requests per 15 minutes per IP
+// Global rate limiter: 2000 requests per 15 minutes per IP (generous for local dev)
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Quá nhiều yêu cầu, vui lòng thử lại sau.' },

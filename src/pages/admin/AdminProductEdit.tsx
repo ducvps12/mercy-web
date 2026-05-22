@@ -44,6 +44,7 @@ interface ProductDetail {
   seoTags: string;
   shopeeUrl: string;
   tiktokUrl: string;
+  youtubeUrl: string;
   isFlashSale: boolean;
   flashSalePercent: number;
   isActive: boolean;
@@ -109,6 +110,7 @@ export default function AdminProductEdit() {
           seoTags: "",
           shopeeUrl: "",
           tiktokUrl: "",
+          youtubeUrl: "",
           isFlashSale: false,
           flashSalePercent: 0,
           isActive: true,
@@ -166,6 +168,7 @@ export default function AdminProductEdit() {
         seoTags: product.seoTags,
         shopeeUrl: product.shopeeUrl,
         tiktokUrl: product.tiktokUrl,
+        youtubeUrl: product.youtubeUrl,
         isFlashSale: product.isFlashSale,
         flashSalePercent: product.flashSalePercent,
         isActive: product.isActive,
@@ -924,6 +927,36 @@ export default function AdminProductEdit() {
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Link TikTok Shop</Label>
                   <Input value={product.tiktokUrl} onChange={(e) => update("tiktokUrl", e.target.value)} placeholder="https://tiktok.com/..." />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    Video YouTube
+                  </Label>
+                  <Input value={product.youtubeUrl} onChange={(e) => update("youtubeUrl", e.target.value)} placeholder="https://www.youtube.com/watch?v=... hoặc https://youtu.be/..." />
+                  <p className="text-[10px] text-muted-foreground">Nhập link YouTube — video sẽ được nhúng trên trang chi tiết sản phẩm</p>
+                  {product.youtubeUrl && (() => {
+                    const url = product.youtubeUrl;
+                    let videoId = '';
+                    try {
+                      if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1]?.split(/[?&#]/)[0] || '';
+                      else if (url.includes('youtube.com/watch')) videoId = new URL(url).searchParams.get('v') || '';
+                      else if (url.includes('youtube.com/embed/')) videoId = url.split('youtube.com/embed/')[1]?.split(/[?&#]/)[0] || '';
+                    } catch {}
+                    if (!videoId) return null;
+                    return (
+                      <div className="mt-2 rounded-lg overflow-hidden border border-border aspect-video">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+                          title="YouTube preview"
+                          className="w-full h-full"
+                          allowFullScreen
+                        />
+                      </div>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>

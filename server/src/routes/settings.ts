@@ -5,7 +5,22 @@ import { isAdmin } from '../middleware/auth';
 const router = Router();
 const prisma = new PrismaClient();
 
-// All settings routes require admin authentication
+// ── Public endpoint: anyone can read branding settings ──
+router.get('/branding', async (req, res) => {
+  try {
+    const setting = await prisma.settings.findUnique({ where: { key: 'branding' } });
+    if (setting?.value) {
+      res.json(JSON.parse(setting.value));
+    } else {
+      res.json(null);
+    }
+  } catch (error) {
+    console.error('Get branding error:', error);
+    res.json(null);
+  }
+});
+
+// All remaining settings routes require admin authentication
 router.use(isAdmin);
 
 // GET all settings

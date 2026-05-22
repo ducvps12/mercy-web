@@ -7,7 +7,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { apiGet } from "@/lib/api";
 import type { ProductData } from "@/data/products";
 import { categories, productDropdown } from "@/data/navigation";
-import { getBranding, BRANDING_UPDATED_EVENT, resolveBranding, type BrandingSettings } from "@/lib/branding";
+import { getBranding, BRANDING_UPDATED_EVENT, resolveBranding, fetchBrandingFromServer, type BrandingSettings } from "@/lib/branding";
 
 const mainMenu = [
   { name: "Trang chủ", hasSubmenu: false, href: "/" },
@@ -99,6 +99,8 @@ const Header = () => {
     const refresh = () => setRawBranding(getBranding());
     window.addEventListener(BRANDING_UPDATED_EVENT, refresh);
     window.addEventListener("storage", refresh);
+    // Fetch branding from server on first mount so all devices see the same logo
+    fetchBrandingFromServer().then(b => setRawBranding(b));
     return () => {
       window.removeEventListener(BRANDING_UPDATED_EVENT, refresh);
       window.removeEventListener("storage", refresh);

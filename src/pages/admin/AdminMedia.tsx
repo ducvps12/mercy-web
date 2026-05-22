@@ -103,6 +103,23 @@ export default function AdminMedia() {
     groupedFiles.get(f.group)!.push(f);
   });
 
+  // Select helpers
+  const selectAll = () => {
+    setSelected(new Set(filtered.map(f => f.filename)));
+  };
+  const deselectAll = () => setSelected(new Set());
+  const toggleSelectGroup = (group: string) => {
+    const groupFiles = filtered.filter(f => f.group === group).map(f => f.filename);
+    const allSelected = groupFiles.every(fn => selected.has(fn));
+    const s = new Set(selected);
+    if (allSelected) { groupFiles.forEach(fn => s.delete(fn)); } else { groupFiles.forEach(fn => s.add(fn)); }
+    setSelected(s);
+  };
+  const isGroupSelected = (group: string) => {
+    const groupFiles = filtered.filter(f => f.group === group).map(f => f.filename);
+    return groupFiles.length > 0 && groupFiles.every(fn => selected.has(fn));
+  };
+
   // Upload handler
   const handleUpload = async (fileList: FileList | File[]) => {
     const arr = Array.from(fileList);
@@ -111,10 +128,17 @@ export default function AdminMedia() {
     try {
       const formData = new FormData();
       arr.forEach(f => formData.append("images", f));
+      // Don't set Content-Type manually — browser adds multipart boundary automatically
+      const token = getToken();
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(`${API_BASE}/media/upload`, {
-        method: "POST", body: formData, headers: authHeaders(),
+        method: "POST", body: formData, headers,
       });
-      if (!res.ok) throw new Error("Upload thất bại");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Upload thất bại' }));
+        throw new Error(err.message);
+      }
       const data = await res.json();
       toast.success(data.message);
       setUploadOpen(false);
@@ -222,16 +246,29 @@ export default function AdminMedia() {
               Quản lý ảnh & video trong <code className="text-xs bg-muted px-1.5 py-0.5 rounded">/products/</code>
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {selectMode && selected.size > 0 && (
-              <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5">
-                <Trash2 className="w-3.5 h-3.5" /> Xóa {selected.size} ảnh
-              </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {selectMode && (
+              <>
+                {selected.size > 0 && (
+                  <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5">
+                    <Trash2 className="w-3.5 h-3.5" /> Xóa {selected.size} ảnh
+                  </Button>
+                )}
+                <Button variant="outline" size="sm"
+                  onClick={selected.size === filtered.length ? deselectAll : selectAll}
+                  className="gap-1.5">
+                  {selected.size === filtered.length ? (
+                    <><X className="w-3.5 h-3.5" /> Bỏ chọn tất cả</>
+                  ) : (
+                    <><CheckSquare className="w-3.5 h-3.5" /> Chọn tất cả ({filtered.length})</>
+                  )}
+                </Button>
+              </>
             )}
             <Button variant={selectMode ? "secondary" : "outline"} size="sm"
               onClick={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
               className="gap-1.5">
-              <CheckSquare className="w-3.5 h-3.5" /> {selectMode ? "Hủy chọn" : "Chọn nhiều"}
+              <CheckSquare className="w-3.5 h-3.5" /> {selectMode ? "Thoát chọn" : "Chọn nhiều"}
             </Button>
             <Button onClick={() => setUploadOpen(true)} className="gap-1.5">
               <Upload className="w-4 h-4" /> Tải lên
@@ -295,10 +332,25 @@ export default function AdminMedia() {
               <Card key={group} className="border-border">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    {selectMode && (
+                      <button
+                        onClick={() => toggleSelectGroup(group)}
+                        className="p-0 shrink-0 transition-transform hover:scale-110"
+                        title={isGroupSelected(group) ? "Bỏ chọn nhóm" : "Chọn cả nhóm"}
+                      >
+                        {isGroupSelected(group)
+                          ? <CheckSquare className="w-4.5 h-4.5 text-primary" />
+                          : <Square className="w-4.5 h-4.5 text-muted-foreground hover:text-primary" />}
+                      </button>
+                    )}
                     <FolderOpen className="w-4 h-4 text-primary" />
                     {group}
                     <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                       {groupFiles.length} file
+                      {selectMode && (() => {
+                        const cnt = groupFiles.filter(f => selected.has(f.filename)).length;
+                        return cnt > 0 ? ` • đã chọn ${cnt}` : '';
+                      })()}
                     </span>
                   </CardTitle>
                 </CardHeader>
@@ -310,12 +362,12 @@ export default function AdminMedia() {
                           selected.has(file.filename) ? "ring-2 ring-primary border-primary" : "border-border hover:border-primary/40"
                         }`}
                         onClick={() => selectMode ? toggleSelect(file.filename) : setPreviewFile(file)}>
-                        {/* Select checkbox */}
+                        {/* Select checkbox — always visible in select mode */}
                         {selectMode && (
-                          <div className="absolute top-2 left-2 z-10">
+                          <div className="absolute top-2 left-2 z-10 cursor-pointer" onClick={e => { e.stopPropagation(); toggleSelect(file.filename); }}>
                             {selected.has(file.filename)
-                              ? <CheckSquare className="w-5 h-5 text-primary drop-shadow" />
-                              : <Square className="w-5 h-5 text-white drop-shadow" />}
+                              ? <CheckSquare className="w-5 h-5 text-primary drop-shadow-md" />
+                              : <Square className="w-5 h-5 text-white/80 drop-shadow-md hover:text-primary transition-colors" />}
                           </div>
                         )}
                         {/* Thumbnail */}

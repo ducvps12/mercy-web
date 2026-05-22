@@ -14,7 +14,7 @@ import {
 import { Plus, Pencil, Trash2, GripVertical, Image as ImageIcon, Megaphone, Upload, Loader2, Sparkles, RotateCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { apiPost } from "@/lib/api";
-import { getBranding, saveBranding, defaultBranding, resolveBranding, type BrandingSettings } from "@/lib/branding";
+import { getBranding, saveBranding, saveBrandingToServer, defaultBranding, resolveBranding, type BrandingSettings } from "@/lib/branding";
 
 /* ═══════════════════════════════════════════
    Types & storage helpers
@@ -250,15 +250,19 @@ const AdminBanners = () => {
 
   const resetBranding = () => {
     setBranding(defaultBranding);
-    saveBranding(defaultBranding);
+    saveBrandingToServer(defaultBranding);
     setSavedBranding(defaultBranding);
     toast.success("Đã khôi phục cấu hình logo mặc định");
   };
 
-  const saveBrandingNow = () => {
-    saveBranding(branding);
+  const saveBrandingNow = async () => {
+    const ok = await saveBrandingToServer(branding);
     setSavedBranding(branding);
-    toast.success("Đã lưu thay đổi logo & header");
+    if (ok) {
+      toast.success("Đã lưu thay đổi logo & header (đồng bộ server)");
+    } else {
+      toast.success("Đã lưu thay đổi logo & header (chỉ trình duyệt này)");
+    }
   };
 
   const isDirty = JSON.stringify(branding) !== JSON.stringify(savedBranding);

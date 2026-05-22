@@ -489,6 +489,7 @@ router.get('/products', async (req, res) => {
         flashSalePercent: p.flash_sale_percent,
         shopeeUrl: p.shopee_url,
         tiktokUrl: p.tiktok_url,
+        youtubeUrl: p.youtube_url,
         isActive: p.is_active,
       };
     });
@@ -533,6 +534,7 @@ router.get('/products/:id', async (req, res) => {
       seoTags: product.seo_tags || '',
       shopeeUrl: product.shopee_url || '',
       tiktokUrl: product.tiktok_url || '',
+      youtubeUrl: product.youtube_url || '',
       isFlashSale: product.is_flash_sale || false,
       flashSalePercent: product.flash_sale_percent || 0,
       isActive: product.is_active !== false,
@@ -559,7 +561,7 @@ router.get('/products/:id', async (req, res) => {
 router.post('/products', async (req, res) => {
   try {
     const { name, shortName, sku, categoryName, categoryId, price, originalPrice, discount, badge,
-      rating, sold, stock, brand, description, seoTags, shopeeUrl, tiktokUrl,
+      rating, sold, stock, brand, description, seoTags, shopeeUrl, tiktokUrl, youtubeUrl,
       isFlashSale, flashSalePercent, isActive, featuresVn, featuresEn, footerInfo, productionYear,
       clearancePrice, dailySalePrice, campaignPrice, offPlatformPrice, warrantyData,
       images, specs, variants } = req.body;
@@ -590,6 +592,7 @@ router.post('/products', async (req, res) => {
         seo_tags: seoTags || null,
         shopee_url: shopeeUrl || null,
         tiktok_url: tiktokUrl || null,
+        youtube_url: youtubeUrl || null,
         is_flash_sale: isFlashSale || false,
         flash_sale_percent: flashSalePercent || 0,
         is_active: isActive !== false,
@@ -674,6 +677,7 @@ router.put('/products/:id', async (req, res) => {
     if (productData.seoTags !== undefined) updateData.seo_tags = productData.seoTags;
     if (productData.shopeeUrl !== undefined) updateData.shopee_url = productData.shopeeUrl || null;
     if (productData.tiktokUrl !== undefined) updateData.tiktok_url = productData.tiktokUrl || null;
+    if (productData.youtubeUrl !== undefined) updateData.youtube_url = productData.youtubeUrl || null;
     if (productData.isFlashSale !== undefined) updateData.is_flash_sale = productData.isFlashSale;
     if (productData.flashSalePercent !== undefined) updateData.flash_sale_percent = productData.flashSalePercent;
     if (productData.isActive !== undefined) updateData.is_active = productData.isActive;

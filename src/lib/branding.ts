@@ -1,13 +1,14 @@
 /**
  * Branding helpers
  * Stores admin-customizable logo settings (desktop / mobile, light / dark variants)
- * in localStorage so the Header and other components can pick them up.
+ * in localStorage AND syncs to the server so ALL devices see the same branding.
  *
  * Empty string for any logo field means "use the bundled default" — the Header is
  * responsible for falling back to its own imported defaults.
  */
 import logoWhiteDefault from "@/assets/logo/logowhite.png";
 import logoBlackDefault from "@/assets/logo/logoBlack.png";
+import { API_BASE_URL } from "@/lib/config";
 
 export const BRANDING_STORAGE_KEY = "mercy_branding";
 export const BRANDING_UPDATED_EVENT = "mercy:branding-updated";
@@ -57,22 +58,26 @@ export const defaultBranding: BrandingSettings = {
   headerHeightDesktop: 88,
 };
 
+function sanitize(parsed: Partial<BrandingSettings>): BrandingSettings {
+  // Migrate ugly default Vite import paths from older versions to empty
+  const isViteAssetPath = (s?: string) =>
+    !!s && (s.startsWith("/src/assets/") || s.includes("/assets/logo/logowhite") || s.includes("/assets/logo/logoBlack"));
+  if (isViteAssetPath(parsed.logoLight)) parsed.logoLight = "";
+  if (isViteAssetPath(parsed.logoDark)) parsed.logoDark = "";
+  if (isViteAssetPath(parsed.logoLightMobile)) parsed.logoLightMobile = "";
+  if (isViteAssetPath(parsed.logoDarkMobile)) parsed.logoDarkMobile = "";
+  // Migrate old defaults so existing users get the bigger / synced sizes
+  if (parsed.logoHeightMobile === 56) parsed.logoHeightMobile = defaultBranding.logoHeightMobile;
+  if (parsed.logoHeightSidebar === 56 || parsed.logoHeightSidebar === 80) parsed.logoHeightSidebar = defaultBranding.logoHeightSidebar;
+  return { ...defaultBranding, ...parsed };
+}
+
 export function getBranding(): BrandingSettings {
   try {
     const saved = localStorage.getItem(BRANDING_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved) as Partial<BrandingSettings>;
-      // Migrate ugly default Vite import paths from older versions to empty
-      const isViteAssetPath = (s?: string) =>
-        !!s && (s.startsWith("/src/assets/") || s.includes("/assets/logo/logowhite") || s.includes("/assets/logo/logoBlack"));
-      if (isViteAssetPath(parsed.logoLight)) parsed.logoLight = "";
-      if (isViteAssetPath(parsed.logoDark)) parsed.logoDark = "";
-      if (isViteAssetPath(parsed.logoLightMobile)) parsed.logoLightMobile = "";
-      if (isViteAssetPath(parsed.logoDarkMobile)) parsed.logoDarkMobile = "";
-      // Migrate old defaults so existing users get the bigger / synced sizes
-      if (parsed.logoHeightMobile === 56) parsed.logoHeightMobile = defaultBranding.logoHeightMobile;
-      if (parsed.logoHeightSidebar === 56 || parsed.logoHeightSidebar === 80) parsed.logoHeightSidebar = defaultBranding.logoHeightSidebar;
-      return { ...defaultBranding, ...parsed };
+      return sanitize(parsed);
     }
   } catch {}
   return defaultBranding;
@@ -81,6 +86,50 @@ export function getBranding(): BrandingSettings {
 export function saveBranding(b: BrandingSettings) {
   localStorage.setItem(BRANDING_STORAGE_KEY, JSON.stringify(b));
   window.dispatchEvent(new Event(BRANDING_UPDATED_EVENT));
+}
+
+/**
+ * Save branding to the server so ALL devices see the same branding.
+ * Also saves to localStorage for immediate local effect.
+ */
+export async function saveBrandingToServer(b: BrandingSettings): Promise<boolean> {
+  saveBranding(b); // immediate local effect
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    const res = await fetch(`${API_BASE_URL}/settings`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ branding: JSON.stringify(b) }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fetch branding from the server and update localStorage.
+ * Called on page load so all devices get the latest branding.
+ */
+export async function fetchBrandingFromServer(): Promise<BrandingSettings> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/settings/branding`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data === "object" && data.logoLight !== undefined) {
+        const b = sanitize(data);
+        localStorage.setItem(BRANDING_STORAGE_KEY, JSON.stringify(b));
+        window.dispatchEvent(new Event(BRANDING_UPDATED_EVENT));
+        return b;
+      }
+    }
+  } catch {}
+  // Fall back to localStorage if server is unavailable
+  return getBranding();
 }
 
 /**

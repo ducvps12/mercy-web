@@ -150,6 +150,7 @@ model products {
   campaign_price     BigInt?     @default(0)
   off_platform_price BigInt?     @default(0)
   warranty_data      String?     @db.Text
+  youtube_url        String?     @db.VarChar(500)
   categories         categories? @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "products_ibfk_1")
 
   @@index([category_id], map: "idx_category")

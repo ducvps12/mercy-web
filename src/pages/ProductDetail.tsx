@@ -10,7 +10,7 @@ import CheckoutPopup from "@/components/CheckoutPopup";
 import { useShop } from "@/context/ShopContext";
 import { formatPrice } from "@/data/products";
 import { useProductFlashSale } from "@/hooks/useFlashSale";
-import { Heart, RefreshCw, ChevronRight, ChevronLeft, Truck, ShieldCheck, RotateCcw, Star, Phone, Headphones, Check, X, Loader2, Minus, Plus } from "lucide-react";
+import { Heart, RefreshCw, ChevronRight, ChevronLeft, Truck, ShieldCheck, RotateCcw, Star, Phone, Headphones, Check, X, Loader2, Minus, Plus, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { getReviewSummary, type Review } from "@/data/reviews";
 import { apiGet, apiPost } from "@/lib/api";
@@ -480,6 +480,34 @@ const ProductDetail = () => {
                 Gọi tư vấn: 0898 273 899
               </a>
 
+              {/* Shopee + TikTok Shop reference buttons */}
+              {(product.shopeeUrl || product.tiktokUrl) && (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {product.shopeeUrl && (
+                    <a
+                      href={product.shopeeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-sm"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 2.5C15.5 1.12 16.62 0 18 0s2.5 1.12 2.5 2.5c0 .53-.16 1.02-.44 1.42l.02.02-3.96 4.57c-.14.16-.41.08-.44-.13-.18-1.38-.98-2.59-2.16-3.3l.06-.07C14.42 4.04 15.5 3.39 15.5 2.5zM21 8.5c-.83 0-1.5.67-1.5 1.5v4c0 3.31-2.69 6-6 6s-6-2.69-6-6V8l-.5-.5H4.5c-.83 0-1.5.67-1.5 1.5v5c0 4.97 4.03 9 9 9s9-4.03 9-9V10c0-.83-.67-1.5-1.5-1.5h.5zM2 4.5C2 3.12 3.12 2 4.5 2S7 3.12 7 4.5c0 .52-.16 1.01-.43 1.41-.28-.39-.74-.66-1.28-.66S4.22 5.52 3.93 5.91c-.27-.4-.43-.89-.43-1.41z"/></svg>
+                      Xem trên Shopee
+                    </a>
+                  )}
+                  {product.tiktokUrl && (
+                    <a
+                      href={product.tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] bg-gradient-to-r from-gray-900 to-gray-700 text-white hover:from-black hover:to-gray-800 shadow-sm"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.86a8.28 8.28 0 0 0 4.76 1.5V6.83a4.83 4.83 0 0 1-1-.14z"/></svg>
+                      Xem trên TikTok
+                    </a>
+                  )}
+                </div>
+              )}
+
               {/* Wishlist + Compare */}
               <div className="flex items-center justify-center gap-6 pt-2">
                 <button
@@ -702,6 +730,45 @@ const ProductDetail = () => {
             )}
           </div>
         </div>
+
+        {/* ═══ YouTube Video Section ═══ */}
+        {product.youtubeUrl && (() => {
+          // Extract YouTube video ID from various URL formats
+          const url = product.youtubeUrl;
+          let videoId = '';
+          try {
+            if (url.includes('youtu.be/')) {
+              videoId = url.split('youtu.be/')[1]?.split(/[?&#]/)[0] || '';
+            } else if (url.includes('youtube.com/watch')) {
+              videoId = new URL(url).searchParams.get('v') || '';
+            } else if (url.includes('youtube.com/embed/')) {
+              videoId = url.split('youtube.com/embed/')[1]?.split(/[?&#]/)[0] || '';
+            } else if (url.includes('youtube.com/shorts/')) {
+              videoId = url.split('youtube.com/shorts/')[1]?.split(/[?&#]/)[0] || '';
+            }
+          } catch {}
+          if (!videoId) return null;
+          return (
+            <div className="mt-6 bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="p-5 border-b border-gray-100 flex items-center gap-2">
+                <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                <h3 className="text-base font-bold text-gray-900">Video sản phẩm</h3>
+              </div>
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+                  title={`Video: ${product.name}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ═══ Upsell Section ═══ */}
         {upsellProducts.length > 0 && (

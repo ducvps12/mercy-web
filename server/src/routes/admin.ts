@@ -794,6 +794,96 @@ router.delete('/products/:id', async (req, res) => {
 });
 
 // ═══════════════════════════════════
+// SYNC IMAGES — match files on disk to products by SKU
+// ═══════════════════════════════════
+router.post('/sync-images', async (req, res) => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const PRODUCTS_DIR = path.default.resolve(__dirname, '../../../public/products');
+    const IMAGE_EXTS = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+
+    if (!fs.default.existsSync(PRODUCTS_DIR)) {
+      return res.json({ message: 'Thư mục products không tồn tại', fixed: 0, skipped: 0, results: [] });
+    }
+
+    // Read all image files
+    const allFiles = fs.default.readdirSync(PRODUCTS_DIR).filter(f => IMAGE_EXTS.test(f)).sort();
+
+    // Group files by SKU prefix: "MCK5.0Đôi-0.jpg" → "MCK5.0Đôi"
+    const fileGroups: Record<string, string[]> = {};
+    for (const f of allFiles) {
+      const nameWithoutExt = f.replace(/\.[^/.]+$/, '');
+      const match = nameWithoutExt.match(/^(.+)-\d+$/);
+      const group = match ? match[1] : nameWithoutExt;
+      if (!fileGroups[group]) fileGroups[group] = [];
+      fileGroups[group].push(f);
+    }
+
+    // Get all products
+    const products = await prisma.products.findMany({
+      select: { id: true, product_id: true, sku: true, name: true }
+    });
+
+    let fixed = 0;
+    let skipped = 0;
+    const results: { sku: string; name: string; status: string; oldCount: number; newCount: number }[] = [];
+
+    for (const product of products) {
+      const sku = product.sku || product.product_id;
+      const matchingFiles = fileGroups[sku];
+
+      if (!matchingFiles || matchingFiles.length === 0) {
+        results.push({ sku, name: product.name, status: 'no_files', oldCount: 0, newCount: 0 });
+        skipped++;
+        continue;
+      }
+
+      // Get current images
+      const currentImages = await prisma.product_images.findMany({
+        where: { product_id: product.product_id },
+        orderBy: { sort_order: 'asc' }
+      });
+      const currentPaths = currentImages.map(img => img.image_url).sort();
+      const correctPaths = matchingFiles.map(f => `/products/${f}`).sort();
+
+      // Compare
+      if (JSON.stringify(currentPaths) === JSON.stringify(correctPaths)) {
+        results.push({ sku, name: product.name, status: 'ok', oldCount: currentImages.length, newCount: correctPaths.length });
+        skipped++;
+        continue;
+      }
+
+      // Replace images
+      await prisma.product_images.deleteMany({ where: { product_id: product.product_id } });
+      await prisma.product_images.createMany({
+        data: matchingFiles.map((f, idx) => ({
+          product_id: product.product_id,
+          image_url: `/products/${f}`,
+          sort_order: idx
+        }))
+      });
+
+      results.push({ sku, name: product.name, status: 'fixed', oldCount: currentImages.length, newCount: correctPaths.length });
+      fixed++;
+    }
+
+    res.json({
+      message: `Đã đồng bộ ${fixed} sản phẩm, ${skipped} không cần thay đổi`,
+      fixed,
+      skipped,
+      total: products.length,
+      diskFiles: allFiles.length,
+      diskGroups: Object.keys(fileGroups).length,
+      results
+    });
+  } catch (error) {
+    console.error('Sync images error:', error);
+    res.status(500).json({ message: 'Lỗi đồng bộ ảnh' });
+  }
+});
+
+// ═══════════════════════════════════
 // REVIEWS
 // ═══════════════════════════════════
 

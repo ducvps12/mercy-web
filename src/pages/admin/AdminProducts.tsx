@@ -4,9 +4,12 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { Search, Plus, Edit, Trash2, Loader2, RefreshCw, Eye, Zap, ArrowRight, ImageIcon, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { apiGet, apiDelete } from "@/lib/api";
+import { apiGet, apiDelete, apiPost } from "@/lib/api";
 import { formatPrice } from "@/data/products";
 
 interface Product {
@@ -30,6 +33,9 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [useApi, setUseApi] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncResult, setSyncResult] = useState<any>(null);
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -74,6 +80,26 @@ export default function AdminProducts() {
     }
   };
 
+  // Sync images
+  const handleSyncImages = async () => {
+    setSyncLoading(true);
+    try {
+      const data = await apiPost<any>("/admin/sync-images");
+      setSyncResult(data);
+      setSyncDialogOpen(true);
+      if (data.fixed > 0) {
+        toast.success(`Đã đồng bộ ${data.fixed} sản phẩm`);
+        loadProducts(); // refresh product list to show new thumbnails
+      } else {
+        toast.info("Tất cả ảnh đã đúng, không cần thay đổi");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Lỗi đồng bộ ảnh");
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   return (
     <AdminLayout title="Sản phẩm">
       <div className="space-y-4">
@@ -105,6 +131,10 @@ export default function AdminProducts() {
             />
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleSyncImages} disabled={syncLoading || loading} className="gap-2" title="Đồng bộ ảnh kho với sản phẩm theo SKU">
+              {syncLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+              <span className="hidden sm:inline">Đồng bộ ảnh</span>
+            </Button>
             <Button variant="outline" onClick={loadProducts} disabled={loading} className="gap-2">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
@@ -194,6 +224,74 @@ export default function AdminProducts() {
           {useApi ? "📊" : "📁"} {useApi ? "Dữ liệu từ MySQL" : "Đang dùng catalog tĩnh (server chưa kết nối)"} • {filteredProducts.length} sản phẩm
         </p>
       </div>
+
+      {/* ═══ Sync Results Dialog ═══ */}
+      <Dialog open={syncDialogOpen} onOpenChange={setSyncDialogOpen}>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-primary" /> Kết quả đồng bộ ảnh
+            </DialogTitle>
+          </DialogHeader>
+          {syncResult && (
+            <div className="space-y-4">
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-green-50 rounded-lg p-2">
+                  <p className="text-xs text-green-600">Đã sửa</p>
+                  <p className="text-lg font-bold text-green-700">{syncResult.fixed}</p>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-2">
+                  <p className="text-xs text-blue-600">Đúng rồi</p>
+                  <p className="text-lg font-bold text-blue-700">{syncResult.skipped}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-2">
+                  <p className="text-xs text-gray-600">Ảnh trên disk</p>
+                  <p className="text-lg font-bold text-gray-700">{syncResult.diskFiles}</p>
+                </div>
+              </div>
+              {/* Detail table */}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-muted/50 border-b">
+                      <th className="text-left p-2 font-medium">SKU</th>
+                      <th className="text-left p-2 font-medium">Sản phẩm</th>
+                      <th className="text-center p-2 font-medium">Trạng thái</th>
+                      <th className="text-center p-2 font-medium">Số ảnh</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {syncResult.results?.map((r: any, i: number) => (
+                      <tr key={i} className={`border-b last:border-0 ${
+                        r.status === 'fixed' ? 'bg-green-50/50' : r.status === 'no_files' ? 'bg-yellow-50/50' : ''
+                      }`}>
+                        <td className="p-2 font-mono text-[11px]">{r.sku}</td>
+                        <td className="p-2 truncate max-w-[180px]" title={r.name}>{r.name?.split(' ').slice(0, 4).join(' ')}...</td>
+                        <td className="p-2 text-center">
+                          {r.status === 'fixed' && <span className="inline-flex items-center gap-1 text-green-600"><CheckCircle2 className="w-3.5 h-3.5" /> Đã sửa</span>}
+                          {r.status === 'ok' && <span className="inline-flex items-center gap-1 text-blue-600"><CheckCircle2 className="w-3.5 h-3.5" /> OK</span>}
+                          {r.status === 'no_files' && <span className="inline-flex items-center gap-1 text-yellow-600"><AlertCircle className="w-3.5 h-3.5" /> Không có ảnh</span>}
+                        </td>
+                        <td className="p-2 text-center">
+                          {r.status === 'fixed' ? (
+                            <span>{r.oldCount} → <span className="font-semibold text-green-600">{r.newCount}</span></span>
+                          ) : r.status === 'ok' ? (
+                            <span className="text-muted-foreground">{r.newCount}</span>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSyncDialogOpen(false)}>Đóng</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

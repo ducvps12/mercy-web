@@ -53,8 +53,31 @@ const CategorySuggestions = () => {
     return filtered.slice(0, 12);
   }, [activeTab, products]);
 
-  // Don't render an empty white card when products haven't loaded
-  if (products.length === 0) return null;
+  // Show loading skeleton when products haven't loaded yet
+  if (products.length === 0) {
+    return (
+      <section className="py-4 md:py-6">
+        <div className="container">
+          <div className="bg-white rounded-2xl shadow-sm p-4 md:p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">Gợi ý cho bạn</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-gray-50 rounded-xl overflow-hidden animate-pulse">
+                  <div className="aspect-square bg-gray-200" />
+                  <div className="p-2.5 space-y-2">
+                    <div className="h-3 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-4 md:py-6">

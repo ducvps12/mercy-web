@@ -48,11 +48,7 @@ const FeaturesBar = () => {
       <div className="container">
         <div className="bg-white rounded-2xl border border-gray-100 p-3 md:p-8">
           {/* Section Header */}
-          <div
-            className={`text-center mb-3 md:mb-8 transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-            }`}
-          >
+          <div className="text-center mb-3 md:mb-8">
             <h2 className="text-sm md:text-xl font-bold text-gray-900">
               Lý do Mercy được khách hàng tin tưởng
             </h2>
@@ -66,12 +62,7 @@ const FeaturesBar = () => {
             {features.map((f, i) => (
               <div
                 key={i}
-                className={`group text-center p-2 md:p-5 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-500 ${
-                  isVisible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-8"
-                }`}
-                style={{ transitionDelay: `${150 + i * 80}ms` }}
+                className="group text-center p-2 md:p-5 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-300"
               >
                 {/* Icon */}
                 <div

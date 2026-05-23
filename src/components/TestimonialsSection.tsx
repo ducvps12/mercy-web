@@ -87,11 +87,7 @@ const TestimonialsSection = () => {
       <div className="container">
         <div className="bg-white rounded-2xl border border-gray-100 p-5 md:p-8 overflow-hidden">
           {/* Header */}
-          <div
-            className={`text-center mb-6 md:mb-8 transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-            }`}
-          >
+          <div className="text-center mb-6 md:mb-8">
             <h2 className="text-lg md:text-xl font-bold text-gray-900">
               Phản hồi từ khách hàng
             </h2>
@@ -120,12 +116,9 @@ const TestimonialsSection = () => {
                 {testimonials.map((item, i) => (
                   <div
                     key={item.id}
-                    className={`flex-shrink-0 px-2 transition-all duration-700 ${
-                      isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                    }`}
+                    className="flex-shrink-0 px-2"
                     style={{
                       width: `${100 / visibleCount}%`,
-                      transitionDelay: `${300 + i * 100}ms`,
                     }}
                   >
                     <div className="bg-white border border-gray-100 rounded-xl p-5 md:p-6 h-full relative hover:border-gray-200 hover:shadow-sm transition-all duration-200">

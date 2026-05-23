@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Video } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 import { formatPrice } from "@/data/products";
 import { Link } from "react-router-dom";
@@ -245,8 +245,9 @@ const ReviewSection = () => {
         {/* FPT-style white card wrapper */}
         <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">
-              🎬 Góc review
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Video className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
+              Góc review
             </h2>
             <span className="text-sm font-medium text-gray-500">
               Xem trực tiếp tại website

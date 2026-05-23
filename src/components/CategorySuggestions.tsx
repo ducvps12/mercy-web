@@ -53,6 +53,9 @@ const CategorySuggestions = () => {
     return filtered.slice(0, 12);
   }, [activeTab, products]);
 
+  // Don't render an empty white card when products haven't loaded
+  if (products.length === 0) return null;
+
   return (
     <section className="py-4 md:py-6">
       <div className="container">

@@ -227,6 +227,9 @@ const ReviewSection = () => {
     });
   }, [products]);
 
+  // Don't render an empty white card when no reviews available
+  if (reviewItems.length === 0) return null;
+
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
     const amount = scrollRef.current.offsetWidth * 0.7;

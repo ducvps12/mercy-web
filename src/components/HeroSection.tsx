@@ -140,13 +140,13 @@ const HeroSection = () => {
                     }}
                     className="w-full relative rounded-xl overflow-hidden group/banner hover:shadow-md transition-all duration-200 active:scale-[0.98] bg-white border border-gray-100 block"
                   >
-                    <div className="w-full aspect-[5/2] md:aspect-[5/2] lg:aspect-[3/1] rounded-xl overflow-hidden">
+                    <div className="w-full rounded-xl overflow-hidden">
                       <picture>
                         {banner.imageMobile && <source media="(max-width: 767px)" srcSet={banner.imageMobile} />}
                         <img
                           src={banner.image}
                           alt={banner.alt}
-                          className="w-full h-full object-cover group-hover/banner:scale-[1.02] transition-transform duration-500"
+                          className="w-full h-auto object-contain group-hover/banner:scale-[1.02] transition-transform duration-500"
                           loading="lazy"
                         />
                       </picture>
@@ -181,39 +181,11 @@ const HeroSection = () => {
             </button>
           </div>
 
-          {/* Desktop Grid — keep existing card layout */}
-          <div className="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* Category Grid — full card layout on all screen sizes */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
             {categoryItems.map((cat, i) => (
               <CategoryCard key={i} cat={cat} navigate={navigate} />
             ))}
-          </div>
-
-          {/* Mobile: FPT Shop style compact icon grid */}
-          <div className="md:hidden grid grid-cols-5 gap-y-4 gap-x-2">
-            {categoryItems.map((cat, i) => {
-              const IconComp = getIcon(cat.iconName);
-              return (
-                <button
-                  key={i}
-                  onClick={() => navigate(cat.link)}
-                  className="flex flex-col items-center gap-1.5 group active:scale-95 transition-transform"
-                >
-                  {/* Circular image thumbnail */}
-                  <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-gray-100 group-active:border-red-200 transition-colors shadow-sm bg-gray-50">
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  {/* Label */}
-                  <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-2 w-full">
-                    {cat.name}
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </div>
       </div>

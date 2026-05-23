@@ -82,6 +82,10 @@ export default function AdminProductEdit() {
   const [mediaFilterGroup, setMediaFilterGroup] = useState("all");
   const [mediaSelected, setMediaSelected] = useState<Set<string>>(new Set());
 
+  // Image drag & drop reorder state
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
   useEffect(() => {
     loadProduct();
   }, [id]);
@@ -205,7 +209,39 @@ export default function AdminProductEdit() {
 
   const update = (field: keyof ProductDetail, value: any) => {
     if (!product) return;
-    setProduct({ ...product, [field]: value });
+    const updated = { ...product, [field]: value };
+    // Auto-sync discount when price or originalPrice changes
+    if (field === "price" || field === "originalPrice") {
+      const price = field === "price" ? Number(value) : updated.price;
+      const orig = field === "originalPrice" ? Number(value) : updated.originalPrice;
+      updated.discount = orig > 0 ? Math.round((1 - price / orig) * 100) : 0;
+    }
+    setProduct(updated);
+  };
+
+  // Image drag handlers
+  const handleDragStart = (idx: number) => {
+    setDragIdx(idx);
+  };
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    setDragOverIdx(idx);
+  };
+  const handleDragEnd = () => {
+    if (!product || dragIdx === null || dragOverIdx === null || dragIdx === dragOverIdx) {
+      setDragIdx(null);
+      setDragOverIdx(null);
+      return;
+    }
+    const imgs = [...product.images];
+    const [moved] = imgs.splice(dragIdx, 1);
+    imgs.splice(dragOverIdx, 0, moved);
+    // Re-index sortOrder
+    const reindexed = imgs.map((img, i) => ({ ...img, sortOrder: i }));
+    setProduct({ ...product, images: reindexed });
+    setDragIdx(null);
+    setDragOverIdx(null);
+    toast.success("Đã sắp xếp lại ảnh");
   };
 
   // Image helpers
@@ -506,7 +542,7 @@ export default function AdminProductEdit() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Giảm giá (%)</Label>
-                    <Input type="number" value={product.discount} onChange={(e) => update("discount", Number(e.target.value))} />
+                    <Input type="number" value={discountPercent} readOnly className="bg-muted/50 cursor-not-allowed" title="Tự tính từ Giá bán / Giá gốc" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">Đã bán</Label>
@@ -666,10 +702,17 @@ export default function AdminProductEdit() {
               ) : (
                 <div className="space-y-2">
                   {product.images.map((img, idx) => (
-                    <div key={idx} className={`flex items-center gap-3 p-2 rounded-lg border transition-colors group ${
-                      idx === 0 ? 'border-primary/30 bg-primary/5' : 'border-border/50 hover:border-border'
-                    }`}>
-                      <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                    <div
+                      key={idx}
+                      draggable
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDragEnd={handleDragEnd}
+                      className={`flex items-center gap-3 p-2 rounded-lg border transition-all group ${
+                        idx === 0 ? 'border-primary/30 bg-primary/5' : 'border-border/50 hover:border-border'
+                      } ${dragIdx === idx ? 'opacity-40 scale-95' : ''} ${dragOverIdx === idx && dragIdx !== idx ? 'border-primary border-dashed bg-primary/5' : ''}`}
+                    >
+                      <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0 cursor-grab active:cursor-grabbing" />
                       <div className="w-14 h-14 rounded-lg bg-muted overflow-hidden shrink-0 border border-border relative">
                         {img.url ? (
                           <img src={img.url} alt="" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "")} />

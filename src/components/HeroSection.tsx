@@ -196,15 +196,15 @@ const HeroSection = () => {
 
 
 // Shared category card component
-const CategoryCard = ({ cat, navigate, mobile }: { cat: CategoryItem; navigate: any; mobile?: boolean }) => {
+const CategoryCard = ({ cat, navigate }: { cat: CategoryItem; navigate: any }) => {
   const IconComp = getIcon(cat.iconName);
   return (
   <button
     onClick={() => navigate(cat.link)}
     className="group relative overflow-hidden rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1 active:scale-[0.98] text-left w-full"
   >
-    {/* Product image with gradient overlay */}
-    <div className={`relative overflow-hidden ${mobile ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
+    {/* Product image — square ratio to prevent cropping */}
+    <div className="relative overflow-hidden aspect-square">
       <img
         src={cat.image}
         alt={cat.name}
@@ -216,21 +216,21 @@ const CategoryCard = ({ cat, navigate, mobile }: { cat: CategoryItem; navigate: 
 
       {/* Product count badge */}
       <div className="absolute top-2 right-2 md:top-2.5 md:right-2.5">
-        <span className="text-[10px] md:text-[10px] font-bold text-white px-2 md:px-2 py-1 md:py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/25">
+        <span className="text-[10px] font-bold text-white px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-white/25">
           {cat.count} SP
         </span>
       </div>
 
       {/* Category info on image — solid background bar for readability */}
       <div className="absolute bottom-0 left-0 right-0">
-        <div className={`${mobile ? 'px-4 py-3' : 'px-3 py-2.5'} bg-black/60 backdrop-blur-sm`}>
+        <div className="px-3 py-2.5 bg-black/60 backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-0.5">
-            <div className={`${mobile ? 'w-8 h-8' : 'w-6 h-6 md:w-7 md:h-7'} rounded-lg bg-white/30 backdrop-blur-md flex items-center justify-center ring-1 ring-white/50`}>
-              <IconComp className={`${mobile ? 'w-4 h-4' : 'w-3 h-3 md:w-3.5 md:h-3.5'} text-white`} />
+            <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white/30 backdrop-blur-md flex items-center justify-center ring-1 ring-white/50">
+              <IconComp className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" />
             </div>
-            <h3 className={`${mobile ? 'text-base' : 'text-[13px] md:text-sm'} font-bold text-white drop-shadow-md`}>{cat.name}</h3>
+            <h3 className="text-[13px] md:text-sm font-bold text-white drop-shadow-md">{cat.name}</h3>
           </div>
-          <p className={`${mobile ? 'text-sm pl-10' : 'text-[10px] md:text-[11px] pl-8 md:pl-9'} text-white/95 font-semibold line-clamp-1`}>{cat.desc}</p>
+          <p className="text-[10px] md:text-[11px] pl-8 md:pl-9 text-white/95 font-semibold line-clamp-1">{cat.desc}</p>
         </div>
       </div>
     </div>

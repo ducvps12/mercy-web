@@ -103,9 +103,7 @@ const LivestreamBanner = () => {
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-xl text-sm font-bold transition-all active:scale-[0.97] bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-md"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 48 48" fill="currentColor">
-                    <path d="M24.2 10.2c-3.1 0-5.6-2.5-5.6-5.6h-2.3c0 4.3 3.5 7.9 7.9 7.9s7.9-3.5 7.9-7.9h-2.3c0 3.1-2.5 5.6-5.6 5.6zM38.4 14.2H10c-1.4 0-2.5 1.2-2.4 2.6l2.2 27c.1 1.3 1.2 2.2 2.4 2.2h24c1.3 0 2.3-1 2.4-2.2l2.2-27c.1-1.4-1-2.6-2.4-2.6z" />
-                  </svg>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7l.867 12.143a2 2 0 0 0 2 1.857h10.276a2 2 0 0 0 2 -1.857l.867 -12.143h-16z" /><path d="M8.5 7c0 -1.653 1.5 -4 3.5 -4s3.5 2.347 3.5 4" /><path d="M9.5 17c.413 .462 1 1 2.5 1s2.5 -.897 2.5 -2s-1 -1.5 -2.5 -2s-2 -1.47 -2 -2c0 -1.104 1 -2 2 -2s1.5 0 2.5 1" /></svg>
                   Xem Live trên Shopee
                 </a>
               )}

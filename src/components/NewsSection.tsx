@@ -89,7 +89,8 @@ const NewsSection = () => {
       try {
         const data = await apiGet('/articles?limit=4');
         if (data && Array.isArray(data)) {
-          setArticlesList(data);
+          // Filter out articles with empty/missing title to prevent blank white cards
+          setArticlesList(data.filter((a: Article) => a.title && a.title.trim().length > 0));
         }
       } catch (error) {
         console.error('Failed to fetch articles:', error);

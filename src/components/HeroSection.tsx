@@ -31,31 +31,31 @@ export const defaultCategories: CategoryItem[] = [
   {
     name: "Kính Bluetooth", desc: "Nghe nhạc, gọi điện, trợ lý AI", iconName: "Headphones",
     gradient: "from-red-500 via-rose-500 to-pink-500", lightBg: "from-red-50 via-rose-50 to-pink-50",
-    borderHover: "hover:border-red-300", image: "/products/MCK5.0D-0.jpg", count: 6,
+    borderHover: "hover:border-red-300", image: "/products/MCK5.0D.png", count: 6,
     link: "/danh-muc/kinh-thong-minh-ai",
   },
   {
     name: "Kính Camera", desc: "Quay 2K POV, chụp 32MP", iconName: "Camera",
     gradient: "from-blue-500 via-indigo-500 to-violet-500", lightBg: "from-blue-50 via-indigo-50 to-violet-50",
-    borderHover: "hover:border-blue-300", image: "/products/POV5.0D-0.jpg", count: 6,
+    borderHover: "hover:border-blue-300", image: "/products/POV5.0D.png", count: 6,
     link: "/danh-muc/kinh-camera",
   },
   {
     name: "Kính Dịch Thuật", desc: "Realtime 40+ ngôn ngữ", iconName: "Languages",
     gradient: "from-emerald-500 via-teal-500 to-cyan-500", lightBg: "from-emerald-50 via-teal-50 to-cyan-50",
-    borderHover: "hover:border-emerald-300", image: "/products/KDT5.0D-0.jpg", count: 6,
+    borderHover: "hover:border-emerald-300", image: "/products/KDT5.0D.png", count: 6,
     link: "/danh-muc/kinh-dich-thuat",
   },
   {
     name: "Robot AI", desc: "Gia sư AI, mắt LED biểu cảm", iconName: "Bot",
     gradient: "from-purple-500 via-violet-500 to-fuchsia-500", lightBg: "from-purple-50 via-violet-50 to-fuchsia-50",
-    borderHover: "hover:border-purple-300", image: "/products/RBnu-capy-0.jpg", count: 4,
+    borderHover: "hover:border-purple-300", image: "/products/RBnu-capy.png", count: 4,
     link: "/danh-muc/robot-ai",
   },
   {
     name: "Phụ Kiện", desc: "Bao da cao cấp, quà tặng", iconName: "Glasses",
     gradient: "from-amber-500 via-orange-500 to-red-500", lightBg: "from-amber-50 via-orange-50 to-red-50",
-    borderHover: "hover:border-amber-300", image: "/products/Bao-da-0.jpg", count: 2,
+    borderHover: "hover:border-amber-300", image: "/products/BD1.png", count: 2,
     link: "/danh-muc/phu-kien",
   },
 ];

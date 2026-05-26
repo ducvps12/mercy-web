@@ -16,7 +16,15 @@ export const useScrollReveal = (threshold = 0.15) => {
     );
 
     if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
+
+    // Fallback: if IntersectionObserver hasn't triggered after 2s,
+    // force visibility to prevent permanently hidden content
+    const fallbackTimer = setTimeout(() => setIsVisible(true), 2000);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(fallbackTimer);
+    };
   }, [threshold]);
 
   return { ref, isVisible };
